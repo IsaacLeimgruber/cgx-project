@@ -42,7 +42,7 @@ public:
 
       vec3 n = cross(v1, v2);
       float angle = acos(dot(v1,v2)) * rotationScale_;
-      std::cout << "Computed angle: " << angle <<std::endl;
+      //std::cout << "Computed angle: " << angle <<std::endl;
 
       return rotate(IDENTITY_MATRIX, angle, n);
     }
@@ -63,7 +63,7 @@ private:
         } else {
             p.z = (sqRadius_/2.f) / sqrt(sqX + sqY);
         }
-        std::cout << "Projected z: " << p.z <<std::endl;
+        //std::cout << "Projected z: " << p.z <<std::endl;
     }
 
     float radius_;

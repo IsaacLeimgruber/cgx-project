@@ -1,36 +1,59 @@
 #version 330
-in vec2 position;
+uniform mat4 projection;
+uniform mat4 model;
+uniform mat4 view;
 
-out vec2 uv;
+uniform vec3 light_pos;
 
-uniform mat4 MVP;
+//TODO: remove this once we have heightMap generatoin implemented
 uniform float time;
 
-float freq = 3.0f/2.0f;
-float amp = 0.15f;
-float phi = 2.0f;
+uniform sampler2D heightMap;
 
-const float DEGTORAD = 3.14159265359f / 180.0f;
+in vec2 gridPos;
 
-float freqs[4] = float[4](3.0f/2.0f, 2.0, 5.0/2.0, 20.0f);
-float amps[4] =  float[4](0.04f, 0.024f, 0.01f, 0.003f);
-float phis[4] = float[4](2.0f, 4.0f, 5.0f, 8.0f);
-float rots[4] = float[4](0.0, DEGTORAD * 30, DEGTORAD * 30.0, DEGTORAD * 15.0);
-float fades[4] = float[4](0.0, 1.0/5.0, 1.0/5.0, 2.0);
-float sinWave[4] = float[4](0, 0, 0, 0);
+out vec2 uv;
+out vec3 light_dir;
+out vec3 view_dir;
+
+//TODO: choose between flat and phong shading
+out vec3 mv_normal;
+out vec4 vpoint_mv;
 
 void main() {
-    uv = (position + vec2(1.0, 1.0)) * 0.5;
+    mat4 MV = view * model;
+    mat4 MVP = projection * MV;
 
-    // convert the 2D position into 3D positions that all lay in a horizontal
-    // plane.
-    // TODO 6: animate the height of the grid points as a sine function of the
-    // 'time' and the position ('uv') within the grid.
+    //Outputs UV coordinate for fragment shader. Grid coordinates are in [-1, 1] x [-1, 1]
+    uv = (gridPos + vec2(1.0, 1.0)) * 0.5;
+
+    //float height = 1.0/2550 * texture(heightMap, uv);
+    float height = 0.1*sin(2 * 6.4 * (uv.x + uv.y) + time);
+    vec3 vnormal = vec3(0.0);
+    vec3 pos_3d = vec3(gridPos.x, height, -gridPos.y);
 
 
-    float height = 0.0;
+    //TODO:If Phong shading then compute vertex normal based on heightmap and 2D pos of the point of the grid
+    /*  Shape of grid:
+     *      x-----x
+     *      |   / |
+     *      |  /  |
+     *      | /   |
+     *      x-----x
+     *  Bottom-left corner is (i,j) and top right is (i+1,j+1)
+     */
 
-    vec3 pos_3d = vec3(position.x, height, -position.y);
+    //Otherwise forwards point to fragment shader so it can compute surface normal:
+    vpoint_mv = MV * vec4(pos_3d, 1.0f);
 
+    //Outputs projected coordinates of the point
     gl_Position = MVP*vec4(pos_3d, 1.f);
+    //Outputs rectified surface normal
+    mv_normal = normalize((inverse(transpose(MV)) * vec4(vnormal, 1.0)).xyz);
+
+    //Lighting
+    // 1) compute the light direction light_dir.
+    light_dir = normalize(light_pos - vpoint_mv.xyz);
+    // 2) compute the view direction view_dir.
+    view_dir = -normalize(vpoint_mv.xyz);
 }
