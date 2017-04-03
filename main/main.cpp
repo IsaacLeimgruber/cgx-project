@@ -9,9 +9,12 @@
 #include "grid/grid.h"
 #include "framebuffer.h"
 #include "trackball.h"
+#include "screenquad/screenquad.h"
+#include "perlin/perlin.h"
 
 Grid grid;
 FrameBuffer framebuffer;
+Perlin perlin;
 
 int window_width = 800;
 int window_height = 600;
@@ -114,7 +117,10 @@ void Init() {
     // sets background color
     glClearColor(0.937, 0.937, 0.937 /*gray*/, 1.0 /*solid*/);
     grid.Init();
+    perlin.Init();
     int texture_id = framebuffer.Init(window_width, window_height);
+
+
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
 
@@ -138,10 +144,11 @@ void Display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     const float time = glfwGetTime();
-
+    perlin.Draw(time, trackball_matrix * quad_model_matrix, view_matrix, projection_matrix);
 
     // draw a quad on the ground.
-    grid.Draw(time, trackball_matrix * quad_model_matrix, view_matrix, projection_matrix);
+    //grid.Draw(time, trackball_matrix * quad_model_matrix, view_matrix, projection_matrix);
+
 }
 
 // transforms glfw screen coordinates into normalized OpenGL coordinates.

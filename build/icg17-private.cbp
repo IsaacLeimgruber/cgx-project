@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="icg17-private"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="msvc8"/>
+		<Option virtualFolders="CMake Files\;CMake Files\common\;CMake Files\main\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="C:/cgx-project/build"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 all"/>
+					<CompileFile command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 clean"/>
+					<DistClean command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="common_headers">
+				<Option working_dir="C:/cgx-project/build"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 common_headers"/>
+					<CompileFile command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 clean"/>
+					<DistClean command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="C:/cgx-project/build"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 edit_cache"/>
+					<CompileFile command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 clean"/>
+					<DistClean command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="C:/cgx-project/build"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 clean"/>
+					<DistClean command="nmake /NOLOGO /f C:\cgx-project\build\Makefile VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="copy_shaders_main">
+				<Option working_dir="C:/cgx-project/build/main"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 copy_shaders_main"/>
+					<CompileFile command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 clean"/>
+					<DistClean command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="main">
+				<Option output="C:/cgx-project/build/main/main.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="C:/cgx-project/build/main"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="msvc8"/>
+				<Compiler>
+					<Add option="-DGLEW_STATIC"/>
+					<Add option="-DGLM_FORCE_RADIANS"/>
+					<Add directory="C:/cgx-project/external/glfw3/x64/include"/>
+					<Add directory="C:/cgx-project/external/glew/include"/>
+					<Add directory="C:/cgx-project/external"/>
+					<Add directory="C:/cgx-project/common"/>
+					<Add directory="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE"/>
+					<Add directory="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE"/>
+					<Add directory="C:\Program Files (x86)\Windows Kits\10\include\10.0.10240.0\ucrt"/>
+					<Add directory="C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um"/>
+					<Add directory="C:\Program Files (x86)\Windows Kits\8.1\include\\shared"/>
+					<Add directory="C:\Program Files (x86)\Windows Kits\8.1\include\\um"/>
+					<Add directory="C:\Program Files (x86)\Windows Kits\8.1\include\\winrt"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 main"/>
+					<CompileFile command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 clean"/>
+					<DistClean command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="main/fast">
+				<Option output="C:/cgx-project/build/main/main.exe" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="C:/cgx-project/build/main"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="msvc8"/>
+				<Compiler>
+					<Add option="-DGLEW_STATIC"/>
+					<Add option="-DGLM_FORCE_RADIANS"/>
+					<Add directory="C:/cgx-project/external/glfw3/x64/include"/>
+					<Add directory="C:/cgx-project/external/glew/include"/>
+					<Add directory="C:/cgx-project/external"/>
+					<Add directory="C:/cgx-project/common"/>
+					<Add directory="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE"/>
+					<Add directory="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE"/>
+					<Add directory="C:\Program Files (x86)\Windows Kits\10\include\10.0.10240.0\ucrt"/>
+					<Add directory="C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um"/>
+					<Add directory="C:\Program Files (x86)\Windows Kits\8.1\include\\shared"/>
+					<Add directory="C:\Program Files (x86)\Windows Kits\8.1\include\\um"/>
+					<Add directory="C:\Program Files (x86)\Windows Kits\8.1\include\\winrt"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 main/fast"/>
+					<CompileFile command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 clean"/>
+					<DistClean command="nmake /NOLOGO /f C:\cgx-project\build\main\Makefile VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="C:/cgx-project/common/check_error_gl.h">
+			<Option target="common_headers"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/common/icg_helper.h">
+			<Option target="common_headers"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/common/stb_image.h">
+			<Option target="common_headers"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/common/tiny_obj_loader.h">
+			<Option target="common_headers"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/framebuffer.h">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/grid/grid.h">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/grid/grid_fshader.glsl">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/grid/grid_vshader.glsl">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/main.cpp">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/perlin/perlin.h">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/perlin/perlin_fshader.glsl">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/perlin/perlin_vshader.glsl">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/screenquad/screenquad.h">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/screenquad/screenquad_fshader.glsl">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/screenquad/screenquad_vshader.glsl">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/trackball.h">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/common/icg_settings.cmake">
+			<Option virtualFolder="CMake Files\common\"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/common/FindGLFW3.cmake">
+			<Option virtualFolder="CMake Files\common\"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/common/FindGLEW.cmake">
+			<Option virtualFolder="CMake Files\common\"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/common/FindGLM.cmake">
+			<Option virtualFolder="CMake Files\common\"/>
+		</Unit>
+		<Unit filename="C:/cgx-project/main/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\main\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
