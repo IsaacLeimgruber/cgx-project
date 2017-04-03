@@ -2,8 +2,6 @@
 in vec2 uv;
 out vec3 color;
 
-int side_number = 5;
-
 int permutation[256] = int[](
     151,160,137,91,90,15,
     131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
@@ -26,14 +24,16 @@ void p512(){
     }
 }
 
+//bon
 float fade(float t){
   return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
+//bon
 float lerp(float a, float b, float x) {
                 return a + x * (b - a);
         }
-
+//bon
 float grad(int hash, float x, float y)
 {
     switch(hash & 0x7)
@@ -49,46 +49,57 @@ float grad(int hash, float x, float y)
         default: return 0.f; // never happens
     }
 }
-int inc(int num) {
-    num++;
-    if (side_number > 0) num %= side_number;
 
-    return num;
-}
 float pnoise(float x, float y){
 
-    int xi = int(mod(x *side_number, 256)),
-        yi = int(mod(y *side_number, 256));
+    vec2 pxy = vec2(x,y),
+         bottomLeft = vec2(int(x), int(y));
 
-    float xf = mod(x * side_number , 1.0);
-    float yf = mod(y * side_number, 1.0);
+    int xi = int(bottomLeft.x),
+        yi = int(bottomLeft.y);
+
+    float xf = mod(x, 1),
+          yf = mod(y, 1);
+
+    int aa = p[ p[ xi    ] + yi       ],
+        ab = p[ p[ xi + 1] + yi       ],
+        ba = p[ p[ xi    ] + yi + 1   ],
+        bb = p[ p[ xi + 1] + yi + 1   ];
 
     float u = fade(xf),
           v = fade(yf);
 
-    int aa = p[ p[ xi    ] + yi        ],
-        ab = p[ p[ inc(xi)] + yi       ],
-        ba = p[ p[ xi    ] + inc(yi)   ],
-        bb = p[ p[ inc(xi)] + inc(yi)  ];
-
     return lerp(
                 lerp(
-                     grad(aa, xf, yf),
-                     grad(ab, xf - 1, yf),
-                     u
-                     ),
+                    grad(aa, xf, yf),
+                    grad(ab, xf - 1, yf),
+                    u
+                    ),
                 lerp(
-                     grad(ba, xf, yf - 1),
-                     grad(bb, xf - 1, yf - 1),
-                     u
-                     ),v
+                    grad(ba, xf, yf - 1),
+                    grad(bb, xf - 1, yf - 1),
+                    u
+                    ),
+                v
                 );
+/*
+    float s = grad(aa, xf, yf),
+          t = grad(ab, xf + 1, yf),
+          u = grad(ba, xf, yf + 1),
+          v = grad(bb, xf + 1, yf + 1);
+
+    float st = lerp(s, t, fade(xf)),
+          uv = lerp(u, v, fade(yf));
+
+
+    return lerp(st, uv, fade(yf));
+    */
 }
 
 
 float octPNoise(float x, float y, int octaves, float persistence) {
                 float total = 0;
-                float frequency = 1;
+                float frequency = 2;
                 float amplitude = 1;
                 float maxValue = 0;			// Used for normalizing result to 0.0 - 1.0
                 for(int i = 0; i < octaves; i++) {
@@ -106,9 +117,7 @@ float octPNoise(float x, float y, int octaves, float persistence) {
 void main() {
 
   p512();
-  color = vec3(/*pnoise(uv.x, uv.y) +*/
-               0.5*pnoise(2*uv.x, 2*uv.y) //+
-               /*0.25*pnoise(4*uv.x, 4*uv.y)*/);
+  color = vec3(octPNoise(uv.x, uv.y, 10, 0.97));
 
 
 }
