@@ -29,14 +29,6 @@ public:
       vec3 current_pos = vec3(x, y, 0.0f);
       ProjectOntoSurface(current_pos);
 
-      // TODO 3: Calculate the rotation given the projections of the anchor
-      // point and the current position. The rotation axis is given by the cross
-      // product of the two projected points, and the angle between them can be
-      // used as the magnitude of the rotation.
-      // you might want to scale the rotation magnitude by a scalar factor.
-      // p.s. No need for using complicated quaternions as suggested inthe wiki
-      // article.
-
       vec3 v1 = normalize(anchor_pos_);
       vec3 v2 = normalize(current_pos);
 
@@ -48,13 +40,9 @@ public:
     }
 
 private:
-    // projects the point p (whose z coordiante is still empty/zero) onto the
-    // trackball surface. If the position at the mouse cursor is outside the
-    // trackball, use a hyberbolic sheet as explained in:
-    // https://www.opengl.org/wiki/Object_Mouse_Trackball.
-    // The trackball radius is given by 'radius_'.
+
     void ProjectOntoSurface(vec3& p) const {
-      // TODO 2: Implement this function. Read above link for details.
+
         float sqX = p.x * p.x;
         float sqY = p.y * p.y;
 

@@ -37,100 +37,17 @@ mat4 quad_model_matrix;
 
 Trackball trackball;
 
-mat4 OrthographicProjection(float left, float right, float bottom,
-                            float top, float near, float far) {
-    assert(right > left);
-    assert(far > near);
-    assert(top > bottom);
-    mat4 projection = mat4(1.0f);
-    projection[0][0] = 2.0f / (right - left);
-    projection[1][1] = 2.0f / (top - bottom);
-    projection[2][2] = -2.0f / (far - near);
-    projection[3][3] = 1.0f;
-    projection[3][0] = -(right + left) / (right - left);
-    projection[3][1] = -(top + bottom) / (top - bottom);
-    projection[3][2] = -(far + near) / (far - near);
-    return projection;
-}
-
-mat4 PerspectiveProjection(float fovy, float aspect, float near, float far) {
-    // TODO 1: Create a perspective projection matrix given the field of view,
-    // aspect ratio, and near and far plane distances.
-    assert(fovy > 0);
-    assert(far > near);
-
-    /*                    |
-     *      <fovy/2       | height/2
-     * cam ---------------|
-     *          near
-     *
-     * tan(fovy / 2) = top / near
-     *
-     * aspect = (right-left)/(top-bottom) = right / top
-     */
-
-    float top = tan(radians(fovy)/2.0f) * near;
-    float bottom = -top;
-    float right = aspect * top;
-    float left = -right;
-
-    mat4 projection = mat4(1.0f);
-    projection[0][0] = (2.0f * near) / (right - left);
-    projection[1][1] = (2.0f * near) / (top - bottom);
-    projection[2][2] = -(far + near) / (far - near);
-    projection[3][3] = 0.0f;
-    projection[2][0] = (right + left) / (right - left);
-    projection[2][1] = (top + bottom) / (top - bottom);
-    projection[2][3] = -1.0f;
-    projection[3][2] = -(2.0f * far * near) / (far - near);
-    return projection;
-}
-
-mat4 LookAt(vec3 eye, vec3 center, vec3 up) {
-    // we need a function that converts from world coordinates into camera coordiantes.
-    //
-    // cam coords to world coords is given by:
-    // X_world = R * X_cam + eye
-    //
-    // inverting it leads to:
-    //
-    // X_cam = R^T * X_world - R^T * eye
-    //
-    // or as a homogeneous matrix:
-    // [ r_00 r_10 r_20 -r_0*eye
-    //   r_01 r_11 r_21 -r_1*eye
-    //   r_02 r_12 r_22 -r_2*eye
-    //      0    0    0        1 ]
-
-    vec3 z_cam = normalize(eye - center);
-    vec3 x_cam = normalize(cross(up, z_cam));
-    vec3 y_cam = cross(z_cam, x_cam);
-
-    mat3 R(x_cam, y_cam, z_cam);
-    R = transpose(R);
-
-    mat4 look_at(vec4(R[0], 0.0f),
-                 vec4(R[1], 0.0f),
-                 vec4(R[2], 0.0f),
-                 vec4(-R * (eye), 1.0f));
-    return look_at;
-}
-
 void Init() {
     // sets background color
-    glClearColor(0.937, 0.937, 0.937 /*gray*/, 1.0 /*solid*/);
+    glClearColor(0.0, 0.0, 0.0, 1.0 /*solid*/);
     perlin.Init();
     int framebuffer_texture_id = framebuffer.Init(1024, 1024, true);
     grid.Init(framebuffer_texture_id);
     screenquad.Init(window_width, window_height, framebuffer_texture_id);
 
-
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
 
-    view_matrix = LookAt(vec3(2.0f, 2.0f, 4.0f),
-                         vec3(0.0f, 0.0f, 0.0f),
-                         vec3(0.0f, 1.0f, 0.0f));
     view_matrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, -4.0f));
 
     trackball_matrix = IDENTITY_MATRIX;
@@ -142,15 +59,14 @@ void Init() {
     framebuffer.Bind();
         perlin.Draw();
     framebuffer.Unbind();
-
 }
 
-// gets called for every frame.
+
 void Display() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     grid.Draw(trackball_matrix * quad_model_matrix, view_matrix, projection_matrix);
-    //screenquad.Draw();
+
 }
 
 // transforms glfw screen coordinates into normalized OpenGL coordinates.
@@ -178,19 +94,11 @@ void MouseButton(GLFWwindow* window, int button, int action, int mod) {
 void MousePos(GLFWwindow* window, double x, double y) {
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         vec2 p = TransformScreenCoords(window, x, y);
-        // TODO 3: Calculate 'trackball_matrix' given the return value of
-        // trackball.Drag(...) and the value stored in 'old_trackball_matrix'.
-        // See also the mouse_button(...) function.
-        // trackball_matrix = ...
         trackball_matrix = trackball.Drag(p.x,p.y) * old_trackball_matrix;
     }
 
     // zoom
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        // TODO 4: Implement zooming. When the right mouse button is pressed,
-        // moving the mouse cursor up and down (along the screen's y axis)
-        // should zoom out and it. For that you have to update the current
-        // 'view_matrix' with a translation along the z axis.
         if(rightMouseButtonIsUp){
             rightMouseButtonIsUp = false;
             old_view_matrix = view_matrix;
@@ -214,20 +122,8 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
 
     glViewport(0, 0, window_width, window_height);
 
-    // TODO 1: Use a perspective projection instead;
-     projection_matrix = PerspectiveProjection(45.0f,
-                                               (GLfloat)window_width / window_height,
-                                               0.1f, 100.0f);
-    //GLfloat top = 1.0f;
-    //GLfloat right = (GLfloat)window_width / window_height * top;
-    //projection_matrix = OrthographicProjection(-right, right, -top, top, -10.0, 10.0f);
-     // gets called when the windows/framebuffer is resized.
-
-
-     // TODO : when the window is resized, the framebuffer and the fullscreen quad
-     //        sizes should be updated accordingly
-
-     screenquad.UpdateSize(window_width, window_height);
+    projection_matrix = glm::perspective(45.0f, (GLfloat)window_width / window_height, 0.1f, 100.0f);
+    screenquad.UpdateSize(window_width, window_height);
 }
 
 void ErrorCallback(int error, const char* description) {
