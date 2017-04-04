@@ -1,7 +1,0 @@
-C:/cgx-project/build/CMakeFiles/common_headers.dir
-C:/cgx-project/build/CMakeFiles/edit_cache.dir
-C:/cgx-project/build/CMakeFiles/rebuild_cache.dir
-C:/cgx-project/build/main/CMakeFiles/rebuild_cache.dir
-C:/cgx-project/build/main/CMakeFiles/copy_shaders_main.dir
-C:/cgx-project/build/main/CMakeFiles/main.dir
-C:/cgx-project/build/main/CMakeFiles/edit_cache.dir

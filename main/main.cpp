@@ -15,12 +15,15 @@
 Grid grid;
 FrameBuffer framebuffer;
 Perlin perlin;
+ScreenQuad screenquad;
 
-int window_width = 800;
-int window_height = 600;
+int window_width = 1280;
+int window_height = 960;
 float zoom_factor = 0.005f;
 float previousMouseY = 0.f;
 bool rightMouseButtonIsUp = true;
+
+const float OFFSET_QTY = 0.04f;
 
 
 using namespace glm;
@@ -116,18 +119,15 @@ mat4 LookAt(vec3 eye, vec3 center, vec3 up) {
 void Init() {
     // sets background color
     glClearColor(0.937, 0.937, 0.937 /*gray*/, 1.0 /*solid*/);
-    grid.Init();
     perlin.Init();
-    int texture_id = framebuffer.Init(window_width, window_height);
+    int framebuffer_texture_id = framebuffer.Init(1024, 1024, true);
+    grid.Init(framebuffer_texture_id);
+    screenquad.Init(window_width, window_height, framebuffer_texture_id);
 
 
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
 
-    // TODO 3: once you use the trackball, you should use a view matrix that
-    // looks straight down the -z axis. Otherwise the trackball's rotation gets
-    // applied in a rotated coordinate frame.
-    // uncomment lower line to achieve this.
     view_matrix = LookAt(vec3(2.0f, 2.0f, 4.0f),
                          vec3(0.0f, 0.0f, 0.0f),
                          vec3(0.0f, 1.0f, 0.0f));
@@ -137,18 +137,20 @@ void Init() {
 
     // scaling matrix to scale the cube down to a reasonable size.
     quad_model_matrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, 0.0f));
+
+    //Generate Perlin
+    framebuffer.Bind();
+        perlin.Draw();
+    framebuffer.Unbind();
+
 }
 
 // gets called for every frame.
 void Display() {
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    const float time = glfwGetTime();
-    perlin.Draw(time, trackball_matrix * quad_model_matrix, view_matrix, projection_matrix);
-
-    // draw a quad on the ground.
-    //grid.Draw(time, trackball_matrix * quad_model_matrix, view_matrix, projection_matrix);
-
+    grid.Draw(trackball_matrix * quad_model_matrix, view_matrix, projection_matrix);
+    //screenquad.Draw();
 }
 
 // transforms glfw screen coordinates into normalized OpenGL coordinates.
@@ -219,6 +221,13 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
     //GLfloat top = 1.0f;
     //GLfloat right = (GLfloat)window_width / window_height * top;
     //projection_matrix = OrthographicProjection(-right, right, -top, top, -10.0, 10.0f);
+     // gets called when the windows/framebuffer is resized.
+
+
+     // TODO : when the window is resized, the framebuffer and the fullscreen quad
+     //        sizes should be updated accordingly
+
+     screenquad.UpdateSize(window_width, window_height);
 }
 
 void ErrorCallback(int error, const char* description) {
@@ -228,6 +237,29 @@ void ErrorCallback(int error, const char* description) {
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
+    }
+
+    if(action == GLFW_PRESS){
+        switch(key){
+            case GLFW_KEY_F:
+                grid.updateZoomFactor(+0.1);
+                break;
+            case GLFW_KEY_G:
+                grid.updateZoomFactor(-0.1);
+                break;
+            case GLFW_KEY_RIGHT:
+                grid.updateOffset(vec2(-OFFSET_QTY, 0.0));
+                break;
+            case GLFW_KEY_LEFT:
+                grid.updateOffset(vec2(OFFSET_QTY, 0.0));
+                break;
+            case GLFW_KEY_UP:
+                grid.updateOffset(vec2(0.0, -OFFSET_QTY));
+                break;
+            case GLFW_KEY_DOWN:
+                grid.updateOffset(vec2(0.0, OFFSET_QTY));
+                break;
+        }
     }
 }
 
@@ -297,6 +329,8 @@ int main(int argc, char *argv[]) {
     }
 
     grid.Cleanup();
+    perlin.Cleanup();
+    framebuffer.Cleanup();
 
     // close OpenGL window and terminate GLFW
     glfwDestroyWindow(window);

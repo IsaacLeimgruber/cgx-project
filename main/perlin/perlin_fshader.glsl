@@ -108,16 +108,15 @@ float octPNoise(float x, float y, int octaves, float persistence) {
                         maxValue += amplitude;
 
                         amplitude *= persistence;
-                        frequency *= 3;
+                        frequency *= 1.85;
                 }
-                return total/maxValue;
+                return total/maxValue + 0.5;
         }
 
 
 void main() {
 
   p512();
-  color = vec3(octPNoise(uv.x, uv.y, 10, 0.97));
-
+  color = vec3(octPNoise(uv.x, uv.y, 8, 0.45));
 
 }
