@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdlib>
 #include <random>
+#include <ctime>
 #include "icg_helper.h"
 
 class Perlin {
@@ -19,7 +20,7 @@ private:
 public:
         void initializePermutations(unsigned rand_seed){
 
-            // create a permutation array with Perlin's recommanded values
+            // create a permutation array with Perlin's recommended values
             // these values won't be used and are here for reference only
             int permutation[256]{
                 151,160,137,91,90,15,
