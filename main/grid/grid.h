@@ -140,7 +140,7 @@ class Grid : public Material, public Light{
                 this->texture_id_ = texture;
                 glBindTexture(GL_TEXTURE_2D, texture_id_);
                 GLuint tex_id = glGetUniformLocation(program_id_, "heightMap");
-                glUniform1i(tex_id, GL_TEXTURE0);
+                glUniform1i(tex_id, 0 /*GL_TEXTURE0*/);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
