@@ -41,7 +41,7 @@ void main()
 
     vheight_F = 1.3 * pow(texture(heightMap, (uv_F+zoomOffset) * zoom).r, 3);
 
-    //vpoint_F.y += vheight_F;
+    vpoint_F.y += vheight_F;
 
     gl_Position = MVP * vec4(vpoint_F, 1.0);
 
