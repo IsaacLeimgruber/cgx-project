@@ -8,7 +8,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "grid/grid.h"
 #include "framebuffer.h"
-#include "trackball.h"
 #include "screenquad/screenquad.h"
 #include "perlin/perlin.h"
 
@@ -19,23 +18,30 @@ ScreenQuad screenquad;
 
 int window_width = 1280;
 int window_height = 960;
+float fov = 45.0f;
 float zoom_factor = 0.005f;
-float previousMouseY = 0.f;
-bool rightMouseButtonIsUp = true;
+float lastX = 0.0f;
+float lastY = 0.0f;
+GLfloat cameraYaw = 270.0f;
+GLfloat cameraPitch = 45.0f;
+bool firstMouse = false;
 
 const float OFFSET_QTY = 0.04f;
-
 
 using namespace glm;
 
 mat4 projection_matrix;
 mat4 view_matrix;
-mat4 old_view_matrix;
-mat4 trackball_matrix;
-mat4 old_trackball_matrix;
 mat4 quad_model_matrix;
 
-Trackball trackball;
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
+GLfloat lastFrame = 0.0f;  	// Time of last frame
+
+bool keys[1024];
 
 void Init() {
     // sets background color
@@ -48,9 +54,7 @@ void Init() {
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
 
-    view_matrix = translate(mat4(1.0f), vec3(0.0f, 0.0f, -4.0f));
-
-    trackball_matrix = IDENTITY_MATRIX;
+    view_matrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
     // scaling matrix to scale the cube down to a reasonable size.
     quad_model_matrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, 0.0f));
@@ -59,13 +63,23 @@ void Init() {
     framebuffer.Bind();
         perlin.Draw();
     framebuffer.Unbind();
+
+    //Initialise boolean keys array
+    for(int i=0; i < 1024; i++){
+        keys[i] = false;
+    }
 }
 
 
 void Display() {
+    GLfloat currentFrame = glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    grid.Draw(trackball_matrix * quad_model_matrix, view_matrix, projection_matrix);
+    view_matrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
+    grid.Draw(quad_model_matrix, view_matrix, projection_matrix);
 
 }
 
@@ -80,36 +94,49 @@ vec2 TransformScreenCoords(GLFWwindow* window, int x, int y) {
                 1.0f - 2.0f * (float)y / height);
 }
 
-void MouseButton(GLFWwindow* window, int button, int action, int mod) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        double x_i, y_i;
-        glfwGetCursorPos(window, &x_i, &y_i);
-        vec2 p = TransformScreenCoords(window, x_i, y_i);
-        trackball.BeingDrag(p.x, p.y);
-        old_trackball_matrix = trackball_matrix;
-        // Store the current state of the model matrix.
+void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
+
+    if(firstMouse) // this bool variable is initially set to true
+    {
+      lastX = xpos;
+      lastY = ypos;
+      firstMouse = false;
     }
+
+    GLfloat xoffset = xpos - lastX;
+    GLfloat yoffset = lastY - ypos; // Reversed since y-coordinates range from bottom to top
+    lastX = xpos;
+    lastY = ypos;
+
+    GLfloat sensitivity = 0.05f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    cameraYaw   += xoffset;
+    cameraPitch += yoffset;
+
+    if(cameraPitch > 89.0f)
+      cameraPitch =  89.0f;
+    if(cameraPitch < -89.0f)
+      cameraPitch = -89.0f;
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(cameraPitch)) * cos(glm::radians(cameraYaw));
+    front.y = sin(glm::radians(cameraPitch));
+    front.z = cos(glm::radians(cameraPitch)) * sin(glm::radians(cameraYaw));
+    cameraFront = glm::normalize(front);
 }
 
-void MousePos(GLFWwindow* window, double x, double y) {
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        vec2 p = TransformScreenCoords(window, x, y);
-        trackball_matrix = trackball.Drag(p.x,p.y) * old_trackball_matrix;
-    }
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+  if(fov >= 1.0f && fov <= 45.0f)
+    fov -= yoffset;
+  if(fov <= 1.0f)
+    fov = 1.0f;
+  if(fov >= 45.0f)
+    fov = 45.0f;
 
-    // zoom
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        if(rightMouseButtonIsUp){
-            rightMouseButtonIsUp = false;
-            old_view_matrix = view_matrix;
-            previousMouseY = y;
-        }
-        view_matrix = translate(IDENTITY_MATRIX, vec3{0.0, 0.0, (y-previousMouseY) * zoom_factor}) * old_view_matrix;
-    }
-
-    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE){
-        rightMouseButtonIsUp = true;
-    }
+  projection_matrix = glm::perspective(fov, (GLfloat)window_width/(GLfloat)window_height, 0.1f, 100.0f);
 }
 
 // Gets called when the windows/framebuffer is resized.
@@ -122,7 +149,7 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
 
     glViewport(0, 0, window_width, window_height);
 
-    projection_matrix = glm::perspective(45.0f, (GLfloat)window_width / window_height, 0.1f, 100.0f);
+    projection_matrix = glm::perspective(fov, (GLfloat)window_width / window_height, 0.1f, 100.0f);
     screenquad.UpdateSize(window_width, window_height);
 }
 
@@ -134,6 +161,11 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
+
+    if(action == GLFW_PRESS)
+      keys[key] = true;
+    else if(action == GLFW_RELEASE)
+      keys[key] = false;
 
     if(action == GLFW_PRESS){
         switch(key){
@@ -157,8 +189,27 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 break;
         }
     }
+
+
 }
 
+void doMovement()
+{
+  GLfloat cameraSpeed = 1.0f * deltaTime;
+  // Camera controls
+  if(keys[GLFW_KEY_W])
+    cameraPos += cameraSpeed * cameraFront;
+  if(keys[GLFW_KEY_S])
+    cameraPos -= cameraSpeed * cameraFront;
+  if(keys[GLFW_KEY_A])
+    cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+  if(keys[GLFW_KEY_D])
+    cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+  if(keys[GLFW_KEY_SPACE])
+    cameraPos += cameraSpeed * cameraUp;
+  if(keys[GLFW_KEY_LEFT_SHIFT])
+    cameraPos -= cameraSpeed * cameraUp;
+}
 
 int main(int argc, char *argv[]) {
     // GLFW Initialization
@@ -180,7 +231,7 @@ int main(int argc, char *argv[]) {
     // note some Intel GPUs do not support OpenGL 3.2
     // note update the driver of your graphic card
     GLFWwindow* window = glfwCreateWindow(window_width, window_height,
-                                          "Trackball", NULL, NULL);
+                                          "Procedural terrain", NULL, NULL);
     if(!window) {
         glfwTerminate();
         return EXIT_FAILURE;
@@ -189,6 +240,9 @@ int main(int argc, char *argv[]) {
     // makes the OpenGL context of window current on the calling thread
     glfwMakeContextCurrent(window);
 
+    // Cursor is captured and hidden
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
     // set the callback for escape key
     glfwSetKeyCallback(window, KeyCallback);
 
@@ -196,8 +250,8 @@ int main(int argc, char *argv[]) {
     glfwSetFramebufferSizeCallback(window, SetupProjection);
 
     // set the mouse press and position callback
-    glfwSetMouseButtonCallback(window, MouseButton);
-    glfwSetCursorPosCallback(window, MousePos);
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
 
     // GLEW Initialization (must have a context)
     // https://www.opengl.org/wiki/OpenGL_Loading_Library
@@ -222,6 +276,7 @@ int main(int argc, char *argv[]) {
         Display();
         glfwSwapBuffers(window);
         glfwPollEvents();
+        doMovement();
     }
 
     grid.Cleanup();
