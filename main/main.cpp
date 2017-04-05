@@ -75,8 +75,8 @@ void Display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     view_matrix = camera.GetViewMatrix();
 
-    //grid.Draw(quad_model_matrix, view_matrix, projection_matrix);
-    perlin.Draw();
+    grid.Draw(quad_model_matrix, view_matrix, projection_matrix);
+    //perlin.Draw();
 }
 
 // transforms glfw screen coordinates into normalized OpenGL coordinates.
@@ -136,10 +136,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
 
-    if(action == GLFW_PRESS)
-
-
-    if(action == GLFW_PRESS){
+   if(action == GLFW_PRESS){
         keys[key] = true;
 
         switch(key){
