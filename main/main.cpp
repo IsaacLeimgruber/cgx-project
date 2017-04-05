@@ -10,40 +10,37 @@
 #include "framebuffer.h"
 #include "screenquad/screenquad.h"
 #include "perlin/perlin.h"
-
-Grid grid;
-FrameBuffer framebuffer;
-Perlin perlin;
-ScreenQuad screenquad;
-
-int window_width = 1280;
-int window_height = 960;
-float fov = 45.0f;
-float zoom_factor = 0.005f;
-float lastX = 0.0f;
-float lastY = 0.0f;
-GLfloat cameraYaw = 270.0f;
-GLfloat cameraPitch = 45.0f;
-bool firstMouse = false;
-
-const float OFFSET_QTY = 0.04f;
+#include "camera/camera.h"
 
 using namespace glm;
+
+Grid grid;
+Perlin perlin;
+Camera camera;
+FrameBuffer framebuffer;
+ScreenQuad screenquad;
+
+bool keys[1024];
+bool firstMouse = false;
+int window_width = 1280;
+int window_height = 960;
+float lastX = 0.0f;
+float lastY = 0.0f;
+
+const float OFFSET_QTY = 0.04f;
 
 mat4 projection_matrix;
 mat4 view_matrix;
 mat4 quad_model_matrix;
 
-glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
-
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
 
-bool keys[1024];
 
 void Init() {
+    // Initialize camera
+    camera = Camera{vec3(0.0, 1.0, 0.0)};
+
     // sets background color
     glClearColor(0.0, 0.0, 0.0, 1.0 /*solid*/);
     perlin.Init();
@@ -54,7 +51,7 @@ void Init() {
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
 
-    view_matrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    view_matrix = camera.GetViewMatrix();
 
     // scaling matrix to scale the cube down to a reasonable size.
     quad_model_matrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, 0.0f));
@@ -70,17 +67,16 @@ void Init() {
     }
 }
 
-
 void Display() {
     GLfloat currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    view_matrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    view_matrix = camera.GetViewMatrix();
 
-    grid.Draw(quad_model_matrix, view_matrix, projection_matrix);
-
+    //grid.Draw(quad_model_matrix, view_matrix, projection_matrix);
+    perlin.Draw();
 }
 
 // transforms glfw screen coordinates into normalized OpenGL coordinates.
@@ -108,35 +104,13 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
     lastX = xpos;
     lastY = ypos;
 
-    GLfloat sensitivity = 0.05f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    cameraYaw   += xoffset;
-    cameraPitch += yoffset;
-
-    if(cameraPitch > 89.0f)
-      cameraPitch =  89.0f;
-    if(cameraPitch < -89.0f)
-      cameraPitch = -89.0f;
-
-    glm::vec3 front;
-    front.x = cos(glm::radians(cameraPitch)) * cos(glm::radians(cameraYaw));
-    front.y = sin(glm::radians(cameraPitch));
-    front.z = cos(glm::radians(cameraPitch)) * sin(glm::radians(cameraYaw));
-    cameraFront = glm::normalize(front);
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-  if(fov >= 1.0f && fov <= 45.0f)
-    fov -= yoffset;
-  if(fov <= 1.0f)
-    fov = 1.0f;
-  if(fov >= 45.0f)
-    fov = 45.0f;
-
-  projection_matrix = glm::perspective(fov, (GLfloat)window_width/(GLfloat)window_height, 0.1f, 100.0f);
+  camera.ProcessMouseScroll(yoffset);
+  projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)window_width / (GLfloat)window_height, 0.1f, 100.0f);
 }
 
 // Gets called when the windows/framebuffer is resized.
@@ -149,7 +123,7 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
 
     glViewport(0, 0, window_width, window_height);
 
-    projection_matrix = glm::perspective(fov, (GLfloat)window_width / window_height, 0.1f, 100.0f);
+    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)window_width / window_height, 0.1f, 1000.0f);
     screenquad.UpdateSize(window_width, window_height);
 }
 
@@ -163,11 +137,11 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     }
 
     if(action == GLFW_PRESS)
-      keys[key] = true;
-    else if(action == GLFW_RELEASE)
-      keys[key] = false;
+
 
     if(action == GLFW_PRESS){
+        keys[key] = true;
+
         switch(key){
             case GLFW_KEY_F:
                 grid.updateZoomFactor(+0.1);
@@ -188,27 +162,26 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 grid.updateOffset(vec2(0.0, OFFSET_QTY));
                 break;
         }
+    } else if(action == GLFW_RELEASE){
+      keys[key] = false;
     }
-
-
 }
 
 void doMovement()
 {
-  GLfloat cameraSpeed = 1.0f * deltaTime;
   // Camera controls
   if(keys[GLFW_KEY_W])
-    cameraPos += cameraSpeed * cameraFront;
+    camera.ProcessKeyboard(FORWARD, deltaTime);
   if(keys[GLFW_KEY_S])
-    cameraPos -= cameraSpeed * cameraFront;
+    camera.ProcessKeyboard(BACKWARD, deltaTime);
   if(keys[GLFW_KEY_A])
-    cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    camera.ProcessKeyboard(LEFT, deltaTime);
   if(keys[GLFW_KEY_D])
-    cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    camera.ProcessKeyboard(RIGHT, deltaTime);
   if(keys[GLFW_KEY_SPACE])
-    cameraPos += cameraSpeed * cameraUp;
+    camera.ProcessKeyboard(UPWARD, deltaTime);
   if(keys[GLFW_KEY_LEFT_SHIFT])
-    cameraPos -= cameraSpeed * cameraUp;
+    camera.ProcessKeyboard(DOWNWARD, deltaTime);
 }
 
 int main(int argc, char *argv[]) {
