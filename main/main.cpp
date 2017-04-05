@@ -1,11 +1,10 @@
 // glew must be before glfw
+#include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-
-// contains helper functions such as shader compiler
 #include "icg_helper.h"
-
 #include <glm/gtc/matrix_transform.hpp>
+
 #include "grid/grid.h"
 #include "framebuffer.h"
 #include "screenquad/screenquad.h"
@@ -104,7 +103,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
     lastX = xpos;
     lastY = ypos;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    //camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
@@ -162,6 +161,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     } else if(action == GLFW_RELEASE){
       keys[key] = false;
     }
+    camera.debug();
 }
 
 void doMovement()
@@ -179,9 +179,20 @@ void doMovement()
     camera.ProcessKeyboard(UPWARD, deltaTime);
   if(keys[GLFW_KEY_LEFT_SHIFT])
     camera.ProcessKeyboard(DOWNWARD, deltaTime);
+  if(keys[GLFW_KEY_J])
+      camera.ProcessKeyboard(ROTATE_LEFT, deltaTime);
+  if(keys[GLFW_KEY_I])
+      camera.ProcessKeyboard(ROTATE_UP, deltaTime);
+  if(keys[GLFW_KEY_K])
+      camera.ProcessKeyboard(ROTATE_DOWN, deltaTime);
+  if(keys[GLFW_KEY_L])
+      camera.ProcessKeyboard(ROTATE_RIGHT, deltaTime);
 }
 
 int main(int argc, char *argv[]) {
+    for(auto& key : keys) {
+        key = false;
+    }
     // GLFW Initialization
     if(!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");

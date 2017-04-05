@@ -20,7 +20,11 @@ enum Camera_Movement {
     LEFT,
     RIGHT,
     UPWARD,
-    DOWNWARD
+    DOWNWARD,
+    ROTATE_UP,
+    ROTATE_DOWN,
+    ROTATE_LEFT,
+    ROTATE_RIGHT
 };
 
 // Default camera values
@@ -90,6 +94,14 @@ public:
             this->Position += this->WorldUp * velocity;
         if (direction == DOWNWARD)
             this->Position -= this->WorldUp * velocity;
+        if (direction == ROTATE_DOWN)
+            this->Pitch += .5;
+        if (direction == ROTATE_UP)
+            this->Pitch -= .5;
+        if (direction == ROTATE_LEFT)
+            this->Yaw -= .5;
+        if (direction == ROTATE_RIGHT)
+            this->Yaw += .5;
     }
 
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -124,6 +136,15 @@ public:
             this->Fov = MIN_FOV;
         if (this->Fov >= MAX_FOV)
             this->Fov = MAX_FOV;
+    }
+
+    void debug() {
+        std::cout << "front: " << this->Front << endl;
+        std::cout << "up: " << this->Up << endl;
+        std::cout << "right: " << this->Right << endl;
+        std::cout << "position: " << this->Position << endl;
+        std::cout << "yaw:" << this->Yaw << endl;
+        std::cout << "pitch:" << this->Pitch << endl;
     }
 
 private:
