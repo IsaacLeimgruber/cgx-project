@@ -49,9 +49,9 @@ namespace icg_helper {
 // compiles the vertex, geometry and fragment shaders stored in the given strings
 inline GLuint CompileShaders(const char* vshader,
                              const char* fshader,
-                             const char* gshader = NULL,
                              const char* tcshader = NULL,
-                             const char* teshader = NULL) {
+                             const char* teshader = NULL,
+                             const char* gshader = NULL) {
     const int SHADER_LOAD_FAILED = 0;
     GLint success = GL_FALSE;
     int info_log_length;
@@ -219,10 +219,12 @@ inline GLuint CompileShaders(const char* vshader,
 // TODO: add support for tessellation shaders
 inline GLuint LoadShaders(const char * vertex_file_path,
                           const char * fragment_file_path,
+                          const char * tesselation_control_file_path = NULL,
+                          const char * tesselation_evaluation_file_path = NULL,
                           const char * geometry_file_path = NULL) {
     const int SHADER_LOAD_FAILED = 0;
 
-    string vertex_shader_code, fragment_shader_code, geometry_shader_code;
+    string vertex_shader_code, fragment_shader_code, tesselation_control_shader_code, tesselation_evaluation_shader_code, geometry_shader_code;
     {
         // read the Vertex Shader code from the file
         ifstream vertex_shader_stream(vertex_file_path, ios::in);
@@ -246,6 +248,32 @@ inline GLuint LoadShaders(const char * vertex_file_path,
             return SHADER_LOAD_FAILED;
         }
 
+        // read the Tesselation Control Shader code from the file
+        if(tesselation_control_file_path != NULL) {
+            ifstream tesselation_control_shader_stream(tesselation_control_file_path, ios::in);
+            if(tesselation_control_shader_stream.is_open()) {
+                tesselation_control_shader_code = string(istreambuf_iterator<char>(tesselation_control_shader_stream),
+                                              istreambuf_iterator<char>());
+                tesselation_control_shader_stream.close();
+            } else {
+                printf("Could not open file: %s\n", tesselation_control_file_path);
+                return SHADER_LOAD_FAILED;
+            }
+        }
+
+        // read the Tesselation Evaluation Shader code from the file
+        if(tesselation_evaluation_file_path != NULL) {
+            ifstream tesselation_evaluation_shader_stream(tesselation_evaluation_file_path, ios::in);
+            if(tesselation_evaluation_shader_stream.is_open()) {
+                tesselation_evaluation_shader_code = string(istreambuf_iterator<char>(tesselation_evaluation_shader_stream),
+                                              istreambuf_iterator<char>());
+                tesselation_evaluation_shader_stream.close();
+            } else {
+                printf("Could not open file: %s\n", tesselation_evaluation_file_path);
+                return SHADER_LOAD_FAILED;
+            }
+        }
+
         // read the Geometry Shader code from the file
         if(geometry_file_path != NULL) {
             ifstream geometry_shader_stream(geometry_file_path, ios::in);
@@ -263,10 +291,17 @@ inline GLuint LoadShaders(const char * vertex_file_path,
     // compile them
     char const *vertex_source_pointer = vertex_shader_code.c_str();
     char const *fragment_source_pointer = fragment_shader_code.c_str();
+    char const *tesselation_control_source_pointer = NULL;
+    char const *tesselation_evaluation_source_pointer = NULL;
     char const *geometry_source_pointer = NULL;
+    if(tesselation_control_file_path != NULL) tesselation_control_source_pointer = tesselation_control_shader_code.c_str();
+    if(tesselation_evaluation_file_path != NULL) tesselation_evaluation_source_pointer = tesselation_evaluation_shader_code.c_str();
     if(geometry_file_path != NULL) geometry_source_pointer = geometry_shader_code.c_str();
 
-    int status = CompileShaders(vertex_source_pointer, fragment_source_pointer,
+    int status = CompileShaders(vertex_source_pointer,
+                                fragment_source_pointer,
+                                tesselation_control_source_pointer,
+                                tesselation_evaluation_source_pointer,
                                 geometry_source_pointer);
     if(status == SHADER_LOAD_FAILED)
         printf("Failed linking:\n  vshader: %s\n  fshader: %s\n  gshader: %s\n",

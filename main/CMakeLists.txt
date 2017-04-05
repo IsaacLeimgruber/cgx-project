@@ -13,6 +13,8 @@ copy_files_once(${TEXTURES})
 file(GLOB SHADERS
   grid/grid_vshader.glsl
   grid/grid_fshader.glsl
+  grid/grid_tcshader.glsl
+  grid/grid_teshader.glsl
   screenquad/screenquad_vshader.glsl
   screenquad/screenquad_fshader.glsl
   perlin/perlin_vshader.glsl

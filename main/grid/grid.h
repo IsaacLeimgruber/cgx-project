@@ -69,7 +69,9 @@ class Grid : public Material, public Light{
         void Init(GLuint texture) {
             // compile the shaders.
             program_id_ = icg_helper::LoadShaders("grid_vshader.glsl",
-                                                  "grid_fshader.glsl");
+                                                  "grid_fshader.glsl",
+                                                  "grid_tcshader.glsl",
+                                                  "grid_teshader.glsl");
             if(!program_id_) {
                 exit(EXIT_FAILURE);
             }
@@ -85,7 +87,7 @@ class Grid : public Material, public Light{
                 std::vector<GLfloat> vertices;
                 std::vector<GLuint> indices;
 
-                int grid_dim = 1024;
+                int grid_dim = 20;
                 float spacing = 2.f/(grid_dim - 1.0);
 
                 /*
@@ -160,6 +162,10 @@ class Grid : public Material, public Light{
             Material::Setup(program_id_);
             Light::Setup(program_id_);
 
+            //Tesselation configuration
+            //TODO: Is location of this line correct ?
+            glPatchParameteri(GL_PATCH_VERTICES, 3);
+
             // to avoid the current object being polluted
             glBindVertexArray(0);
             glUseProgram(0);
@@ -205,7 +211,7 @@ class Grid : public Material, public Light{
             glUniform2fv(offset_id_, 1, glm::value_ptr(offset));
 
             // draw only the wireframe.
-            //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
             glDrawElements(GL_TRIANGLES, num_indices_, GL_UNSIGNED_INT, 0);
 

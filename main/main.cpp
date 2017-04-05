@@ -190,16 +190,12 @@ int main(int argc, char *argv[]) {
 
     glfwSetErrorCallback(ErrorCallback);
 
-    // hint GLFW that we would like an OpenGL 3 context (at least)
-    // http://www.glfw.org/faq.html#how-do-i-create-an-opengl-30-context
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // attempt to open the window: fails if required version unavailable
-    // note some Intel GPUs do not support OpenGL 3.2
-    // note update the driver of your graphic card
     GLFWwindow* window = glfwCreateWindow(window_width, window_height,
                                           "Procedural terrain", NULL, NULL);
     if(!window) {

@@ -3,13 +3,12 @@
 uniform vec3 La, Ld;
 uniform vec3 ka, kd;
 
-in vec4 vpoint_mv;
-in vec3 light_dir, view_dir;
+in vec4 vpoint_MV_F;
+in vec3 lightDir_F, viewDir_F;
 
-in vec2 uv;
-in vec3 mv_normal;
+in vec2 uv_F;
 
-in float vheight;
+in float vheight_F;
 
 out vec3 color;
 
@@ -30,35 +29,35 @@ const vec3  WATER_COLOR_DEEP = vec3(34,68,170),
 
 void main() {
 
-    vec3 triangleNormal = normalize(cross(dFdx(vpoint_mv.xyz), dFdy(vpoint_mv.xyz)));
+    vec3 triangleNormal = normalize(cross(dFdx(vpoint_MV_F.xyz), dFdy(vpoint_MV_F.xyz)));
 
-    float cosNL = dot(triangleNormal, light_dir);
+    float cosNL = dot(triangleNormal, lightDir_F);
 
     vec3 heightCol = vec3(0);
 
-    if(vheight <= WATER_HEIGHT){
-        heightCol = mix(WATER_COLOR_DEEP, WATER_COLOR, (vheight) / (WATER_HEIGHT));
+    if(vheight_F <= WATER_HEIGHT){
+        heightCol = mix(WATER_COLOR_DEEP, WATER_COLOR, (vheight_F) / (WATER_HEIGHT));
 
-    } else if(vheight > WATER_HEIGHT && vheight <= SAND_HEIGHT){
+    } else if(vheight_F > WATER_HEIGHT && vheight_F <= SAND_HEIGHT){
         heightCol = SAND_COLOR;
-    } else if(vheight > SAND_HEIGHT && vheight <= GRASS_HEIGHT){
+    } else if(vheight_F > SAND_HEIGHT && vheight_F <= GRASS_HEIGHT){
 
 
         float mixCoeff = 1.0;
 
-        if(vheight < GRASS_TRANSITION){
-            mixCoeff = (vheight-SAND_HEIGHT) / (GRASS_TRANSITION-SAND_HEIGHT);
+        if(vheight_F < GRASS_TRANSITION){
+            mixCoeff = (vheight_F-SAND_HEIGHT) / (GRASS_TRANSITION-SAND_HEIGHT);
         }
         heightCol = mix(SAND_COLOR, GRASS_COLOR, mixCoeff);
 
-    } else if(vheight > GRASS_HEIGHT && vheight <= ROCK_HEIGHT){
-        heightCol = mix(GRASS_COLOR, ROCK_COLOR, (vheight-GRASS_HEIGHT) / (ROCK_HEIGHT-GRASS_HEIGHT));
-    } else if(vheight > ROCK_HEIGHT){
-        heightCol = mix(ROCK_COLOR, SNOW_COLOR, (vheight-ROCK_HEIGHT) / (SNOW_HEIGHT-ROCK_HEIGHT));
+    } else if(vheight_F > GRASS_HEIGHT && vheight_F <= ROCK_HEIGHT){
+        heightCol = mix(GRASS_COLOR, ROCK_COLOR, (vheight_F-GRASS_HEIGHT) / (ROCK_HEIGHT-GRASS_HEIGHT));
+    } else if(vheight_F > ROCK_HEIGHT){
+        heightCol = mix(ROCK_COLOR, SNOW_COLOR, (vheight_F-ROCK_HEIGHT) / (SNOW_HEIGHT-ROCK_HEIGHT));
     }
 
     heightCol /= 255.0;
-    vec3 reflection_dir = normalize( 2.0 * triangleNormal * max(0.0, cosNL) - light_dir);
+    vec3 reflection_dir = normalize( 2.0 * triangleNormal * max(0.0, cosNL) - lightDir_F);
     color = (heightCol * La) + (heightCol * cosNL * Ld) ;
-
+    color = vec3(1.0,1.0,1.0);
 }
