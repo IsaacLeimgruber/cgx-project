@@ -22,8 +22,8 @@ ScreenQuad screenquad;
 
 bool keys[1024];
 bool firstMouse = false;
-int window_width = 1600;
-int window_height = 1200;
+int window_width = 1280;
+int window_height = 960;
 float lastX = 0.0f;
 float lastY = 0.0f;
 
@@ -33,8 +33,11 @@ mat4 projection_matrix;
 mat4 view_matrix;
 mat4 quad_model_matrix;
 
+const GLfloat SEC_DURATION = 1.0;
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
+GLfloat lastSec = 0.0;
+GLuint frameCount = 0;
 
 
 void Init() {
@@ -72,11 +75,19 @@ void Display() {
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
+    if(currentFrame - lastSec > SEC_DURATION){
+        std::cout << "Frames per second: " << frameCount << std::endl;
+        lastSec = currentFrame;
+        frameCount = 0;
+    }
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     view_matrix = camera.GetViewMatrix();
 
     grid.Draw(quad_model_matrix, view_matrix, projection_matrix);
-    //perlin.Draw();
+
+
+    frameCount++;
 }
 
 // transforms glfw screen coordinates into normalized OpenGL coordinates.

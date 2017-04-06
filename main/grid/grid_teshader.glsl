@@ -45,17 +45,16 @@ void main()
     uv_F = interpolate2D(uv_TE[0], uv_TE[1], uv_TE[2], uv_TE[3]);
     vec3 vpoint_F = interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]);
 
+    // Set height for generated (and original) vertices
     vheight_F = 1.3 * pow(texture(heightMap, (uv_F+zoomOffset) * zoom).r, 3);
 
-    vpoint_F.y += vheight_F;
+    vpoint_F.y = vheight_F;
 
     gl_Position = MVP * vec4(vpoint_F, 1.0);
 
     vpoint_MV_F = MV * vec4(vpoint_F, 1.0);
 
     //Lighting
-    // 1) compute the light direction light_dir.
     lightDir_F = normalize(light_pos - vpoint_MV_F.xyz);
-    // 2) compute the view direction view_dir.
     viewDir_F = -normalize(vpoint_MV_F.xyz);
 }

@@ -61,9 +61,9 @@ class Grid : public Material, public Light{
         GLuint P_id_;                           // projection matrix ID
         GLuint zoom_id_;
         GLuint offset_id_;
-
+        GLfloat zoom = 1;
         bool wireframeDebugEnabled = false;
-        float zoom = 1;
+
         glm::vec2 offset = glm::vec2(0,0);
 
     public:
@@ -88,7 +88,7 @@ class Grid : public Material, public Light{
                 std::vector<GLfloat> vertices;
                 std::vector<GLuint> indices;
 
-                int grid_dim = 10;
+                int grid_dim = 16;
                 float spacing = 2.f/(grid_dim - 1.0);
 
                 /*
