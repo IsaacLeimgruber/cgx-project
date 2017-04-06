@@ -141,6 +141,9 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
         switch(key){
             case GLFW_KEY_F:
+                grid.toggleWireframeMode();
+                break;
+            case GLFW_KEY_H:
                 grid.updateZoomFactor(+0.1);
                 break;
             case GLFW_KEY_G:

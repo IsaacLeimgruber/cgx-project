@@ -14,22 +14,22 @@ in vec2 uv_TC[];
 out vec3 vpoint_TE[];
 out vec2 uv_TE[];
 
+const float CLOSEST_TESS_DISTANCE = 0.2f;
+const float FURTHEST_TESS_DISTANCE = 5.0f;
+const float MIN_TESSELATION = 1.0f;
+const float MAX_TESSELATION = 32.0f;
+
 float GetTessLevel(float Distance0, float Distance1)
 {
-    float AvgDistance = (Distance0 + Distance1) / 2.0;
+    float avgDistance = (Distance0 + Distance1) / 2.0;
 
-    if (AvgDistance <= 2) {
-        return 16.0;
-    }
-    else if (AvgDistance <= 3) {
-        return 10.0;
-    }
-    else if (AvgDistance <= 4) {
-        return 7.0;
-    }
-    else {
-        return 3.0;
-    }
+    //Clamp average between closest and furthest tesselation distance
+    avgDistance = min(max(CLOSEST_TESS_DISTANCE, avgDistance), FURTHEST_TESS_DISTANCE);
+
+    //More tesselation the closer we are from the point
+    return mix(MAX_TESSELATION,
+               MIN_TESSELATION,
+               (avgDistance - CLOSEST_TESS_DISTANCE) / (FURTHEST_TESS_DISTANCE - CLOSEST_TESS_DISTANCE));
 }
 
 void main()
@@ -65,6 +65,6 @@ void main()
    gl_TessLevelOuter[1] = GetTessLevel(EyeToVertexDistance1, EyeToVertexDistance0);
    gl_TessLevelOuter[2] = GetTessLevel(EyeToVertexDistance2, EyeToVertexDistance1);
    gl_TessLevelOuter[3] = GetTessLevel(EyeToVertexDistance3, EyeToVertexDistance2);
-   gl_TessLevelInner[0] = gl_TessLevelOuter[1];
-   gl_TessLevelInner[1] = gl_TessLevelOuter[0];
+   gl_TessLevelInner[0] = (gl_TessLevelOuter[1] + gl_TessLevelOuter[3]) / 2.0;
+   gl_TessLevelInner[1] = (gl_TessLevelOuter[0] + gl_TessLevelOuter[2]) / 2.0;
 }

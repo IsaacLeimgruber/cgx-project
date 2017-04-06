@@ -62,6 +62,7 @@ class Grid : public Material, public Light{
         GLuint zoom_id_;
         GLuint offset_id_;
 
+        bool wireframeDebugEnabled = false;
         float zoom = 1;
         glm::vec2 offset = glm::vec2(0,0);
 
@@ -87,7 +88,7 @@ class Grid : public Material, public Light{
                 std::vector<GLfloat> vertices;
                 std::vector<GLuint> indices;
 
-                int grid_dim = 4;
+                int grid_dim = 10;
                 float spacing = 2.f/(grid_dim - 1.0);
 
                 /*
@@ -170,6 +171,10 @@ class Grid : public Material, public Light{
             glUseProgram(0);
         }
 
+        void toggleWireframeMode(){
+            wireframeDebugEnabled = !wireframeDebugEnabled;
+        }
+
         void updateZoomFactor(float z){
             zoom = glm::max(glm::min(4.0f, zoom + z), 0.1f);
             std::cout << "Zoom factor: " << zoom << std::endl;
@@ -209,8 +214,7 @@ class Grid : public Material, public Light{
             glUniform1f(zoom_id_, zoom);
             glUniform2fv(offset_id_, 1, glm::value_ptr(offset));
 
-            // draw only the wireframe.
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glPolygonMode(GL_FRONT_AND_BACK, (wireframeDebugEnabled) ? GL_LINE : GL_FILL);
 
             glDrawElements(GL_PATCHES, num_indices_, GL_UNSIGNED_INT, 0);
 

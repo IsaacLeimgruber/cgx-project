@@ -1,6 +1,6 @@
 #version 410 core
 
-layout(quads, equal_spacing, ccw) in;
+layout(quads, fractional_even_spacing, ccw) in;
 
 uniform mat4 projection;
 uniform mat4 model;
