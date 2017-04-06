@@ -22,8 +22,8 @@ ScreenQuad screenquad;
 
 bool keys[1024];
 bool firstMouse = false;
-int window_width = 1280;
-int window_height = 960;
+int window_width = 1600;
+int window_height = 1200;
 float lastX = 0.0f;
 float lastY = 0.0f;
 

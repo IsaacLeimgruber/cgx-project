@@ -59,5 +59,4 @@ void main() {
     heightCol /= 255.0;
     vec3 reflection_dir = normalize( 2.0 * triangleNormal * max(0.0, cosNL) - lightDir_F);
     color = (heightCol * La) + (heightCol * cosNL * Ld) ;
-
 }

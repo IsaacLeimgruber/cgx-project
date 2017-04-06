@@ -87,7 +87,7 @@ class Grid : public Material, public Light{
                 std::vector<GLfloat> vertices;
                 std::vector<GLuint> indices;
 
-                int grid_dim = 20;
+                int grid_dim = 4;
                 float spacing = 2.f/(grid_dim - 1.0);
 
                 /*
@@ -106,12 +106,12 @@ class Grid : public Material, public Light{
                     for(int i = 0; i < grid_dim-1; i++){
                         //First triangle
                         indices.push_back((j*grid_dim) + (i));
+                        indices.push_back(((j)*grid_dim) + (i+1));
                         indices.push_back(((j+1)*grid_dim) + (i+1));
                         indices.push_back(((j+1)*grid_dim) + (i));
                         //Second triangle
-                        indices.push_back((j*grid_dim) + (i));
-                        indices.push_back(((j)*grid_dim) + (i+1));
-                        indices.push_back(((j+1)*grid_dim) + (i+1));
+                        //indices.push_back((j*grid_dim) + (i));
+                        //indices.push_back(((j+1)*grid_dim) + (i+1));
                     }
                 }
 
@@ -142,7 +142,7 @@ class Grid : public Material, public Light{
                 this->texture_id_ = texture;
                 glBindTexture(GL_TEXTURE_2D, texture_id_);
                 GLuint tex_id = glGetUniformLocation(program_id_, "heightMap");
-                glUniform1i(tex_id, GL_TEXTURE0);
+                glUniform1i(tex_id, 0);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
@@ -163,8 +163,7 @@ class Grid : public Material, public Light{
             Light::Setup(program_id_);
 
             //Tesselation configuration
-            //TODO: Is location of this line correct ?
-            glPatchParameteri(GL_PATCH_VERTICES, 3);
+            glPatchParameteri(GL_PATCH_VERTICES, 4);
 
             // to avoid the current object being polluted
             glBindVertexArray(0);
