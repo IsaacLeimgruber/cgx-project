@@ -28,7 +28,7 @@ void main() {
     vec3 vnormal = vec3(0.0);
     vec3 pos_3d = vec3(gridPos.x, vheight, -gridPos.y);
 
-    vpoint_mv = MV * vec4(pos_3d, 1.0f);
+    vpoint_mv = vec4(pos_3d, 1.0f);
 
     //Outputs projected coordinates of the point
     gl_Position = MVP*vec4(pos_3d, 1.f);
