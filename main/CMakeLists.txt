@@ -18,7 +18,9 @@ file(GLOB SHADERS
   screenquad/screenquad_vshader.glsl
   screenquad/screenquad_fshader.glsl
   perlin/perlin_vshader.glsl
-  perlin/perlin_fshader.glsl)
+  perlin/perlin_fshader.glsl
+  normalmap/normalmap_vshader.glsl
+  normalmap/normalmap_fshader.glsl)
 deploy_shaders_to_build_dir(${SHADERS})
 
 add_executable(${EXERCISENAME} ${SOURCES} ${HEADERS} ${SHADERS})

@@ -3,10 +3,16 @@
 uniform vec3 La, Ld, Ls;
 uniform vec3 ka, kd, ks;
 uniform float alpha;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 normalMatrix;
+uniform sampler2D heightMap;
+uniform sampler2D normalMap;
 
 in vec4 vpoint_MV_F;
 in vec4 vpoint_M_F;
 in vec3 lightDir_F, viewDir_F;
+in vec3 normal_MV_F;
 in vec2 uv_F;
 
 in float vheight_F;
@@ -33,7 +39,7 @@ const vec3  WATER_COLOR_DEEP = vec3(34,68,170),
 
 void main() {
 
-    vec3 gridNormal = normalize(cross(dFdx(vpoint_M_F.xyz), dFdy(vpoint_M_F.xyz)));
+    vec3 gridNormal = texture(normalMap, uv_F).xyz;
 
     float cosNL = dot(gridNormal, lightDir_F);
 
@@ -79,6 +85,6 @@ void main() {
 
 
     heightCol /= 255.0;
-    vec3 reflection_dir = normalize( 2.0 * gridNormal * max(0.0, cosNL) - lightDir_F);
-    color = (heightCol * La) + (kd * cosNL * Ld) + (ks * pow(max(0, dot(reflection_dir, viewDir_F)), alpha) * Ls);
+    //vec3 reflection_dir = normalize( 2.0 * gridNormal * max(0.0, cosNL) - lightDir_F);
+    color = (heightCol * La) + (kd * cosNL * Ld) ;//+ (ks * pow(max(0, dot(reflection_dir, viewDir_F)), alpha) * Ls);
 }

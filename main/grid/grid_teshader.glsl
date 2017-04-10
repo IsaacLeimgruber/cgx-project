@@ -10,6 +10,7 @@ uniform vec2 zoomOffset;
 uniform float zoom;
 
 uniform sampler2D heightMap;
+uniform sampler2D normalMap;
 
 in vec3 vpoint_TE[];
 in vec2 uv_TE[];
@@ -54,6 +55,6 @@ void main()
 
 
     //Lighting
-    lightDir_F = normalize(light_pos - vpoint_MV_F.xyz);
+    lightDir_F = normalize(light_pos - vpoint_M_F.xyz);
     viewDir_F = -normalize(vpoint_MV_F.xyz);
 }

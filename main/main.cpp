@@ -10,6 +10,7 @@
 #include "screenquad/screenquad.h"
 #include "perlin/perlin.h"
 #include "camera/camera.h"
+#include "normalmap/normalmap.h"
 
 using namespace glm;
 
@@ -17,7 +18,9 @@ Grid grid;
 Perlin perlin;
 Camera camera;
 FrameBuffer framebuffer;
+FrameBuffer normalBuffer;
 ScreenQuad screenquad;
+NormalMap normalMap;
 
 bool keys[1024];
 bool firstMouse = false;
@@ -47,8 +50,10 @@ void Init() {
     glClearColor(0.0, 0.0, 0.0, 1.0 /*solid*/);
     perlin.Init();
     int framebuffer_texture_id = framebuffer.Init(1024, 1024, true);
-    grid.Init(framebuffer_texture_id);
-    screenquad.Init(window_width, window_height, framebuffer_texture_id);
+    int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, true);
+    normalMap.Init(framebuffer_texture_id);
+    grid.Init(framebuffer_texture_id, normalBuffer_texture_id);
+    screenquad.Init(window_width, window_height, normalBuffer_texture_id);
 
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
@@ -62,6 +67,11 @@ void Init() {
     framebuffer.Bind();
         perlin.Draw();
     framebuffer.Unbind();
+
+    normalBuffer.Bind();
+        normalMap.Draw();
+    normalBuffer.Unbind();
+
 
     //Initialise boolean keys array
     for(int i=0; i < 1024; i++){
@@ -83,8 +93,10 @@ void Display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     view_matrix = camera.GetViewMatrix();
 
-    grid.Draw(quad_model_matrix, view_matrix, projection_matrix);
+    //glm::rotate(IDENTITY_MATRIX,(float)( (3.14/180) * glfwGetTime() * 30), glm::vec3(0.0, 1.0, 0.0))
 
+    grid.Draw(quad_model_matrix, view_matrix, projection_matrix);
+    //screenquad.Draw();
 
     frameCount++;
 }
@@ -273,6 +285,7 @@ int main(int argc, char *argv[]) {
     grid.Cleanup();
     perlin.Cleanup();
     framebuffer.Cleanup();
+    normalMap.Cleanup();
 
     // close OpenGL window and terminate GLFW
     glfwDestroyWindow(window);

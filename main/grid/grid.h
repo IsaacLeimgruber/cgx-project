@@ -4,8 +4,8 @@
 
 struct Light {
         glm::vec3 La = glm::vec3(1.0f, 1.0f, 1.0f);
-        glm::vec3 Ld = glm::vec3(0.4, 0.4, 0.4);
-        glm::vec3 Ls = glm::vec3(0.1f, 0.1f, 0.1f);
+        glm::vec3 Ld = glm::vec3(0.35, 0.35, 0.35);
+        glm::vec3 Ls = glm::vec3(0.9f, 0.9f, 0.9f);
         glm::vec3 light_pos = glm::vec3(5.0f, 2.0f, 0.0f);
 
         // pass light properties to the shader
@@ -29,8 +29,8 @@ struct Light {
 struct Material {
         glm::vec3 ka = glm::vec3(0.18f, 0.1f, 0.1f);
         glm::vec3 kd = glm::vec3(0.9f, 0.9f, 0.9f);
-        glm::vec3 ks = glm::vec3(0.0f, 0.0f, 0.0f);
-        float alpha = 10.0;
+        glm::vec3 ks = glm::vec3(0.9f, 0.9f, 0.9f);
+        float alpha = 100.0;
         // pass material properties to the shaders
         void Setup(GLuint program_id) {
             glUseProgram(program_id);
@@ -54,11 +54,13 @@ class Grid : public Material, public Light{
         GLuint vertex_buffer_object_position_;  // memory buffer for positions
         GLuint vertex_buffer_object_index_;     // memory buffer for indices
         GLuint program_id_;                     // GLSL shader program ID
-        GLuint texture_id_;                     // texture ID
+        GLuint colorTexture_id_;                     // texture ID
+        GLuint normalTexture_id_;
         GLuint num_indices_;                    // number of vertices to render
         GLuint M_id_;                           // model matrix ID
         GLuint V_id_;                           // view matrix ID
         GLuint P_id_;                           // projection matrix ID
+        GLuint N_id_;
         GLuint zoom_id_;
         GLuint offset_id_;
         GLfloat zoom = 1;
@@ -67,7 +69,7 @@ class Grid : public Material, public Light{
         glm::vec2 offset = glm::vec2(0,0);
 
     public:
-        void Init(GLuint texture) {
+        void Init(GLuint colorTexture, GLuint normalTexture) {
             // compile the shaders.
             program_id_ = icg_helper::LoadShaders("grid_vshader.glsl",
                                                   "grid_fshader.glsl",
@@ -140,14 +142,27 @@ class Grid : public Material, public Light{
             // load texture
             {
                 // load/Assign texture
-                this->texture_id_ = texture;
-                glBindTexture(GL_TEXTURE_2D, texture_id_);
-                GLuint tex_id = glGetUniformLocation(program_id_, "heightMap");
-                glUniform1i(tex_id, 0 /*GL_TEXTURE0*/);
+                this->colorTexture_id_ = colorTexture;
+                GLuint heightMapLocation = glGetUniformLocation(program_id_, "heightMap");
+                glUniform1i(heightMapLocation, 0);
+
+                glBindTexture(GL_TEXTURE_2D, colorTexture_id_);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
                 glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+                glBindTexture(GL_TEXTURE_2D, 0);
+
+                // load/Assign normal map
+                this->normalTexture_id_ = normalTexture;
+                GLuint normalMapLocation = glGetUniformLocation(program_id_, "normalMap");
+                glUniform1i(normalMapLocation, 1);
+
+                glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
                 glBindTexture(GL_TEXTURE_2D, 0);
             }
 
@@ -155,6 +170,7 @@ class Grid : public Material, public Light{
             M_id_ = glGetUniformLocation(program_id_, "model");
             V_id_ = glGetUniformLocation(program_id_, "view");
             P_id_ = glGetUniformLocation(program_id_, "projection");
+            N_id_ = glGetUniformLocation(program_id_, "normalMatrix");
 
             zoom_id_ = glGetUniformLocation(program_id_, "zoom");
             offset_id_ = glGetUniformLocation(program_id_, "zoomOffset");
@@ -192,23 +208,31 @@ class Grid : public Material, public Light{
             glDeleteBuffers(1, &vertex_buffer_object_index_);
             glDeleteVertexArrays(1, &vertex_array_id_);
             glDeleteProgram(program_id_);
-            glDeleteTextures(1, &texture_id_);
+            glDeleteTextures(1, &colorTexture_id_);
+            glDeleteTextures(1, &normalTexture_id_);
         }
 
         void Draw(const glm::mat4 &model = IDENTITY_MATRIX,
                   const glm::mat4 &view = IDENTITY_MATRIX,
                   const glm::mat4 &projection = IDENTITY_MATRIX) {
+
+            //glm::mat4 normalMatrix = inverse(transpose(view * model));
+
             glUseProgram(program_id_);
             glBindVertexArray(vertex_array_id_);
 
             // bind textures
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture_id_);
+            glActiveTexture(GL_TEXTURE0 + 0);
+            glBindTexture(GL_TEXTURE_2D, colorTexture_id_);
+
+            glActiveTexture(GL_TEXTURE0 + 1);
+            glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
 
             // setup MVP
             glUniformMatrix4fv(M_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(model));
             glUniformMatrix4fv(V_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(view));
             glUniformMatrix4fv(P_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(projection));
+            //glUniformMatrix4fv(N_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(normalMatrix));
 
             // setup zoom and offset, ie. what part of the perlin noise we are sampling
             glUniform1f(zoom_id_, zoom);

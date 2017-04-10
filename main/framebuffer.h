@@ -43,7 +43,7 @@ class FrameBuffer {
                 }
 
                 //Texture with only one float component
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width_, height_, 0,
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width_, height_, 0,
                              GL_RED, GL_FLOAT, NULL);
             }
 
