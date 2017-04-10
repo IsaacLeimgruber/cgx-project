@@ -187,7 +187,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     } else if(action == GLFW_RELEASE){
       keys[key] = false;
     }
-    camera.debug();
+    //camera.debug();
 }
 
 void doMovement()
