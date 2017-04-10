@@ -44,6 +44,10 @@ static const glm::mat4 IDENTITY_MATRIX = glm::mat4(1.0f);
 #define EXIT_FAILURE 1
 #endif
 
+std::ostream& operator<<(std::ostream& stream, glm::vec3 v) {
+    return stream << v.x << ", " << v.y << ", " << v.z;
+}
+
 namespace icg_helper {
 
 // compiles the vertex, geometry and fragment shaders stored in the given strings
