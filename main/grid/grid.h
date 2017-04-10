@@ -4,9 +4,9 @@
 
 struct Light {
         glm::vec3 La = glm::vec3(1.0f, 1.0f, 1.0f);
-        glm::vec3 Ld = glm::vec3(0.5, 0.5, 0.5);
-        glm::vec3 Ls = glm::vec3(1.0f, 1.0f, 1.0f);
-        glm::vec3 light_pos = glm::vec3(0.0f, 0.0f, 2.0f);
+        glm::vec3 Ld = glm::vec3(0.4, 0.4, 0.4);
+        glm::vec3 Ls = glm::vec3(0.1f, 0.1f, 0.1f);
+        glm::vec3 light_pos = glm::vec3(5.0f, 2.0f, 0.0f);
 
         // pass light properties to the shader
         void Setup(GLuint program_id) {
@@ -29,8 +29,8 @@ struct Light {
 struct Material {
         glm::vec3 ka = glm::vec3(0.18f, 0.1f, 0.1f);
         glm::vec3 kd = glm::vec3(0.9f, 0.9f, 0.9f);
-        glm::vec3 ks = glm::vec3(0.8f, 0.8f, 0.8f);
-        float alpha = 60.0;
+        glm::vec3 ks = glm::vec3(0.0f, 0.0f, 0.0f);
+        float alpha = 10.0;
         // pass material properties to the shaders
         void Setup(GLuint program_id) {
             glUseProgram(program_id);

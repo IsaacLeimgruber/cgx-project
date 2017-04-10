@@ -15,6 +15,7 @@ in vec3 vpoint_TE[];
 in vec2 uv_TE[];
 
 out vec4 vpoint_MV_F;
+out vec4 vpoint_M_F;
 out vec2 uv_F;
 out vec3 lightDir_F;
 out vec3 viewDir_F;
@@ -38,8 +39,7 @@ vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2, vec3 v3)
 
 void main()
 {
-    mat4 MV = view * model;
-    mat4 MVP = projection * MV;
+    mat4 VP = projection * view;
 
     // Interpolate the attributes of the output vertex using the barycentric coordinates
     uv_F = interpolate2D(uv_TE[0], uv_TE[1], uv_TE[2], uv_TE[3]);
@@ -47,12 +47,11 @@ void main()
 
     // Set height for generated (and original) vertices
     vheight_F = 1.3 * pow(texture(heightMap, (uv_F+zoomOffset) * zoom).r, 3);
-
     vpoint_F.y = vheight_F;
+    vpoint_M_F  = model * vec4(vpoint_F, 1.0);
+    vpoint_MV_F = view * vpoint_M_F;
+    gl_Position = projection * vpoint_MV_F;
 
-    gl_Position = MVP * vec4(vpoint_F, 1.0);
-
-    vpoint_MV_F = MV * vec4(vpoint_F, 1.0);
 
     //Lighting
     lightDir_F = normalize(light_pos - vpoint_MV_F.xyz);

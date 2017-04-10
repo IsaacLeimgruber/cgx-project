@@ -1,9 +1,11 @@
 #version 330
 
-uniform vec3 La, Ld;
-uniform vec3 ka, kd;
+uniform vec3 La, Ld, Ls;
+uniform vec3 ka, kd, ks;
+uniform float alpha;
 
 in vec4 vpoint_MV_F;
+in vec4 vpoint_M_F;
 in vec3 lightDir_F, viewDir_F;
 in vec2 uv_F;
 
@@ -31,16 +33,13 @@ const vec3  WATER_COLOR_DEEP = vec3(34,68,170),
 
 void main() {
 
-    vec3 triangleNormal = normalize(cross(dFdx(vpoint_MV_F.xyz), dFdy(vpoint_MV_F.xyz)));
+    vec3 gridNormal = normalize(cross(dFdx(vpoint_M_F.xyz), dFdy(vpoint_M_F.xyz)));
 
-    float cosNL = dot(triangleNormal, lightDir_F);
+    float cosNL = dot(gridNormal, lightDir_F);
 
     vec3 heightCol = vec3(0);
-    vec3 normal_mv = normalize(cross(dFdx(vpoint_MV_F.xyz), dFdy(vpoint_MV_F.xyz)));
     vec3 vert = vec3(0.f, 1.f, 0.f);
-    float slope = dot(normal_mv, vert);//range [-1, 1], highest slope when 0
-
-
+    float slope = dot(gridNormal, vert);//range [-1, 1], highest slope when 0
 
         if(vheight_F <= WATER_HEIGHT){
             heightCol = mix(WATER_COLOR_DEEP, WATER_COLOR, (vheight_F) / (WATER_HEIGHT));
@@ -80,7 +79,6 @@ void main() {
 
 
     heightCol /= 255.0;
-    vec3 reflection_dir = normalize( 2.0 * triangleNormal * max(0.0, cosNL) - lightDir_F);
-    color = (heightCol * La) + (heightCol * cosNL * Ld) ;
-
+    vec3 reflection_dir = normalize( 2.0 * gridNormal * max(0.0, cosNL) - lightDir_F);
+    color = (heightCol * La) + (kd * cosNL * Ld) + (ks * pow(max(0, dot(reflection_dir, viewDir_F)), alpha) * Ls);
 }
