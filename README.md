@@ -19,15 +19,20 @@ For your convenience, please note the effect of the following inputs:
 
 ## 1. Project basis: Perlin noise, heightmap and coloring
 
-todo isaac: describe your stuff here
+Initial Perlin noise implementation following GPUGems
 
-- Initial Perlin noise implementation following GPUGems
-- Initial OctavePerlin implementation that adds several octaves of Perlin noise
+Perlin noise was first implemented using the permutation table to generate pseudo-random gradients. The following the algorithm, we   obtaint our perlin noise. Our has the signature perlin_nosie(float x, float y). Multiplying the x and y parameters, initially given   as uv.x and uv.y allows us to modify the frequency.
+
+Initial OctavePerlin implementation that adds several octaves of Perlin noise
+
+The implementation of the Brownian motion was mainly generating and stacking multiple perlin noises at different frequencies.
 
 ### 1.2. Height and angle based colouring of terrain
 
-- and here also
-- blah
+Mapping normal vector to color
+
+Passing the vpoint vector from the vshader allows us to calculate the slope by scalar product with the vertical vector )(0, 0, 1) and vpoint normalized). Now we have an alpha angle with range [-1, 1]. Now we can choose an arbitrary threshold. Knowing that angle 0     means our normal vector is horizontal, we have highest slope. Instead of only color with some grey when the slope is higher than the threshold, we found more realistic to mix the rock color with the already set color for the given height, the mix ratio being a function of the slope allowed us to define a smooth transition between, say, grass and rock, up to some other threshold where we directly color with rock (this seemed to imitate a natural coloring pretty well. One can think of a cliff this way: When the slope is low there is grass (less as the slope increase), but at some point, there's no grass anymore.
+
 
 ## 2. Perlin noise improvements and variations
 Since the perlin noise is at the heart of our procedural project, we took some time experiment with and better understand its complicated behaviors.
@@ -117,7 +122,7 @@ Finally we perform model, view and projection transforms on each vertex and appl
 ## Work distribution
 
 **Isaac Leimgruber**
-- implemented section `1. Project basis: Perlin noise, heightmap and coloring`
+- implemented section `1. Project basis: Perlin noise, fBm, heightmap and coloring`
 
 **Julien Harbulot**
 - implemented section `2. Perlin noise generation and variations`
