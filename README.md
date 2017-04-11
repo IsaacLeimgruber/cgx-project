@@ -1,15 +1,15 @@
 # Milestone 1 - Procedural terrain generation
 
-#Contents:
+## Contents:
 
-1. Perlin noise generation and variations
-2. Normal map from noise texture
-3. Height and angle based colouring of terrain
+1. Project basis: Perlin noise, heightmap and coloring
+2. Perlin noise generation and variations
+3. Normal map from noise texture
 4. First person view camera
 5. Tesselation shader
 6. Work distribution
 
-##Notes
+## Keyboard controls
 For your convenience, please note the effect of the following inputs:
 
 - Keys W,A,S,D: Respectively move the camera forward, backward, left and right
@@ -17,8 +17,47 @@ For your convenience, please note the effect of the following inputs:
 - Keys G/H: Decrease or increase the zoom used to sample the heightmap to generate terrain elevation
 - Key F: Activate/deactivate wireframe rendering mode.
 
-## 1. Perlin noise generation and variations
-## 2. Normal map from noise texture
+## 1. Project basis: Perlin noise, heightmap and coloring
+
+todo isaac: describe your stuff here
+
+- Initial Perlin noise implementation following GPUGems
+- Initial OctavePerlin implementation that adds several octaves of Perlin noise
+
+### 1.2. Height and angle based colouring of terrain
+
+- and here also
+- blah
+
+## 2. Perlin noise improvements and variations
+Since the perlin noise is at the heart of our procedural project, we took some time experiment with and better understand its complicated behaviors.
+
+Moving on from the initial Perlin noise implementation, we tweaked the permutation array generation to make it faster (with pre-caching) and random (using c++11's random). From there, we implemented several fBm:
+
+- Ridged noise: a ridged noise and fBm
+- Multifractal: this is Kenton Musgrave's mutifractal algorithm
+- pow fBm: this is an octave based fBm were the power of the Perlin noise is taken
+
+We then proceeded to implement an utility that would display the different noise side by side so as to be able to compare them.
+On the screenshots below: 
+
+- OctavePerlin is on the top left corner,
+- Pow-fBm is on the bottom left corner, 
+- Ridged-noise is on the top right corner,
+- and Multifractal (fed with an initial ridged-noise) is on the bottom right corner.
+
+<img src="http://img4.hostingpics.net/pics/896863photo20170411103519.jpg" height="400" alt="Perlin noise variations" />
+
+<img src="http://img4.hostingpics.net/pics/834107photo20170411103516.jpg" height="400" alt="Perlin noise variations" />
+
+Our work on the noise generation is not finished, yet. We are still looking for an implementation or combination of noise that will provide the most realistic results. It's incredible how time consuming it is to tweak the different parameters so as to produce the best heightmap. Our plans for improvement are the following:
+
+- Further optimize fBm generation's speed by extracting the Perlin noise in a different texture.
+- Find the most appropriate random distribution for the permutation array generation.
+- Settle for a noise implementation. Our favorite at the moment is a mix of Perlin noise and ridged-noise in a multifractal like fBm. Due to technical problems (Julien's computer died...) we couldn't implement it in the project, yet.
+- Maybe implement erosion.
+
+## 3. Normal map from noise texture
 One of the main disadvantage with flat shading is that it requires to compute the normal for each fragment.
 Such computations can be very inefficient because when multiple fragments share the same primitive, they will
 have the same normal and we will compute multiple times the same value.
@@ -33,7 +72,6 @@ The additional advantage that this technique offers is that when used with the t
 can still leverage the normal map to simulate a high level of detail, even if the underlying mesh is at low
 resolution.
 
-## 3. Height and angle based colouring of terrain
 ## 4. First person view camera
 We followed the tutorial on learnopengl.com to implement the first person view camera. At the end of the 
 tutorial the author of the website offers a class which encapsulates the behavior of the camera. As we
@@ -77,6 +115,13 @@ vertex position.
 Finally we perform model, view and projection transforms on each vertex and apply some diffuse lighting on it.
 
 ## Work distribution
-- Isaac Leimgruber:
-- Julien Harbulot: 
-- Leandro Kieliger: Tesselation shader, normal map computation.
+
+**Isaac Leimgruber**
+- implemented section `1. Project basis: Perlin noise, heightmap and coloring`
+
+**Julien Harbulot**
+- implemented section `2. Perlin noise generation and variations`
+- researched the best way to make the terrain infinite, but couldn't implement a working version for this assignment due to technical problems (computer died).
+
+**Leandro Kieliger**
+- implemented sections `3. Normal map from noise texture` and `5. Tesselation shader`.
