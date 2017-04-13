@@ -43,9 +43,9 @@ On the screenshots below:
 - Ridged-noise is on the top right corner,
 - and Multifractal (fed with an initial ridged-noise) is on the bottom right corner.
 
-<img src="http://img4.hostingpics.net/pics/896863photo20170411103519.jpg" alt="Perlin noise variations" />
+<img src="https://lkieliger.ch/docs/pictures/cgx/terrainCompil1.jpg" alt="Perlin noise variations" />
 
-<img src="http://img4.hostingpics.net/pics/834107photo20170411103516.jpg"  alt="Perlin noise variations" />
+<img src="https://lkieliger.ch/docs/pictures/cgx/terrainCompil2.jpg"  alt="Perlin noise variations" />
 
 Our work on the noise generation is not finished, yet. We are still looking for an implementation or combination of noise that will provide the most realistic results. It's incredible how time consuming it is to tweak the different parameters so as to produce the best heightmap. Our plans for improvement are the following:
 
@@ -92,10 +92,9 @@ The inner tesselation levels are simply the average of the corresponding outer l
 inner tesselation level is the average of the outer levels on the left and right edges and the vertical inner
 tesselation level is the average of the outer levels on the top and bottom edges.
 
-The outer tesselation levels are computed based on the distance between the vertices of the edge and the camera.
-We take the mean camera distance of each pair of vertices per quad edge and use it to interpolate the 
-appropriate tesselation level.
-To this end we specified a maximum/minimum tesselation level and a maximum/minimum distance at which the tesselation
+The outer tesselation levels are computed based on the mean distance between the pair of vertices forming the edge and the camera.
+We use the distance to interpolate the appropriate tesselation level.
+To this end, we specified a maximum/minimum tesselation level and a maximum/minimum distance at which the tesselation
 becomes active.
 
 Finally, we cull the patches that are outside the camera view frustrum to save computation time.
@@ -103,22 +102,21 @@ Finally, we cull the patches that are outside the camera view frustrum to save c
 ### 5.2 Tesselation Evaluation Shader
 The evaluation shader receives all generated primitives. It first compute the primitive attributes such as
 the 3D position or 2D texture coordinates by interpolating the values of the control points (the vertices)
-forming the patch based on the gl_TessCoord value, which indicates the position of the generated primitive
-inside the patch.
+forming the patch. The interpolation is done based on the gl_TessCoord value, which indicates the position of the generated primitive with respect to its patch.
 
 We then sample the heightmap to define the height of each vertex and the normal map to get the normal at the
 vertex position.
 
 Finally we perform model, view and projection transforms on each vertex and apply some diffuse lighting on it.
 
-You can see the results on the screenshots below three different stages of tesselation based on vertex distance to the camera.
+You can see the results which show four different stages of tesselation based on vertex distance to the camera.
 
 <img src="https://lkieliger.ch/docs/pictures/cgx/tessCompil.png">
 
 ### 5.3 Further improvements
-At the moment, we use a fixed patch size for the tesselation. That is, the gris is always represented with a fixed number of vertices. While this allow for a simple implementation of the tesselation shader, when patches are really far away they may end up in the same fragment after rasterization. Therefore we would like to lower the level of details even more.
+At the moment, we use a fixed patch size for the tesselation. That is, the grid is always represented with a fixed number of vertices. While this allow for a simple implementation of the tesselation shader, when patches are really far away they may end up in the same fragment after rasterization. Therefore, we would like to lower the level of detail of those sections even more.
 
-This can be done by represening the terrain with a quadtree, where each leaf of the tree defines a region of the grid. This way, we can recursively split the quadtree into 4 child nodes, which would then represent 4 sub-patches on the grid, based on the distance to the camera.
+This can be done by represening the terrain with a quadtree, where each leaf of the tree defines a region of the grid. This way, we can recursively split the quadtree into 4 child nodes, which would then represent 4 sub-patches on the grid, based on the distance to the camera. The deeper the leaf in the quadtree, the more vertices are used in the corresponding patch in the terrain.
 
 ## Work distribution
 
