@@ -9,19 +9,11 @@
 5. Tesselation shader
 6. Work distribution
 
-## Keyboard controls
-For your convenience, please note the effect of the following inputs:
-
-- Keys W,A,S,D: Respectively move the camera forward, backward, left and right
-- Shift and spacebar: Respectively move the camera downward and upward.
-- Keys G/H: Decrease or increase the zoom used to sample the heightmap to generate terrain elevation
-- Key F: Activate/deactivate wireframe rendering mode.
-
 ## 1. Project basis: Perlin noise, heightmap and coloring
 
 Initial Perlin noise implementation following GPUGems
 
-Perlin noise was first implemented using the permutation table to generate pseudo-random gradients. The following the algorithm, we   obtaint our perlin noise. Our has the signature perlin_nosie(float x, float y). Multiplying the x and y parameters, initially given   as uv.x and uv.y allows us to modify the frequency.
+Perlin noise was first implemented using the permutation table to generate pseudo-random gradients. The following the algorithm, we obtaint our perlin noise. Our has the signature perlin_nosie(float x, float y). Multiplying the x and y parameters, initially given   as uv.x and uv.y allows us to modify the frequency.
 
 Initial OctavePerlin implementation that adds several octaves of Perlin noise
 
@@ -51,9 +43,9 @@ On the screenshots below:
 - Ridged-noise is on the top right corner,
 - and Multifractal (fed with an initial ridged-noise) is on the bottom right corner.
 
-<img src="http://img4.hostingpics.net/pics/896863photo20170411103519.jpg" height="400" alt="Perlin noise variations" />
+<img src="http://img4.hostingpics.net/pics/896863photo20170411103519.jpg" alt="Perlin noise variations" />
 
-<img src="http://img4.hostingpics.net/pics/834107photo20170411103516.jpg" height="400" alt="Perlin noise variations" />
+<img src="http://img4.hostingpics.net/pics/834107photo20170411103516.jpg"  alt="Perlin noise variations" />
 
 Our work on the noise generation is not finished, yet. We are still looking for an implementation or combination of noise that will provide the most realistic results. It's incredible how time consuming it is to tweak the different parameters so as to produce the best heightmap. Our plans for improvement are the following:
 
@@ -77,6 +69,8 @@ The additional advantage that this technique offers is that when used with the t
 can still leverage the normal map to simulate a high level of detail, even if the underlying mesh is at low
 resolution.
 
+<img src="https://lkieliger.ch/docs/pictures/cgx/normalMapCompil.png">
+
 ## 4. First person view camera
 We followed the tutorial on learnopengl.com to implement the first person view camera. At the end of the 
 tutorial the author of the website offers a class which encapsulates the behavior of the camera. As we
@@ -90,8 +84,6 @@ Control Shader and the Tesselation Evaluation Shader.
 The grid class was modified to render GL_PATCHES instead of GL_ELEMENTS, the vertices are now indexed
 in squares instead of triangles and in counter clockwise order. That is, bottom left is vertex 0, 
 bottom right 1, top right 2, top left 3.
-
-**Dont forget that you can toggle the wireframe rendering mode by using the F key !**
 
 ### 5.1 Tesselation Control Shader
 The control shader receives patches of 4 vertices and specifies the outer and inner levels of tesselation.
@@ -118,6 +110,15 @@ We then sample the heightmap to define the height of each vertex and the normal 
 vertex position.
 
 Finally we perform model, view and projection transforms on each vertex and apply some diffuse lighting on it.
+
+You can see the results on the screenshots below three different stages of tesselation based on vertex distance to the camera.
+
+<img src="https://lkieliger.ch/docs/pictures/cgx/tessCompil.png">
+
+### 5.3 Further improvements
+At the moment, we use a fixed patch size for the tesselation. That is, the gris is always represented with a fixed number of vertices. While this allow for a simple implementation of the tesselation shader, when patches are really far away they may end up in the same fragment after rasterization. Therefore we would like to lower the level of details even more.
+
+This can be done by represening the terrain with a quadtree, where each leaf of the tree defines a region of the grid. This way, we can recursively split the quadtree into 4 child nodes, which would then represent 4 sub-patches on the grid, based on the distance to the camera.
 
 ## Work distribution
 
