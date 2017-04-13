@@ -8,6 +8,8 @@ uniform mat4 view;
 uniform mat4 normalMatrix;
 uniform sampler2D heightMap;
 uniform sampler2D normalMap;
+uniform vec2 zoomOffset;
+uniform float zoom;
 
 in vec4 vpoint_MV_F;
 in vec4 vpoint_M_F;
@@ -39,7 +41,7 @@ const vec3  WATER_COLOR_DEEP = vec3(34,68,170),
 
 void main() {
 
-    vec3 gridNormal = (texture(normalMap, uv_F).xyz * 2.0) - 1.0f;
+    vec3 gridNormal = (texture(normalMap, (uv_F+zoomOffset) * zoom).xyz * 2.0) - 1.0f;
 
     float cosNL = dot(gridNormal, lightDir_F);
 
@@ -68,7 +70,7 @@ void main() {
             heightCol = mix(ROCK_COLOR, SNOW_COLOR, (vheight_F-ROCK_HEIGHT) / (SNOW_HEIGHT-ROCK_HEIGHT));
     }
 
-        if(abs(slope) < SLOPE_THRESHOLD){
+        if(abs(slope) < SLOPE_THRESHOLD && vheight_F > WATER_HEIGHT){
 
 
             float x = 1 - (abs(slope)/SLOPE_THRESHOLD);// triangle centered in 0,

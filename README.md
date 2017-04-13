@@ -11,7 +11,8 @@
 
 ## 1. Project basis: Perlin noise, heightmap and coloring
 
-Initial Perlin noise implementation following GPUGems
+Initial Perlin noise implementation following GPUGems.
+
 
 Perlin noise was first implemented using the permutation table to generate pseudo-random gradients. Following the algorithm, we obtained our perlin noise. Our function has the signature perlin_nosie(float x, float y). Multiplying the x and y parameters, initially given   as uv.x and uv.y allows us to modify the frequency.
 
@@ -21,16 +22,14 @@ The implementation of the Brownian motion was mainly generating and stacking mul
 
 ### 1.2. Height and angle based colouring of terrain
 
-Mapping normal vector to color
-
-Using the normalMap vector allows us to calculate the slope by scalar product with the vertical vector (0, 0, 1). Now we have an alpha angle with range [-1, 1].We can choose an arbitrary threshold. Knowing that angle 0 means our normal vector is horizontal, we have highest slope. Instead of coloring only with some grey when the slope is higher than the threshold, we found more realistic to mix the rock color with the color corresponding to the given height. The mix ratio being a function of the slope allowed us to define a smooth transition between, say, grass and rock, up to some other threshold where we directly color with rock (this seemed to imitate a natural coloring pretty well. One can think of a cliff this way: When the slope is low there is grass (less as the slope increase), but at some point, there's no grass anymore.
+Using the normal vector allows us to calculate the slope by scalar product with the vertical vector (0, 1, 0). Now we have an alpha angle with range [-1, 1]. We can choose an arbitrary threshold. Knowing that angle 0 means our normal vector is horizontal, we have highest slope. Instead of coloring only with some grey when the slope is higher than the threshold, we found more realistic to mix the rock color with the color corresponding to the given height. The mix ratio being a function of the slope allowed us to define a smooth transition between, say, grass and rock, up to some other threshold where we directly color with rock (this seemed to imitate a natural coloring pretty well. One can think of a cliff this way: When the slope is low there is grass (less as the slope increase), but at some height, there's no grass anymore.
 
 <img src="https://lkieliger.ch/docs/pictures/cgx/cliffMix.png">
 
 ## 2. Perlin noise improvements and variations
 Since the perlin noise is at the heart of our procedural project, we took some time experiment with and better understand its complicated behaviors.
 
-Moving on from the initial Perlin noise implementation, we tweaked the permutation array generation to make it faster (with pre-caching) and random (using c++11's random). From there, we implemented several fBm:
+Moving on from the initial Perlin noise implementation, we tweaked the permutation array generation to make it faster (with pre-caching) and random (using C++ 11's random). From there, we implemented several fBm:
 
 - Ridged noise: a ridged noise and fBm
 - Multifractal: this is Kenton Musgrave's mutifractal algorithm
@@ -56,7 +55,7 @@ Our work on the noise generation is not finished, yet. We are still looking for 
 - Implement erosion.
 
 ## 3. Normal map from noise texture
-One of the main disadvantage with flat shading is that it requires to compute the normal for each fragment.
+One of the main disadvantages with flat shading is that it requires to compute the triangle normal for each fragment.
 Such computations can be very inefficient because when multiple fragments share the same primitive, they will
 have the same normal and we will compute multiple times the same value.
 
@@ -122,11 +121,11 @@ This can be done by represening the terrain with a quadtree, where each leaf of 
 ## Work distribution
 
 **Isaac Leimgruber**
-- implemented section `1. Project basis: Perlin noise, fBm, heightmap and coloring`
+- 33% implemented section `1. Project basis: Perlin noise, fBm, heightmap and coloring`
 
 **Julien Harbulot**
-- implemented section `2. Perlin noise generation and variations`
+- 33% implemented section `2. Perlin noise generation and variations`
 - researched the best way to make the terrain infinite, but couldn't implement a working version for this assignment due to technical problems (computer died).
 
 **Leandro Kieliger**
-- implemented sections `3. Normal map from noise texture` and `5. Tesselation shader`.
+- 33% implemented sections `3. Normal map from noise texture` and `5. Tesselation shader`.
