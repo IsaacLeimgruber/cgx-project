@@ -39,7 +39,7 @@ const vec3  WATER_COLOR_DEEP = vec3(34,68,170),
 
 void main() {
 
-    vec3 gridNormal = texture(normalMap, uv_F).xyz;
+    vec3 gridNormal = (texture(normalMap, uv_F).xyz * 2.0) - 1.0f;
 
     float cosNL = dot(gridNormal, lightDir_F);
 
