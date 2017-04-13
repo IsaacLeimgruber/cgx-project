@@ -13,9 +13,9 @@
 
 Initial Perlin noise implementation following GPUGems
 
-Perlin noise was first implemented using the permutation table to generate pseudo-random gradients. The following the algorithm, we obtaint our perlin noise. Our has the signature perlin_nosie(float x, float y). Multiplying the x and y parameters, initially given   as uv.x and uv.y allows us to modify the frequency.
+Perlin noise was first implemented using the permutation table to generate pseudo-random gradients. Following the algorithm, we obtained our perlin noise. Our function has the signature perlin_nosie(float x, float y). Multiplying the x and y parameters, initially given   as uv.x and uv.y allows us to modify the frequency.
 
-Initial OctavePerlin implementation that adds several octaves of Perlin noise
+Initial OctavePerlin implementation cumulates several octaves of Perlin noise.
 
 The implementation of the Brownian motion was mainly generating and stacking multiple perlin noises at different frequencies.
 
