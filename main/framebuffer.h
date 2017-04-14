@@ -7,6 +7,7 @@ class FrameBuffer {
         int width_;
         int height_;
         GLuint framebuffer_object_id_;
+        GLuint depth_render_buffer_id_;
         GLuint color_texture_id_;
 
     public:
@@ -14,7 +15,7 @@ class FrameBuffer {
         void Bind() {
             glViewport(0, 0, width_, height_);
             glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_object_id_);
-            const GLenum buffers[] = {GL_COLOR_ATTACHMENT0};
+            const GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
             glDrawBuffers(1 /*length of buffers[]*/, buffers);
         }
 
@@ -22,8 +23,7 @@ class FrameBuffer {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
-        int Init(int image_width, int image_height,
-                                  bool use_interpolation = false) {
+        int Init(int image_width, int image_height, bool use_interpolation = false) {
             this->width_ = image_width;
             this->height_ = image_height;
 
@@ -42,13 +42,19 @@ class FrameBuffer {
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 }
 
+                // create texture for the color attachment
+                // see Table.2 on
+                // khronos.org/opengles/sdk/docs/man3/docbook4/xhtml/glTexImage2D.xml
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width_, height_, 0,
-                             GL_RED, GL_FLOAT, NULL);
+                             GL_RGBA, GL_FLOAT, NULL);
+                // how to load from buffer
             }
 
             // create render buffer (for depth channel)
             {
-                glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, width_, height_);
+                glGenRenderbuffers(1, &depth_render_buffer_id_);
+                glBindRenderbuffer(GL_RENDERBUFFER, depth_render_buffer_id_);
+                glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, width_, height_);
                 glBindRenderbuffer(GL_RENDERBUFFER, 0);
             }
 
@@ -60,6 +66,8 @@ class FrameBuffer {
                                        GL_COLOR_ATTACHMENT0 /*location = 0*/,
                                        GL_TEXTURE_2D, color_texture_id_,
                                        0 /*level*/);
+                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                          GL_RENDERBUFFER, depth_render_buffer_id_);
 
                 if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
                     GL_FRAMEBUFFER_COMPLETE) {
@@ -71,17 +79,9 @@ class FrameBuffer {
             return color_texture_id_;
         }
 
-        void ClearContent() {
-            glViewport(0, 0, width_, height_);
-            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_object_id_);
-            glDrawBuffer(GL_COLOR_ATTACHMENT0);
-            glClearColor(1.0, 1.0, 1.0, 1.0);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
-
         void Cleanup() {
             glDeleteTextures(1, &color_texture_id_);
+            glDeleteRenderbuffers(1, &depth_render_buffer_id_);
             glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
             glDeleteFramebuffers(1, &framebuffer_object_id_);
         }

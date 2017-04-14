@@ -7,6 +7,7 @@
 
 #include "grid/grid.h"
 #include "framebuffer.h"
+#include "framebufferRGBA.h"
 #include "screenquad/screenquad.h"
 #include "perlin/perlin.h"
 #include "camera/camera.h"
@@ -18,8 +19,8 @@ using namespace glm;
 Grid grid;
 Perlin perlin;
 Camera camera;
-FrameBuffer framebuffer;
-FrameBuffer normalBuffer;
+FrameBufferRGBA framebuffer;
+FrameBufferRGBA normalBuffer;
 FrameBuffer reflectionBuffer;
 ScreenQuad screenquad;
 NormalMap normalMap;
@@ -54,11 +55,11 @@ void Init() {
     perlin.Init();
     int framebuffer_texture_id = framebuffer.Init(1024, 1024, true);
     int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, true);
-    int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height, true);
+    int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height, false);
     normalMap.Init(framebuffer_texture_id);
     grid.Init(framebuffer_texture_id, normalBuffer_texture_id);
     screenquad.Init(window_width, window_height, normalBuffer_texture_id);
-    water.Init(reflectionBuffer_texture_id, framebuffer_texture_id);
+    water.Init(reflectionBuffer_texture_id, framebuffer_texture_id, normalBuffer_texture_id);
 
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
@@ -104,14 +105,14 @@ void Display() {
 
     reflectionBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, 1.0, 1.0)), view_matrix, projection_matrix, true);
+        grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, -1.0, 1.0)), view_matrix, projection_matrix, true);
     reflectionBuffer.Unbind();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //TODO: uniformiser la facon dont on passe les matrices au GPU
     grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, 1.0, 1.0)), view_matrix, projection_matrix, false);
-    //grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, -1.0, 1.0)), view_matrix, projection_matrix, true);
     water.Draw(IDENTITY_MATRIX, view_matrix, projection_matrix);
+    //grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, -1.0, 1.0)), view_matrix, projection_matrix, true);
     //screenquad.Draw();
 
     frameCount++;
