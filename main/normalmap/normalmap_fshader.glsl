@@ -4,7 +4,7 @@ uniform float textureWidth;
 uniform float textureHeight;
 
 in vec2 uv;
-out vec3 color;
+out vec4 color;
 
 
 void main() {
@@ -32,5 +32,5 @@ void main() {
                        cross(v2,v3) +
                        cross(v3,v4) +
                        cross(v4,v1));
-    color = (n + 1.0) / 2.0;
+    color = vec4((n + 1.0) / 2.0, 1.0f);
 }

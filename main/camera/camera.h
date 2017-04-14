@@ -78,6 +78,17 @@ public:
         return glm::lookAt(this->Position, this->Position + this->Front, this->Up);
     }
 
+    glm::mat4 GetMirroredViewMatrix(float mirrorHeight)
+    {
+        glm::vec3 mirrorPos = glm::vec3(this->Position.x, -(this->Position.y) + 2.0 * mirrorHeight, this->Position.z);
+        glm::vec3 mirrorFront = glm::vec3(this->Front.x, -this->Front.y, this->Front.z);
+
+        glm::vec3 mirrorUp    = glm::normalize(glm::cross(this->Right, mirrorFront));
+
+        //std::cout <<"POS: " << mirrorPos << " FRONT:" << mirrorFront << " UP:"<< mirrorUp << std::endl;
+        return glm::lookAt(mirrorPos, mirrorPos + mirrorFront, mirrorUp);
+    }
+
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime)
     {
@@ -124,6 +135,7 @@ public:
 
         // Update Front, Right and Up Vectors using the updated Eular angles
         this->updateCameraVectors();
+        debug();
     }
 
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
@@ -146,6 +158,8 @@ public:
         std::cout << "yaw:" << this->Yaw << endl;
         std::cout << "pitch:" << this->Pitch << endl;
     }
+
+
 
 private:
     // Calculates the front vector from the Camera's (updated) Eular Angles

@@ -20,7 +20,11 @@ file(GLOB SHADERS
   perlin/perlin_vshader.glsl
   perlin/perlin_fshader.glsl
   normalmap/normalmap_vshader.glsl
-  normalmap/normalmap_fshader.glsl)
+  normalmap/normalmap_fshader.glsl
+  water/water_vshader.glsl
+  water/water_fshader.glsl
+  water/water_tcshader.glsl
+  water/water_teshader.glsl)
 deploy_shaders_to_build_dir(${SHADERS})
 
 add_executable(${EXERCISENAME} ${SOURCES} ${HEADERS} ${SHADERS})

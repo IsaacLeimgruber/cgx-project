@@ -42,8 +42,7 @@ class FrameBuffer {
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 }
 
-                //Texture with only one float component
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width_, height_, 0,
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width_, height_, 0,
                              GL_RED, GL_FLOAT, NULL);
             }
 
@@ -51,7 +50,7 @@ class FrameBuffer {
             {
                 glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, width_, height_);
                 glBindRenderbuffer(GL_RENDERBUFFER, 0);
-            }           
+            }
 
             // tie it all together
             {

@@ -5,6 +5,7 @@ layout(quads, fractional_even_spacing, ccw) in;
 uniform mat4 projection;
 uniform mat4 model;
 uniform mat4 view;
+uniform mat4 normalMatrix;
 uniform vec3 light_pos;
 uniform vec2 zoomOffset;
 uniform float zoom;
@@ -17,6 +18,7 @@ in vec2 uv_TE[];
 
 out vec4 vpoint_MV_F;
 out vec4 vpoint_M_F;
+out vec4 normal_MV_F;
 out vec2 uv_F;
 out vec3 lightDir_F;
 out vec3 viewDir_F;
@@ -48,7 +50,7 @@ void main()
 
     // Set height for generated (and original) vertices
     vheight_F = 1.3 * pow(texture(heightMap, (uv_F+zoomOffset) * zoom).r, 3);
-    vpoint_F.y = vheight_F;
+    vpoint_F.y = vheight_F - 0.1f;
     vpoint_M_F  = model * vec4(vpoint_F, 1.0);
     vpoint_MV_F = view * vpoint_M_F;
     gl_Position = projection * vpoint_MV_F;

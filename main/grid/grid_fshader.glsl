@@ -10,16 +10,17 @@ uniform sampler2D heightMap;
 uniform sampler2D normalMap;
 uniform vec2 zoomOffset;
 uniform float zoom;
+uniform bool mirrorPass;
 
 in vec4 vpoint_MV_F;
 in vec4 vpoint_M_F;
-in vec3 lightDir_F, viewDir_F;
-in vec3 normal_MV_F;
+in vec3 lightDir_F;
+in vec3 viewDir_F;
 in vec2 uv_F;
 
 in float vheight_F;
 
-out vec3 color;
+out vec4 color;
 
 const float SLOPE_THRESHOLD = 0.5;
 const float MIX_SLOPE_THRESHOLD = 0.2;
@@ -32,7 +33,7 @@ const float WATER_HEIGHT = 0.1,
 
 const float GRASS_TRANSITION = SAND_HEIGHT + (1.0/5.0) * (GRASS_HEIGHT - SAND_HEIGHT);
 
-const vec3  WATER_COLOR_DEEP = vec3(34,68,170),
+const vec3  WATER_COLOR_DEEP = vec3(14,48,150),
             WATER_COLOR = vec3(125,186,217),
             SAND_COLOR = vec3(189,173,94),
             GRASS_COLOR = vec3(52,103,0),
@@ -40,6 +41,12 @@ const vec3  WATER_COLOR_DEEP = vec3(34,68,170),
             SNOW_COLOR = vec3(231,249,251);
 
 void main() {
+
+    if(mirrorPass){
+        if(vpoint_M_F.y > 0.0){
+            discard;
+        }
+    }
 
     vec3 gridNormal = (texture(normalMap, (uv_F+zoomOffset) * zoom).xyz * 2.0) - 1.0f;
 
@@ -88,5 +95,7 @@ void main() {
 
     heightCol /= 255.0;
     //vec3 reflection_dir = normalize( 2.0 * gridNormal * max(0.0, cosNL) - lightDir_F);
-    color = (heightCol * La) + (kd * cosNL * Ld) ;//+ (ks * pow(max(0, dot(reflection_dir, viewDir_F)), alpha) * Ls);
+    color = vec4((heightCol * La) + (kd * cosNL * Ld), 1.0f);//+ (ks * pow(max(0, dot(reflection_dir, viewDir_F)), alpha) * Ls);
+
+
 }

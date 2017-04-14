@@ -11,6 +11,7 @@
 #include "perlin/perlin.h"
 #include "camera/camera.h"
 #include "normalmap/normalmap.h"
+#include "water/water.h"
 
 using namespace glm;
 
@@ -19,8 +20,10 @@ Perlin perlin;
 Camera camera;
 FrameBuffer framebuffer;
 FrameBuffer normalBuffer;
+FrameBuffer reflectionBuffer;
 ScreenQuad screenquad;
 NormalMap normalMap;
+Water water;
 
 bool keys[1024];
 bool firstMouse = false;
@@ -51,17 +54,22 @@ void Init() {
     perlin.Init();
     int framebuffer_texture_id = framebuffer.Init(1024, 1024, true);
     int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, true);
+    int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height, true);
     normalMap.Init(framebuffer_texture_id);
     grid.Init(framebuffer_texture_id, normalBuffer_texture_id);
     screenquad.Init(window_width, window_height, normalBuffer_texture_id);
+    water.Init(reflectionBuffer_texture_id, framebuffer_texture_id);
 
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
 
+    // enable culling
+    glCullFace(GL_BACK);
+
     view_matrix = camera.GetViewMatrix();
 
     // scaling matrix to scale the cube down to a reasonable size.
-    quad_model_matrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, 0.0f));
+    quad_model_matrix = IDENTITY_MATRIX;
 
     //Generate Perlin
     framebuffer.Bind();
@@ -90,12 +98,20 @@ void Display() {
         frameCount = 0;
     }
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     view_matrix = camera.GetViewMatrix();
+    mat4 mirrored_view_matrix = camera.GetMirroredViewMatrix(0.0f);
+    // reflection computation
 
-    //glm::rotate(IDENTITY_MATRIX,(float)( (3.14/180) * glfwGetTime() * 30), glm::vec3(0.0, 1.0, 0.0))
+    reflectionBuffer.Bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, 1.0, 1.0)), view_matrix, projection_matrix, true);
+    reflectionBuffer.Unbind();
 
-    grid.Draw(quad_model_matrix, view_matrix, projection_matrix);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //TODO: uniformiser la facon dont on passe les matrices au GPU
+    grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, 1.0, 1.0)), view_matrix, projection_matrix, false);
+    //grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, -1.0, 1.0)), view_matrix, projection_matrix, true);
+    water.Draw(IDENTITY_MATRIX, view_matrix, projection_matrix);
     //screenquad.Draw();
 
     frameCount++;
@@ -164,6 +180,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         switch(key){
             case GLFW_KEY_F:
                 grid.toggleWireframeMode();
+                water.toggleWireframeMode();
                 break;
             case GLFW_KEY_H:
                 grid.updateZoomFactor(+0.1);
@@ -246,6 +263,10 @@ int main(int argc, char *argv[]) {
     // Cursor is captured and hidden
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    // Enable transparent materials
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // set the callback for escape key
     glfwSetKeyCallback(window, KeyCallback);
 
@@ -284,6 +305,8 @@ int main(int argc, char *argv[]) {
 
     grid.Cleanup();
     perlin.Cleanup();
+    water.Cleanup();
+    reflectionBuffer.Cleanup();
     framebuffer.Cleanup();
     normalMap.Cleanup();
 

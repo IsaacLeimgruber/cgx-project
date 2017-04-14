@@ -63,6 +63,7 @@ class Grid : public Material, public Light{
         GLuint N_id_;
         GLuint zoom_id_;
         GLuint offset_id_;
+        GLuint mirrorPass_id_;
         GLfloat zoom = 1;
         bool wireframeDebugEnabled = false;
 
@@ -175,6 +176,8 @@ class Grid : public Material, public Light{
             zoom_id_ = glGetUniformLocation(program_id_, "zoom");
             offset_id_ = glGetUniformLocation(program_id_, "zoomOffset");
 
+            mirrorPass_id_ = glGetUniformLocation(program_id_, "mirrorPass");
+
             // Setup material and lighting
             Material::Setup(program_id_);
             Light::Setup(program_id_);
@@ -214,13 +217,13 @@ class Grid : public Material, public Light{
 
         void Draw(const glm::mat4 &model = IDENTITY_MATRIX,
                   const glm::mat4 &view = IDENTITY_MATRIX,
-                  const glm::mat4 &projection = IDENTITY_MATRIX) {
+                  const glm::mat4 &projection = IDENTITY_MATRIX,
+                  bool mirrorPass = false) {
 
-            //glm::mat4 normalMatrix = inverse(transpose(view * model));
+            glm::mat4 normalMatrix = inverse(transpose(model));
 
             glUseProgram(program_id_);
             glBindVertexArray(vertex_array_id_);
-
             // bind textures
             glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D, colorTexture_id_);
@@ -232,11 +235,14 @@ class Grid : public Material, public Light{
             glUniformMatrix4fv(M_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(model));
             glUniformMatrix4fv(V_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(view));
             glUniformMatrix4fv(P_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(projection));
-            //glUniformMatrix4fv(N_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(normalMatrix));
+            glUniformMatrix4fv(N_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(normalMatrix));
 
             // setup zoom and offset, ie. what part of the perlin noise we are sampling
             glUniform1f(zoom_id_, zoom);
             glUniform2fv(offset_id_, 1, glm::value_ptr(offset));
+
+            // if mirror pass is enabled then we cull back-facing fragments and underwater fragments
+            glUniform1i(mirrorPass_id_, mirrorPass);
 
             glPolygonMode(GL_FRONT_AND_BACK, (wireframeDebugEnabled) ? GL_LINE : GL_FILL);
 

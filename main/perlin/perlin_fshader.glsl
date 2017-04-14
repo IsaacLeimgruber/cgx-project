@@ -1,6 +1,6 @@
 #version 330 core
 in vec2 uv;
-out vec3 color;
+out vec4 color;
 uniform int p[512];
 uniform float pos_offset[2];
 
@@ -82,7 +82,7 @@ float ridged_noise(float x, float y, int octaves, float persistence) {
 }
 
 void main() {
-    color = vec3(octPNoise(uv.x, uv.y, 8, 0.45));
+    color = vec4(vec3(octPNoise(uv.x, uv.y, 8, 0.45)), 1.0f);
     //TODO: pourquoi ça ne marche pas quand on utilise le pos_offset ? J'en ai besoin !
     //color = vec3(octPNoise(uv.x + pos_offset[0], uv.y + pos_offset[1], 8, 0.45));
     //color = vec3(pos_offset[0], pos_offset[1], 0);
