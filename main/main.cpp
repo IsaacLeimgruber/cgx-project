@@ -48,7 +48,7 @@ GLuint frameCount = 0;
 
 void Init() {
     // Initialize camera
-    camera = Camera{vec3(0.0, 1.0, 0.0)};
+    camera = Camera{vec3(0.0, 2.5, 0.0)};
 
     // sets background color
     glClearColor(0.0, 0.0, 0.0, 1.0 /*solid*/);
