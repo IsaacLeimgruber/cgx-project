@@ -208,7 +208,7 @@ class Water{
 
             if(debug){
                 glUseProgram(debug_program_id_);
-
+                glBindVertexArray(vertex_array_id_);
                 // setup MVP
                 glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "model"), ONE, DONT_TRANSPOSE, glm::value_ptr(model));
                 glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "view"), ONE, DONT_TRANSPOSE, glm::value_ptr(view));

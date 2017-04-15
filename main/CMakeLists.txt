@@ -11,10 +11,15 @@ copy_files_once(${TEXTURES})
 # list all the files you want to copy everytime
 # you build (ie, you want the shaders there)
 file(GLOB SHADERS
-  grid/grid_vshader.glsl
-  grid/grid_fshader.glsl
-  grid/grid_tcshader.glsl
-  grid/grid_teshader.glsl
+    grid/grid_vshader.glsl
+    grid/grid_fshader.glsl
+    grid/grid_tcshader.glsl
+    grid/grid_teshader.glsl
+    grid/grid_vshader_debug.glsl
+    grid/grid_fshader_debug.glsl
+    grid/grid_tcshader_debug.glsl
+    grid/grid_teshader_debug.glsl
+    grid/grid_gshader_debug.glsl
   screenquad/screenquad_vshader.glsl
   screenquad/screenquad_fshader.glsl
   perlin/perlin_vshader.glsl

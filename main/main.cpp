@@ -190,6 +190,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 grid.updateZoomFactor(-0.1);
                 break;
             case GLFW_KEY_N:
+                grid.toggleDebugMode();
                 water.toggleDebugMode();
                 break;
             case GLFW_KEY_RIGHT:

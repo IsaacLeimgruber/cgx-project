@@ -54,6 +54,7 @@ class Grid : public Material, public Light{
         GLuint vertex_buffer_object_position_;  // memory buffer for positions
         GLuint vertex_buffer_object_index_;     // memory buffer for indices
         GLuint program_id_;                     // GLSL shader program ID
+        GLuint debug_program_id_;
         GLuint colorTexture_id_;                     // texture ID
         GLuint normalTexture_id_;
         GLuint num_indices_;                    // number of vertices to render
@@ -65,6 +66,7 @@ class Grid : public Material, public Light{
         GLuint offset_id_;
         GLuint mirrorPass_id_;
         GLfloat zoom = 1;
+        bool debug = false;
         bool wireframeDebugEnabled = false;
 
         glm::vec2 offset = glm::vec2(0,0);
@@ -76,7 +78,14 @@ class Grid : public Material, public Light{
                                                   "grid_fshader.glsl",
                                                   "grid_tcshader.glsl",
                                                   "grid_teshader.glsl");
-            if(!program_id_) {
+
+
+            debug_program_id_ = icg_helper::LoadShaders("grid_vshader_debug.glsl",
+                                                  "grid_fshader_debug.glsl",
+                                                  "grid_tcshader_debug.glsl",
+                                                  "grid_teshader_debug.glsl",
+                                                  "grid_gshader_debug.glsl");
+            if(!program_id_ || !debug_program_id_) {
                 exit(EXIT_FAILURE);
             }
 
@@ -147,6 +156,11 @@ class Grid : public Material, public Light{
                 GLuint heightMapLocation = glGetUniformLocation(program_id_, "heightMap");
                 glUniform1i(heightMapLocation, 0);
 
+                glUseProgram(debug_program_id_);
+                    heightMapLocation = glGetUniformLocation(debug_program_id_, "heightMap");
+                    glUniform1i(heightMapLocation, 0);
+                glUseProgram(program_id_);
+
                 glBindTexture(GL_TEXTURE_2D, colorTexture_id_);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -158,6 +172,11 @@ class Grid : public Material, public Light{
                 this->normalTexture_id_ = normalTexture;
                 GLuint normalMapLocation = glGetUniformLocation(program_id_, "normalMap");
                 glUniform1i(normalMapLocation, 1);
+
+                glUseProgram(debug_program_id_);
+                    normalMapLocation = glGetUniformLocation(debug_program_id_, "normalMap");
+                    glUniform1i(normalMapLocation, 1);
+                glUseProgram(program_id_);
 
                 glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -190,6 +209,10 @@ class Grid : public Material, public Light{
             glUseProgram(0);
         }
 
+        void toggleDebugMode(){
+            debug = !debug;
+        }
+
         void toggleWireframeMode(){
             wireframeDebugEnabled = !wireframeDebugEnabled;
         }
@@ -220,7 +243,7 @@ class Grid : public Material, public Light{
                   const glm::mat4 &projection = IDENTITY_MATRIX,
                   bool mirrorPass = false) {
 
-            glm::mat4 normalMatrix = inverse(transpose(model));
+            glm::mat4 normalMatrix = inverse(transpose(view * model));
 
             glUseProgram(program_id_);
             glBindVertexArray(vertex_array_id_);
@@ -241,13 +264,38 @@ class Grid : public Material, public Light{
             glUniform1f(zoom_id_, zoom);
             glUniform2fv(offset_id_, 1, glm::value_ptr(offset));
 
-            // if mirror pass is enabled then we cull back-facing fragments and underwater fragments
+            // if mirror pass is enabled then we cull underwater fragments
             glUniform1i(mirrorPass_id_, mirrorPass);
 
             glPolygonMode(GL_FRONT_AND_BACK, (wireframeDebugEnabled) ? GL_LINE : GL_FILL);
 
             glDrawElements(GL_PATCHES, num_indices_, GL_UNSIGNED_INT, 0);
 
+            if(debug){
+                glUseProgram(debug_program_id_);
+
+                // setup MVP
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "model"), ONE, DONT_TRANSPOSE, glm::value_ptr(model));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "view"), ONE, DONT_TRANSPOSE, glm::value_ptr(view));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "projection"), ONE, DONT_TRANSPOSE, glm::value_ptr(projection));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "normalMatrix"), ONE, DONT_TRANSPOSE, glm::value_ptr(normalMatrix));
+
+                // setup zoom and offset, ie. what part of the perlin noise we are sampling
+                glUniform1f(glGetUniformLocation(debug_program_id_, "zoom"), zoom);
+                glUniform2fv(glGetUniformLocation(debug_program_id_, "zoomOffset"), 1, glm::value_ptr(offset));
+
+                // if mirror pass is enabled then we cull underwater fragments
+                glUniform1i(glGetUniformLocation(debug_program_id_, "mirrorPass"), mirrorPass);
+
+                glDrawElements(GL_PATCHES, num_indices_, GL_UNSIGNED_INT, 0);
+            }
+
+            // unbind textures
+            glActiveTexture(GL_TEXTURE0 + 0);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            glActiveTexture(GL_TEXTURE0 + 1);
+            glBindTexture(GL_TEXTURE_2D, 0);
             glBindVertexArray(0);
             glUseProgram(0);
         }
