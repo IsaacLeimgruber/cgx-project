@@ -7,7 +7,6 @@ uniform vec2 offset;
 in vec2 uv_F;
 in vec2 reflectOffset_F;
 in vec3 normal_F;
-in vec3 vpoint_F;
 in vec4 gl_FragCoord;
 
 out vec4 color;
@@ -18,6 +17,6 @@ void main() {
     float _u = gl_FragCoord.x / window_size.x;
     float _v = gl_FragCoord.y / window_size.y;
 
-    color = mix(vec4(125,186,217,255) / 255.0, vec4(texture(mirrorTex, vec2(_u, _v) + reflectOffset_F).rgb, 0.5f), vec4(.3f));
+    color = mix(vec4(125,186,217,255) / 255.0, vec4(texture(mirrorTex, vec2(_u, _v) + vec2(reflectOffset_F.x, reflectOffset_F.y)).rgb, 0.5f), vec4(.3f));
     color.a = 0.8;
 }

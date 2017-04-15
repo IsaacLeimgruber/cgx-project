@@ -1,25 +1,19 @@
 #version 410 core
 
-layout(quads, fractional_even_spacing, ccw) in;
+layout(quads, equal_spacing, ccw) in;
 
 uniform mat4 projection;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 normalMatrix;
-
-uniform vec2 offset;
-
-uniform sampler2D normalMap;
-uniform sampler2D mirrorTexture;
-
 uniform float time;
 
 in vec3 vpoint_TE[];
 in vec2 uv_TE[];
 
-out vec2 uv_F;
-out vec3 vpoint_F;
-out vec2 reflectOffset_F;
+out vec2 uv_G;
+out vec2 reflectOffset_G;
+out vec3 waveNormal_G;
 
 const float DEGTORAD = 3.14159265359f / 180.0f;
 
@@ -54,12 +48,12 @@ void main()
     mat4 VP = projection * view;
 
     // Interpolate the attributes of the output vertex using the barycentric coordinates
-    uv_F = interpolate2D(uv_TE[0], uv_TE[1], uv_TE[2], uv_TE[3]);
-    vec3 vpoint_F = interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]);
+    uv_G = interpolate2D(uv_TE[0], uv_TE[1], uv_TE[2], uv_TE[3]);
+    vec3 vpoint_G = interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]);
 
     for(int i = 0; i < 4; i++){
 
-        float waveParam = (dot(dirs[i], uv_F) * freqs[i]) + (phis[i] * time);
+        float waveParam = (dot(dirs[i], uv_G) * freqs[i]) + (phis[i] * time);
 
         //Bring sin in [0,1] for later exponentiation
         float sinTmp = (sin(waveParam) + 1.0)/2.0;
@@ -75,7 +69,7 @@ void main()
 
     vec3 waveNormal = vec3(0.0);
     for(int i = 0; i < 4; i++){
-        vpoint_F.y += sinWave[i];
+        vpoint_G.y += sinWave[i];
         waveNormal += vec3(-ddx[i], 1.0, ddy[i]);
     }
 
@@ -88,9 +82,11 @@ void main()
     vec3 eyeNormal = (normalMatrix * vec4(flatNormal, 1.0)).xyz;
 
     //Compute distortion
-    reflectOffset_F = normalize(eyeNormal.xy) * length (flatNormal) * 0.3;
+    reflectOffset_G = normalize(eyeNormal.xy) * length (flatNormal) * 0.3;
 
     // Set height for generated (and original) vertices
-    gl_Position = projection * view * model * vec4(vpoint_F, 1.0);
+    gl_Position = vec4(vpoint_G, 1.0);
 
+    //Pass wave normal to geometry shader
+    waveNormal_G = waveNormal;
 }

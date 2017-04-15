@@ -24,7 +24,12 @@ file(GLOB SHADERS
   water/water_vshader.glsl
   water/water_fshader.glsl
   water/water_tcshader.glsl
-  water/water_teshader.glsl)
+  water/water_teshader.glsl
+  water/water_vshader_debug.glsl
+  water/water_fshader_debug.glsl
+  water/water_tcshader_debug.glsl
+  water/water_teshader_debug.glsl
+  water/water_gshader_debug.glsl)
 deploy_shaders_to_build_dir(${SHADERS})
 
 add_executable(${EXERCISENAME} ${SOURCES} ${HEADERS} ${SHADERS})

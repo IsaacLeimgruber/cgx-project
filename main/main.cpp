@@ -189,6 +189,9 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             case GLFW_KEY_G:
                 grid.updateZoomFactor(-0.1);
                 break;
+            case GLFW_KEY_N:
+                water.toggleDebugMode();
+                break;
             case GLFW_KEY_RIGHT:
                 grid.updateOffset(vec2(-OFFSET_QTY, 0.0));
                 break;

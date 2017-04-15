@@ -10,6 +10,7 @@ class Water{
         GLuint vertex_buffer_object_position_;  // memory buffer for positions
         GLuint vertex_buffer_object_index_;     // memory buffer for indices
         GLuint program_id_;                     // GLSL shader program ID
+        GLuint debug_program_id_;
         GLuint heightMapTexture_id_;            // texture ID
         GLuint mirrorTexture_id_;
         GLuint normalTexture_id_;
@@ -21,6 +22,7 @@ class Water{
         GLuint time_id_;
         GLuint offset_id_;
         bool wireframeDebugEnabled = false;
+        bool debug = false;
 
     public:
         void Init(GLuint mirrorTexture, GLuint heightMapTexture, GLuint normalTexture) {
@@ -29,7 +31,12 @@ class Water{
                                                   "water_fshader.glsl",
                                                   "water_tcshader.glsl",
                                                   "water_teshader.glsl");
-            if(!program_id_) {
+            debug_program_id_ = icg_helper::LoadShaders("water_vshader_debug.glsl",
+                                                  "water_fshader_debug.glsl",
+                                                  "water_tcshader_debug.glsl",
+                                                  "water_teshader_debug.glsl",
+                                                  "water_gshader_debug.glsl");
+            if(!program_id_ || !debug_program_id_) {
                 exit(EXIT_FAILURE);
             }
 
@@ -153,6 +160,10 @@ class Water{
             wireframeDebugEnabled = !wireframeDebugEnabled;
         }
 
+        void toggleDebugMode(){
+            debug = !debug;
+        }
+
         void Cleanup() {
             glBindVertexArray(0);
             glUseProgram(0);
@@ -191,9 +202,23 @@ class Water{
 
             glUniform1f(time_id_, glfwGetTime());
 
-            glPolygonMode(GL_FRONT_AND_BACK, (wireframeDebugEnabled) ? GL_LINE : GL_FILL);
+            //glPolygonMode(GL_FRONT_AND_BACK, (wireframeDebugEnabled) ? GL_LINE : GL_FILL);
 
             glDrawElements(GL_PATCHES, num_indices_, GL_UNSIGNED_INT, 0);
+
+            if(debug){
+                glUseProgram(debug_program_id_);
+
+                // setup MVP
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "model"), ONE, DONT_TRANSPOSE, glm::value_ptr(model));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "view"), ONE, DONT_TRANSPOSE, glm::value_ptr(view));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "projection"), ONE, DONT_TRANSPOSE, glm::value_ptr(projection));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "normalMatrix"), ONE, DONT_TRANSPOSE, glm::value_ptr(normalMatrix));
+
+                glUniform1f(glGetUniformLocation(debug_program_id_, "time"), glfwGetTime());
+
+                glDrawElements(GL_PATCHES, num_indices_, GL_UNSIGNED_INT, 0);
+            }
             glBindVertexArray(0);
             glUseProgram(0);
         }
