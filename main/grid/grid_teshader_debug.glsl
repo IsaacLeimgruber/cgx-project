@@ -6,7 +6,7 @@ uniform mat4 projection;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 normalMatrix;
-uniform vec3 light_pos;
+uniform vec3 lightPos;
 uniform vec2 zoomOffset;
 uniform float zoom;
 
@@ -59,6 +59,6 @@ void main()
     vec3 n = (texture(normalMap, (uv_G+zoomOffset) * zoom).xyz * 2.0) - 1.0f;
     normal_MV_G = normalMatrix * vec4(n * 0.1, 1.0);
     //Lighting
-    lightDir_G = normalize(light_pos - vpoint_M_G.xyz);
+    lightDir_G = normalize((view * vec4(lightPos,1.0) - vpoint_MV_G).xyz);
     viewDir_G = -normalize(vpoint_MV_G.xyz);
 }

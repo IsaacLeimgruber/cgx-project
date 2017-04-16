@@ -6,7 +6,7 @@ uniform mat4 projection;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 normalMatrix;
-uniform vec3 light_pos;
+uniform vec3 lightPos;
 uniform vec2 zoomOffset;
 uniform float zoom;
 
@@ -57,6 +57,6 @@ void main()
 
 
     //Lighting
-    lightDir_F = normalize(light_pos - vpoint_M_F.xyz);
+    lightDir_F = normalize(lightPos - vpoint_M_F.xyz);
     viewDir_F = -normalize(vpoint_MV_F.xyz);
 }

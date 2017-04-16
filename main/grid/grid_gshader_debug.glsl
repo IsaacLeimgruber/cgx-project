@@ -31,13 +31,13 @@ void main()
         uv_F = uv_G[i];
 
         vec3 P = vpoint_MV_G[i].xyz;
-        vec3 N = normal_MV_G[i].xyz;
+        vec3 N = lightDir_G[i].xyz;
 
         gl_Position = projection * vec4(P, 1.0);
         //vertex_color = vertex[i].color;
         EmitVertex();
 
-        gl_Position = projection * vec4(P + N, 1.0);
+        gl_Position = projection * vec4(P + N * 0.1, 1.0);
         uv_F = uv_G[i];
         //vertex_color = vertex[i].color;
         EmitVertex();

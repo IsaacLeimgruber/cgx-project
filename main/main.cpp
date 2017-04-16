@@ -13,6 +13,8 @@
 #include "camera/camera.h"
 #include "normalmap/normalmap.h"
 #include "water/water.h"
+#include "light/light.h"
+#include "material/material.h"
 
 using namespace glm;
 
@@ -25,6 +27,8 @@ FrameBuffer reflectionBuffer;
 ScreenQuad screenquad;
 NormalMap normalMap;
 Water water;
+Light light;
+Material material;
 
 bool keys[1024];
 bool firstMouse = false;
@@ -50,6 +54,11 @@ void Init() {
     // Initialize camera
     camera = Camera{vec3(0.0, 2.5, 0.0)};
 
+    // Let there be light !
+    light = Light{vec3(5.0, 2.0, 0.0)};
+
+    material = Material{};
+
     // sets background color
     glClearColor(0.0, 0.0, 0.0, 1.0 /*solid*/);
     perlin.Init();
@@ -58,6 +67,8 @@ void Init() {
     int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height, false);
     normalMap.Init(framebuffer_texture_id);
     grid.Init(framebuffer_texture_id, normalBuffer_texture_id);
+    grid.useLight(light);
+    grid.useMaterial(material);
     screenquad.Init(window_width, window_height, normalBuffer_texture_id);
     water.Init(reflectionBuffer_texture_id, framebuffer_texture_id, normalBuffer_texture_id);
 

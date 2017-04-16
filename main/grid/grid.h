@@ -1,53 +1,11 @@
 #pragma once
 #include "icg_helper.h"
 #include <glm/gtc/type_ptr.hpp>
+#include "../light/light.h"
+#include "../material/material.h"
 
-struct Light {
-        glm::vec3 La = glm::vec3(1.0f, 1.0f, 1.0f);
-        glm::vec3 Ld = glm::vec3(0.35, 0.35, 0.35);
-        glm::vec3 Ls = glm::vec3(0.9f, 0.9f, 0.9f);
-        glm::vec3 light_pos = glm::vec3(5.0f, 2.0f, 0.0f);
 
-        // pass light properties to the shader
-        void Setup(GLuint program_id) {
-            glUseProgram(program_id);
-
-            // given in camera space
-            GLuint light_pos_id = glGetUniformLocation(program_id, "light_pos");
-
-            GLuint La_id = glGetUniformLocation(program_id, "La");
-            GLuint Ld_id = glGetUniformLocation(program_id, "Ld");
-            GLuint Ls_id = glGetUniformLocation(program_id, "Ls");
-
-            glUniform3fv(light_pos_id, ONE, glm::value_ptr(light_pos));
-            glUniform3fv(La_id, ONE, glm::value_ptr(La));
-            glUniform3fv(Ld_id, ONE, glm::value_ptr(Ld));
-            glUniform3fv(Ls_id, ONE, glm::value_ptr(Ls));
-        }
-};
-
-struct Material {
-        glm::vec3 ka = glm::vec3(0.18f, 0.1f, 0.1f);
-        glm::vec3 kd = glm::vec3(0.9f, 0.9f, 0.9f);
-        glm::vec3 ks = glm::vec3(0.9f, 0.9f, 0.9f);
-        float alpha = 100.0;
-        // pass material properties to the shaders
-        void Setup(GLuint program_id) {
-            glUseProgram(program_id);
-
-            GLuint ka_id = glGetUniformLocation(program_id, "ka");
-            GLuint kd_id = glGetUniformLocation(program_id, "kd");
-            GLuint ks_id = glGetUniformLocation(program_id, "ks");
-            GLuint alpha_id = glGetUniformLocation(program_id, "alpha");
-
-            glUniform3fv(ka_id, ONE, glm::value_ptr(ka));
-            glUniform3fv(kd_id, ONE, glm::value_ptr(kd));
-            glUniform3fv(ks_id, ONE, glm::value_ptr(ks));
-            glUniform1f(alpha_id, alpha);
-        }
-};
-
-class Grid : public Material, public Light{
+class Grid{
 
     private:
         GLuint vertex_array_id_;                // vertex array object
@@ -65,13 +23,19 @@ class Grid : public Material, public Light{
         GLuint zoom_id_;
         GLuint offset_id_;
         GLuint mirrorPass_id_;
-        GLfloat zoom = 1;
-        bool debug = false;
-        bool wireframeDebugEnabled = false;
+        GLfloat zoom;
+        Light light;
+        Material material;
+        bool debug;
+        bool wireframeDebugEnabled;
 
         glm::vec2 offset = glm::vec2(0,0);
 
     public:
+        Grid():light{Light()}, zoom{1}, debug{false}, wireframeDebugEnabled{false} {
+
+        }
+
         void Init(GLuint colorTexture, GLuint normalTexture) {
             // compile the shaders.
             program_id_ = icg_helper::LoadShaders("grid_vshader.glsl",
@@ -122,9 +86,6 @@ class Grid : public Material, public Light{
                         indices.push_back(((j)*grid_dim) + (i+1));
                         indices.push_back(((j+1)*grid_dim) + (i+1));
                         indices.push_back(((j+1)*grid_dim) + (i));
-                        //Second triangle
-                        //indices.push_back((j*grid_dim) + (i));
-                        //indices.push_back(((j+1)*grid_dim) + (i+1));
                     }
                 }
 
@@ -197,16 +158,28 @@ class Grid : public Material, public Light{
 
             mirrorPass_id_ = glGetUniformLocation(program_id_, "mirrorPass");
 
-            // Setup material and lighting
-            Material::Setup(program_id_);
-            Light::Setup(program_id_);
-
             //Tesselation configuration
             glPatchParameteri(GL_PATCH_VERTICES, 4);
 
             // to avoid the current object being polluted
             glBindVertexArray(0);
             glUseProgram(0);
+        }
+
+        void useLight(Light l){
+            this->light = l;
+            light.Setup(program_id_);
+            glUseProgram(debug_program_id_);
+                light.Setup(debug_program_id_);
+            glUseProgram(program_id_);
+        }
+
+        void useMaterial(Material m){
+            this->material = m;
+            material.Setup(program_id_);
+            glUseProgram(debug_program_id_);
+                material.Setup(debug_program_id_);
+            glUseProgram(program_id_);
         }
 
         void toggleDebugMode(){
