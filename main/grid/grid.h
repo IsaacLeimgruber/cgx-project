@@ -32,7 +32,7 @@ class Grid{
         glm::vec2 offset = glm::vec2(0,0);
 
     public:
-        Grid():light{Light()}, zoom{1}, debug{false}, wireframeDebugEnabled{false} {
+        Grid():light{Light()}, material{Material()}, zoom{1}, debug{false}, wireframeDebugEnabled{false} {
 
         }
 

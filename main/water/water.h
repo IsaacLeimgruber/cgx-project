@@ -1,7 +1,8 @@
 #pragma once
 #include "icg_helper.h"
 #include <glm/gtc/type_ptr.hpp>
-
+#include "../light/light.h"
+#include "../material/material.h"
 
 class Water{
 
@@ -21,10 +22,15 @@ class Water{
         GLuint N_id_;
         GLuint time_id_;
         GLuint offset_id_;
-        bool wireframeDebugEnabled = false;
-        bool debug = false;
+        Light light;
+        Material material;
+        bool wireframeDebugEnabled;
+        bool debug;
 
     public:
+        Water(): light{Light()}, material{Material()}, debug{false},wireframeDebugEnabled{false}{
+
+        }
         void Init(GLuint mirrorTexture, GLuint heightMapTexture, GLuint normalTexture) {
             // compile the shaders.
             program_id_ = icg_helper::LoadShaders("water_vshader.glsl",
@@ -51,7 +57,7 @@ class Water{
                 std::vector<GLfloat> vertices;
                 std::vector<GLuint> indices;
 
-                int grid_dim = 12;
+                int grid_dim = 16;
                 float spacing = 2.f/(grid_dim - 1.0);
 
                 /*
@@ -154,6 +160,22 @@ class Water{
             // to avoid the current object being polluted
             glBindVertexArray(0);
             glUseProgram(0);
+        }
+
+        void useLight(Light l){
+            this->light = l;
+            light.Setup(program_id_);
+            glUseProgram(debug_program_id_);
+                light.Setup(debug_program_id_);
+            glUseProgram(program_id_);
+        }
+
+        void useMaterial(Material m){
+            this->material = m;
+            material.Setup(program_id_);
+            glUseProgram(debug_program_id_);
+                material.Setup(debug_program_id_);
+            glUseProgram(program_id_);
         }
 
         void toggleWireframeMode(){

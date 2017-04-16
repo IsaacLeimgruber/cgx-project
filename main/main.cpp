@@ -55,7 +55,7 @@ void Init() {
     camera = Camera{vec3(0.0, 2.5, 0.0)};
 
     // Let there be light !
-    light = Light{vec3(5.0, 2.0, 0.0)};
+    light = Light{vec3(-5.0, 2.0, 5.0)};
 
     material = Material{};
 
@@ -71,7 +71,7 @@ void Init() {
     grid.useMaterial(material);
     screenquad.Init(window_width, window_height, normalBuffer_texture_id);
     water.Init(reflectionBuffer_texture_id, framebuffer_texture_id, normalBuffer_texture_id);
-
+    water.useLight(light);
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
 
