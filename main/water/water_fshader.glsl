@@ -28,17 +28,18 @@ void main() {
 
     vec3 reflection = mix(vec3(125,186,217) / 255.0, vec3(texture(mirrorTex, vec2(_u, _v) + reflectOffset_F).rgb), 0.5f);
 
+    vec3 lightDir = normalize(lightDir_F);
+    float cosNL = dot(normal_MV_F, lightDir);
 
-    float cosNL = dot(normal_MV_F, lightDir_F);
+    vec3 lightingResult = (reflection * La);
 
-    vec3 reflectionDir = normalize(2*normal_MV_F * cosNL - lightDir_F);
+    if(cosNL > 0){
+        vec3 reflectionDir = normalize(2*normal_MV_F * cosNL - lightDir);
+         lightingResult +=
+                (vec3(1,1,1) * cosNL * Ld)
+                +
+                (vec3(0.7,0.7,0.7) * pow(max(0, dot(reflectionDir, viewDir_F)), 200) * Ls);
+    }
 
-    vec3 lightingColor =   //Ambient
-            (reflection * La)
-            + //Diffuse
-            (vec3(1,1,1) * max(0, cosNL) * Ld)
-            + //Specular
-            (vec3(1,1,1) * pow(max(0, dot(reflectionDir, viewDir_F)), 160) * Ls);
-
-    color = vec4(lightingColor, 0.8f);
+    color = vec4(lightingResult, 0.8f);
 }

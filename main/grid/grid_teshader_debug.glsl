@@ -18,7 +18,7 @@ in vec2 uv_TE[];
 
 out vec4 vpoint_MV_G;
 out vec4 vpoint_M_G;
-out vec4 normal_MV_G;
+out vec3 normal_MV_G;
 out vec2 uv_G;
 out vec3 lightDir_G;
 out vec3 viewDir_G;
@@ -55,10 +55,10 @@ void main()
     vpoint_MV_G = view * vpoint_M_G;
     gl_Position = view * model * vec4(vpoint_G,1.0);
 
+    lightDir_G = normalize((view * vec4(lightPos, 1.0)).xyz - vpoint_MV_G.xyz);
+    vec3 gridNormal = (texture(normalMap, (uv_G+zoomOffset) * zoom).xyz * 2.0) - 1.0f;
+    normal_MV_G = (normalMatrix * vec4(gridNormal, 1.0)).xyz;
 
-    vec3 n = (texture(normalMap, (uv_G+zoomOffset) * zoom).xyz * 2.0) - 1.0f;
-    normal_MV_G = normalMatrix * vec4(n * 0.1, 1.0);
-    //Lighting
-    lightDir_G = normalize((view * vec4(lightPos,1.0) - vpoint_MV_G).xyz);
+
     viewDir_G = -normalize(vpoint_MV_G.xyz);
 }

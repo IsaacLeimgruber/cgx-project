@@ -12,7 +12,6 @@ uniform vec2 zoomOffset;
 uniform float zoom;
 uniform bool mirrorPass;
 
-in vec4 vpoint_MV_F;
 in vec4 vpoint_M_F;
 in vec3 lightDir_F;
 in vec3 viewDir_F;
@@ -49,8 +48,9 @@ void main() {
     }
 
     vec3 gridNormal = (texture(normalMap, (uv_F+zoomOffset) * zoom).xyz * 2.0) - 1.0f;
+    vec3 normal_MV = (normalMatrix * vec4(gridNormal, 1.0)).xyz;
 
-    float cosNL = dot(gridNormal, lightDir_F);
+    vec3 lightDir = normalize(lightDir_F);
 
     vec3 heightCol = vec3(0);
     vec3 vert = vec3(0.f, 1.f, 0.f);
@@ -94,8 +94,17 @@ void main() {
 
 
     heightCol /= 255.0;
-    //vec3 reflection_dir = normalize( 2.0 * gridNormal * max(0.0, cosNL) - lightDir_F);
-    color = vec4((heightCol * La) + (kd * cosNL * Ld), 1.0f);//+ (ks * pow(max(0, dot(reflection_dir, viewDir_F)), alpha) * Ls);
+    float cosNL = dot(normal_MV, lightDir);
 
+    vec3 lightingResult = (heightCol * La);
 
+    if(cosNL > 0){
+         vec3 reflectionDir = normalize( 2.0 * normal_MV * cosNL - lightDir);
+         lightingResult +=
+                (vec3(0.7,0.7,0.7) * cosNL * Ld)
+                +
+                (heightCol * pow(max(0, dot(reflectionDir, viewDir_F)), 512) * Ls);
+    }
+
+    color = vec4(lightingResult, 1.0);
 }
