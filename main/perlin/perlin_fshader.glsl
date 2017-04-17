@@ -2,7 +2,8 @@
 in vec2 uv;
 out vec3 color;
 uniform int p[512];
-uniform float pos_offset[2];
+uniform float xoffset;
+uniform float yoffset;
 
 //bon
 float fade(float t) {
@@ -63,27 +64,50 @@ float perlin_noise(float x, float y) {
                 );
 }
 
-float octPNoise(float x, float y, int octaves, float persistence) {
-        float total = 0;
+//float ridged_noise(float x, float y) {
+//  return 1.0f - abs(perlin_noise(x, y));
+//}
+float ridged_noise(float x, float y) {
+  float scaling_factor = .9;
+  float noise = perlin_noise(x, y);
+  if (noise < 0) noise = -noise;
+  if (noise > 1) noise = 1;
+  noise = scaling_factor * (1 - noise);
+  noise = pow(noise, 1.8);
+  return noise - .5; // noise is in [-1;1]
+}
+
+float fBm(float x, float y) {
+        int octaves = 8;
+        float persistence = .5;
         float frequency = 2;
         float amplitude = 1;
-        float maxValue = 0; // Used for normalizing result to 0.0 - 1.0
+        float first = 2 * pow(perlin_noise(x,y), 3);
+        float total = 1.3 * first;
+        float p = (abs(first) > .8) ? 0 : 1 - abs(first);
+        p = p*p;
+        for(int i = 0; i < 3; i++) {
+          total += perlin_noise(x * frequency, y * frequency)
+            * amplitude * .1
+            * p;
+          amplitude *= persistence;
+          frequency *= 1.4;
+        }
+
+        frequency = 2;
+        amplitude = 1;
+        float maxValue = 1.3; // Used for normalizing result to 0.0 - 1.0
         for(int i = 0; i < octaves; i++) {
-                total += perlin_noise(x * frequency, y * frequency) * amplitude;
-                maxValue += amplitude;
-                amplitude *= persistence;
-                frequency *= 1.85;
+          total += ridged_noise(x * frequency, y * frequency)
+                   * amplitude
+                   * first;
+          maxValue += amplitude * first;
+          amplitude *= persistence;
+          frequency *= 1.85;
         }
         return total/maxValue + 0.5;
 }
 
-float ridged_noise(float x, float y, int octaves, float persistence) {
-    return 1.0f - abs(octPNoise(x, y, octaves, persistence));
-}
-
 void main() {
-    color = vec3(octPNoise(uv.x, uv.y, 8, 0.45));
-    //TODO: pourquoi ça ne marche pas quand on utilise le pos_offset ? J'en ai besoin !
-    //color = vec3(octPNoise(uv.x + pos_offset[0], uv.y + pos_offset[1], 8, 0.45));
-    //color = vec3(pos_offset[0], pos_offset[1], 0);
+  color = vec3(fBm(xoffset + uv.x, yoffset + uv.y));
 }

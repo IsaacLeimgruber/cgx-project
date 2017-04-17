@@ -127,9 +127,12 @@ public:
             glDeleteTextures(1, &texture_id_);
         }
 
-        void Draw(std::vector<GLfloat> pos_offset = {0.5f, 0.5f}) {
+        void Draw(float xoffset = 0, float yoffset = 0) {
             glUseProgram(program_id_);
-            glUniform1fv(glGetUniformLocation(program_id_, "pos_offset"), 1, pos_offset.data());
+
+            glUniform1f(glGetUniformLocation(program_id_, "xoffset"), xoffset);
+            glUniform1f(glGetUniformLocation(program_id_, "yoffset"), yoffset);
+
             glBindVertexArray(vertex_array_id_);
             // bind texture
             glActiveTexture(GL_TEXTURE0);
