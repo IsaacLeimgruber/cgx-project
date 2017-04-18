@@ -113,5 +113,8 @@ float fBm(float x, float y) {
 }
 
 void main() {
-  color = vec3(fBm(xoffset + uv.x, yoffset + uv.y));
+  float f = fBm(xoffset + uv.x, yoffset + uv.y);
+  f = f < -1 ? -1 : f;
+  f = f > 1 ? -1 : f;
+  color = vec3(f);
 }
