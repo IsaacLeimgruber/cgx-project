@@ -4,6 +4,8 @@ out vec3 color;
 uniform int p[512];
 uniform float xoffset;
 uniform float yoffset;
+uniform float xscale;
+uniform float yscale;
 
 //bon
 float fade(float t) {
@@ -113,7 +115,7 @@ float fBm(float x, float y) {
 }
 
 void main() {
-  float f = fBm(xoffset + uv.x, yoffset + uv.y);
+  float f = fBm((xoffset + uv.x) * xscale, (yoffset + uv.y) * yscale);
   f = f < -1 ? -1 : f;
   f = f > 1 ? -1 : f;
   color = vec3(f);

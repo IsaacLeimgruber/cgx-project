@@ -127,11 +127,19 @@ public:
             glDeleteTextures(1, &texture_id_);
         }
 
-        void Draw(float xoffset = 0, float yoffset = 0) {
+        void Draw(glm::vec2 xyoffset, glm::vec2 xyscale, glm::vec3 translation = glm::vec3(0,0,0)) {
+          Draw(xyoffset.x, xyoffset.y, xyscale.x, xyscale.y, translation);
+        }
+
+        void Draw(float xoffset = 0, float yoffset = 0, float xscale = 1, float yscale = 1, glm::vec3 translation = glm::vec3(0,0,0)) {
             glUseProgram(program_id_);
 
+            glUniform1f(glGetUniformLocation(program_id_, "xscale"), xscale);
+            glUniform1f(glGetUniformLocation(program_id_, "yscale"), yscale);
             glUniform1f(glGetUniformLocation(program_id_, "xoffset"), xoffset);
             glUniform1f(glGetUniformLocation(program_id_, "yoffset"), yoffset);
+            glUniform3fv(glGetUniformLocation(program_id_, "translation"), 1, &translation[0]);
+            //glUniform1f(glGetUniformLocation(program_id_, "scale"), scale);
 
             glBindVertexArray(vertex_array_id_);
             // bind texture

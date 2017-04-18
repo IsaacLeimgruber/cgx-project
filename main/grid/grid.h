@@ -62,7 +62,7 @@ class Grid : public Material, public Light{
         GLuint P_id_;                           // projection matrix ID
         GLuint N_id_;
         GLuint zoom_id_;
-        GLuint offset_id_;
+        int offset_id_;
         GLfloat zoom = 1;
         bool wireframeDebugEnabled = false;
 
@@ -149,8 +149,8 @@ class Grid : public Material, public Light{
                 glBindTexture(GL_TEXTURE_2D, colorTexture_id_);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-                glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
                 glBindTexture(GL_TEXTURE_2D, 0);
 
                 // load/Assign normal map
@@ -161,8 +161,8 @@ class Grid : public Material, public Light{
                 glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
                 glBindTexture(GL_TEXTURE_2D, 0);
             }
 
@@ -175,6 +175,10 @@ class Grid : public Material, public Light{
             zoom_id_ = glGetUniformLocation(program_id_, "zoom");
             offset_id_ = glGetUniformLocation(program_id_, "zoomOffset");
 
+            if (offset_id_ < 0) {
+              cout << "unable to find uniform 'offset'" << std::endl;
+              exit(-1);
+            }
             // Setup material and lighting
             Material::Setup(program_id_);
             Light::Setup(program_id_);
@@ -197,8 +201,8 @@ class Grid : public Material, public Light{
         }
 
         void updateOffset(glm::vec2 v){
-            offset += v;
-            std::cout << "Offset value: (" << offset.x <<", " << offset.y << ")" << std::endl;
+            offset = v;
+            std::cout << "Offset: " << v.x << ", " << v.y << std::endl;
         }
 
         void Cleanup() {
