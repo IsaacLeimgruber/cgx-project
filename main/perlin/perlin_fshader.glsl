@@ -31,6 +31,10 @@ float grad(int hash, float x, float y) {
 }
 
 float perlin_noise(float x, float y) {
+  // The noise is not defined when x, y are negative
+  // Taking the absolute value creates a mirror effect
+    x = abs(x);
+    y = abs(y);
 
     vec2 pxy = vec2(x,y),
          bottomLeft = vec2(int(x), int(y));

@@ -1,5 +1,6 @@
 // glew must be before glfw
 #include <iostream>
+#include <array>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "icg_helper.h"
@@ -14,13 +15,25 @@
 
 using namespace glm;
 
-Grid grid;
+constexpr int gridWidth  = 3;
+constexpr int gridHeight = 3;
+
+template <class T>
+using Matrix = array<array<T, gridWidth>, gridHeight>;
+
+Matrix<Grid> grid;
 Perlin perlin;
 Camera camera;
-FrameBuffer framebuffer;
-FrameBuffer normalBuffer;
+Matrix<FrameBuffer> framebuffer;
+Matrix<FrameBuffer> normalBuffer;
 ScreenQuad screenquad;
-NormalMap normalMap;
+Matrix<NormalMap> normalMap;
+vec2 currentOffset{1, 1}; //offset for middle grid
+int iOffset = 0;
+int jOffset = 0;
+bool setupWindowBuffer = true;
+int noiseTextureWidth = 256;
+int noiseTextureHeight = 256;
 
 bool keys[1024];
 bool firstMouse = false;
@@ -41,7 +54,35 @@ GLfloat lastFrame = 0.0f;  	// Time of last frame
 GLfloat lastSec = 0.0;
 GLuint frameCount = 0;
 
+vec3 translationForGrid(int i, int j) {
+  static Matrix<vec3> gridTranslation{
+    vec3(-1, 0,-1),
+    vec3( 0, 0,-1),
+    vec3( 1, 0,-1),
+    vec3(-1, 0, 0),
+    vec3( 0, 0, 0),
+    vec3( 1, 0, 0),
+    vec3(-1, 0, 1),
+    vec3( 0, 0, 1),
+    vec3( 1, 0, 1),
+  };
+  int ti = (i + iOffset + gridHeight) % gridHeight;
+  int tj = (j + jOffset + gridWidth ) % gridWidth;
+  return gridTranslation[ti][tj];
+}
+void redrawNoise(int i, int j) {
+  vec3 t = translationForGrid(i, j);
 
+  framebuffer[i][j].Bind();
+  perlin.Draw(currentOffset.x + t.x, currentOffset.y - t.z);
+  framebuffer[i][j].Unbind();
+
+  normalBuffer[i][j].Bind();
+  normalMap[i][j].Draw();
+  normalBuffer[i][j].Unbind();
+
+  setupWindowBuffer = true;
+}
 void Init() {
     // Initialize camera
     camera = Camera{vec3(0.0, 1.0, 0.0)};
@@ -49,11 +90,19 @@ void Init() {
     // sets background color
     glClearColor(0.0, 0.0, 0.0, 1.0 /*solid*/);
     perlin.Init();
-    int framebuffer_texture_id = framebuffer.Init(1024, 1024, true);
-    int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, true);
-    normalMap.Init(framebuffer_texture_id);
-    grid.Init(framebuffer_texture_id, normalBuffer_texture_id);
-    screenquad.Init(window_width, window_height, normalBuffer_texture_id);
+
+    Matrix<int> framebuffer_id;
+    Matrix<int> normalbuffer_id;
+    for (int i = 0; i < gridHeight; ++i) {
+      for (int j = 0; j < gridWidth; ++j) {
+        framebuffer_id[i][j] = framebuffer[i][j].Init(noiseTextureWidth, noiseTextureHeight, true);
+        normalbuffer_id[i][j] = normalBuffer[i][j].Init(noiseTextureWidth, noiseTextureHeight, true);
+        normalMap[i][j].Init(framebuffer_id[i][j]);
+        grid[i][j].Init(framebuffer_id[i][j], normalbuffer_id[i][j]);
+      }
+    }
+
+    //screenquad.Init(window_width, window_height, normalbuffer_id[0]);
 
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
@@ -64,18 +113,15 @@ void Init() {
     quad_model_matrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, 0.0f));
 
     //Generate Perlin
-    framebuffer.Bind();
-        perlin.Draw();
-    framebuffer.Unbind();
-
-    normalBuffer.Bind();
-        normalMap.Draw();
-    normalBuffer.Unbind();
-
+    for (int i = 0; i < gridHeight; ++i) {
+      for (int j = 0; j < gridWidth; ++j) {
+        redrawNoise(i, j);
+      }
+    }
 
     //Initialise boolean keys array
-    for(int i=0; i < 1024; i++){
-        keys[i] = false;
+    for(auto& key : keys) {
+      key = false;
     }
 }
 
@@ -95,10 +141,51 @@ void Display() {
 
     //glm::rotate(IDENTITY_MATRIX,(float)( (3.14/180) * glfwGetTime() * 30), glm::vec3(0.0, 1.0, 0.0))
 
-    grid.Draw(quad_model_matrix, view_matrix, projection_matrix);
-    //screenquad.Draw();
+    for (int i = 0; i < gridHeight; ++i) {
+      for (int j = 0; j < gridWidth; ++j) {
+        glm::mat4 t = translate(quad_model_matrix, translationForGrid(i,j)*2.0f);
+        grid[i][j].Draw(t, view_matrix, projection_matrix);
+      }
+    }
 
     frameCount++;
+}
+
+void moveRight() {
+  jOffset = (jOffset + 1) % gridWidth;
+  currentOffset.x -= 1;
+
+  int j = (gridWidth - jOffset) % gridWidth;
+  for (int i = 0; i < gridHeight; ++i) {
+    redrawNoise(i, j);
+  }
+}
+void moveLeft() {
+  jOffset = (jOffset + gridWidth - 1) % gridWidth;
+  currentOffset.x += 1;
+
+  int j = (gridWidth - jOffset - 1) % gridWidth;
+  for (int i = 0; i < gridHeight; ++i) {
+    redrawNoise(i, j);
+  }
+}
+void moveUp() {
+  iOffset = (iOffset + gridHeight - 1) % gridHeight;
+  currentOffset.y -= 1;
+
+  int i = (gridHeight - iOffset - 1) % gridHeight;
+  for (int j = 0; j < gridWidth; ++j) {
+    redrawNoise(i, j);
+  }
+}
+void moveDown() {
+  iOffset = (iOffset + 1) % gridHeight;
+  currentOffset.y += 1;
+
+  int i = (gridHeight - iOffset) % gridHeight;
+  for (int j = 0; j < gridWidth; ++j) {
+    redrawNoise(i, j);
+  }
 }
 
 // transforms glfw screen coordinates into normalized OpenGL coordinates.
@@ -163,31 +250,34 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
         switch(key){
             case GLFW_KEY_F:
-                grid.toggleWireframeMode();
+                for (auto& lig : grid) {
+                  for (auto& item : lig) {
+                      item.toggleWireframeMode();
+                  }
+                }
                 break;
             case GLFW_KEY_H:
-                grid.updateZoomFactor(+0.1);
+                //grid[0].updateZoomFactor(+0.1);
                 break;
             case GLFW_KEY_G:
-                grid.updateZoomFactor(-0.1);
+                //grid[0].updateZoomFactor(-0.1);
                 break;
             case GLFW_KEY_RIGHT:
-                grid.updateOffset(vec2(-OFFSET_QTY, 0.0));
+                moveRight();
                 break;
             case GLFW_KEY_LEFT:
-                grid.updateOffset(vec2(OFFSET_QTY, 0.0));
+                moveLeft();
                 break;
             case GLFW_KEY_UP:
-                grid.updateOffset(vec2(0.0, -OFFSET_QTY));
+                moveUp();
                 break;
             case GLFW_KEY_DOWN:
-                grid.updateOffset(vec2(0.0, OFFSET_QTY));
+                moveDown();
                 break;
         }
     } else if(action == GLFW_RELEASE){
       keys[key] = false;
     }
-    //camera.debug();
 }
 
 void doMovement()
@@ -216,9 +306,6 @@ void doMovement()
 }
 
 int main(int argc, char *argv[]) {
-    for(auto& key : keys) {
-        key = false;
-    }
     // GLFW Initialization
     if(!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
@@ -226,7 +313,6 @@ int main(int argc, char *argv[]) {
     }
 
     glfwSetErrorCallback(ErrorCallback);
-
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -266,28 +352,26 @@ int main(int argc, char *argv[]) {
 
     cout << "OpenGL" << glGetString(GL_VERSION) << endl;
 
-    // initialize our OpenGL program
     Init();
 
-    // update the window size with the framebuffer size (on hidpi screens the
-    // framebuffer is bigger)
+    // updates the window size with the framebuffer size
+    // (on hidpi screens the framebuffer is bigger)
     glfwGetFramebufferSize(window, &window_width, &window_height);
-    SetupProjection(window, window_width, window_height);
 
-    // render loop
     while(!glfwWindowShouldClose(window)){
+
+        if (setupWindowBuffer) {
+          // note: this is needed each time another buffer is binded and unbinded, hence the boolean
+          SetupProjection(window, window_width, window_height);
+          setupWindowBuffer = false;
+        }
+
         Display();
         glfwSwapBuffers(window);
         glfwPollEvents();
         doMovement();
     }
 
-    grid.Cleanup();
-    perlin.Cleanup();
-    framebuffer.Cleanup();
-    normalMap.Cleanup();
-
-    // close OpenGL window and terminate GLFW
     glfwDestroyWindow(window);
     glfwTerminate();
     return EXIT_SUCCESS;
