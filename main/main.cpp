@@ -15,8 +15,8 @@
 
 using namespace glm;
 
-constexpr int gridWidth  = 3;
-constexpr int gridHeight = 3;
+constexpr int gridWidth  = 7;
+constexpr int gridHeight = 7;
 
 template <class T>
 using Matrix = array<array<T, gridWidth>, gridHeight>;
@@ -32,8 +32,9 @@ vec2 currentOffset{1, 1}; //offset for middle grid
 int iOffset = 0;
 int jOffset = 0;
 bool setupWindowBuffer = true;
-int noiseTextureWidth = 256;
-int noiseTextureHeight = 256;
+int targetResolution = 1024;
+int noiseTextureWidth = targetResolution/gridWidth;
+int noiseTextureHeight = targetResolution/gridHeight;
 
 bool keys[1024];
 bool firstMouse = false;
@@ -54,18 +55,18 @@ GLfloat lastFrame = 0.0f;  	// Time of last frame
 GLfloat lastSec = 0.0;
 GLuint frameCount = 0;
 
+Matrix<vec3> makeInitialTranslations() {
+    Matrix<vec3> t;
+    for (int i = 0; i < gridHeight; ++i) {
+      for (int j = 0; j < gridWidth; ++j) {
+        t[i][j] = vec3(j - gridWidth/2, 0, i - gridHeight/2);
+        cout << "t " << i << " " << j << " = " << t[i][j] << endl;
+      }
+    }
+    return t;
+}
 vec3 translationForGrid(int i, int j) {
-  static Matrix<vec3> gridTranslation{
-    vec3(-1, 0,-1),
-    vec3( 0, 0,-1),
-    vec3( 1, 0,-1),
-    vec3(-1, 0, 0),
-    vec3( 0, 0, 0),
-    vec3( 1, 0, 0),
-    vec3(-1, 0, 1),
-    vec3( 0, 0, 1),
-    vec3( 1, 0, 1),
-  };
+  static Matrix<vec3> gridTranslation = makeInitialTranslations();
   int ti = (i + iOffset + gridHeight) % gridHeight;
   int tj = (j + jOffset + gridWidth ) % gridWidth;
   return gridTranslation[ti][tj];
