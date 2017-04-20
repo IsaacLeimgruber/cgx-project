@@ -1,5 +1,6 @@
 // glew must be before glfw
 #include <iostream>
+#include <array>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "icg_helper.h"
@@ -22,116 +23,114 @@ FrameBuffer normalBuffer;
 ScreenQuad screenquad;
 NormalMap normalMap;
 
-
 namespace gridParams {
-  constexpr int iMax = 20;
-  constexpr int jMax = 20;
-  int iBottomLeftUnit = 0;
-  int jBottomLeftUnit = 0;
-}
+  using gridCoord_t = array<int, 2>;
+  enum CoordSelector { I = 0, J = 1 };
 
+  template <class T>
+  array<T, 2> makeIJVector(T iValue, T jValue) {
+    array<T, 2> c; c[I] = iValue; c[J] = jValue;
+    return c;
+  }
+  gridCoord_t makeCoords(int i, int j) {
+    return makeIJVector(i, j);
+  }
+
+  const gridCoord_t coordMax = makeCoords(20, 20);
+  gridCoord_t bottomLeftTile = makeCoords(0, 0);
+
+  int coordInBottomLeftReferential(CoordSelector ij, int coordInGridReferential) {
+    return (coordInGridReferential + coordMax[ij] - bottomLeftTile[ij]) % coordMax[ij];
+  }
+  int coordInGridReferential(CoordSelector ij, int coordInBottomLeftReferential) {
+    return (coordInBottomLeftReferential + bottomLeftTile[ij]) % coordMax[ij];
+  }
+  void updateCoord(CoordSelector ij, int direction, gridCoord_t& coords) {
+    coords[ij] = (coords[ij] + coordMax[ij] + direction) % coordMax[ij];
+  }
+  void increaseCoord(CoordSelector ij, gridCoord_t& coords) {
+    updateCoord(ij, +1, coords);
+  }
+  void decreaseCoord(CoordSelector ij, gridCoord_t& coords) {
+    updateCoord(ij, -1, coords);
+  }
+}
 namespace textureParams {
-  constexpr float xScale = 1.0f / gridParams::jMax;
-  constexpr float yScale = 1.0f / gridParams::iMax;
-  constexpr float xOriginalWidth = 2.0f;
-  constexpr float yOriginalHeight = 2.0f;
-  constexpr float xWidth = xOriginalWidth * xScale;
-  constexpr float yHeight = yOriginalHeight * yScale;
+  const int X = 0, Y = 1;
+  const vec2 textureScale = {1.0f / gridParams::coordMax[gridParams::J],
+                             1.0f / gridParams::coordMax[gridParams::I]};
+  const float xOriginalWidth = 2.0f;
+  const float yOriginalHeight = 2.0f;
+  const float xWidth = xOriginalWidth * textureScale[X];
+  const float yHeight = yOriginalHeight * textureScale[Y];
   const vec3 toTextureBottomLeft = vec3(-1 + xWidth / 2.0f, -1 + yHeight / 2.0, 0);
+
+  vec3 translationForGridCoords(const gridParams::gridCoord_t& gridCoords) {
+    return toTextureBottomLeft + vec3{gridCoords[gridParams::J] * xWidth, gridCoords[gridParams::I] * yHeight, 0};
+  }
 }
 namespace noiseParams {
-  const vec2 offsetGainPerGridColumn = {1, 0};
-  const vec2 offsetGainPerGridLine = {0, 1};
-  vec2 bottomLeftUnitOffset = {0, 0};
+  const array<vec2, 2> offsetGainPerGridBand = gridParams::makeIJVector(vec2(0, 1), vec2(1, 0));
+  vec2 bottomLeftTileOffset = {0, 0};
   float noiseBufferHeight = 1024;
   float noiseBufferWidth = 1024;
+
+  vec2 noiseOffsetForTile(gridParams::gridCoord_t tile) {
+    return bottomLeftTileOffset
+      + offsetGainPerGridBand[gridParams::I] * static_cast<float>(tile[gridParams::I])
+      + offsetGainPerGridBand[gridParams::J] * static_cast<float>(tile[gridParams::J]);
+  }
 }
 
-void redrawLine(int iLig) {
+void redrawGridBand(gridParams::CoordSelector S, int sCoordValue) {
+  using namespace gridParams;
+  using namespace textureParams;
+  using namespace noiseParams;
+  CoordSelector T = (S == I) ? J : I;
+  gridCoord_t gridCoord;
+  gridCoord_t tileCoord;
+  gridCoord[S] = sCoordValue;
+  tileCoord[S] = coordInBottomLeftReferential(S, gridCoord[S]);
+  for (tileCoord[T] = 0; tileCoord[T] < coordMax[T]; ++tileCoord[T]) {
+    gridCoord[T] = coordInGridReferential(T, tileCoord[T]);
+    perlin.Draw(noiseOffsetForTile(tileCoord),
+                textureScale,
+                translationForGridCoords(gridCoord));
+  }
+}
+
+void updatePerlinOffset(gridParams::CoordSelector bandSelector, int direction) {
   using namespace gridParams;
   using namespace textureParams;
   using namespace noiseParams;
 
-  int iUnit = (iLig + iMax - iBottomLeftUnit) % iMax;
-  vec2 unitNoiseOffset = bottomLeftUnitOffset + offsetGainPerGridLine * ((float) iUnit);
+  gridCoord_t oldBottomLeftTile = bottomLeftTile;
+  updateCoord(bandSelector, direction, bottomLeftTile);
+  int obsoleteBand = (direction < 0) ? bottomLeftTile[bandSelector] : oldBottomLeftTile[bandSelector];
+  bottomLeftTileOffset += static_cast<float>(direction) * offsetGainPerGridBand[bandSelector];
+
+  grid.updateOffset(vec2(bottomLeftTileOffset.x/coordMax[J], bottomLeftTileOffset.y/coordMax[I]));
 
   framebuffer.Bind();
-  for (int jCol = 0; jCol < jMax; ++jCol) {
-    vec3 iTranslation = {0, iLig * yHeight, 0};
-    vec3 jTranslation = {((jBottomLeftUnit + jCol) % jMax) * xWidth, 0, 0};
-
-    perlin.Draw(unitNoiseOffset + offsetGainPerGridColumn * ((float) jCol),
-                {xScale, yScale},
-                toTextureBottomLeft + iTranslation + jTranslation);
-  }
+  redrawGridBand(bandSelector, obsoleteBand);
   framebuffer.Unbind();
-  normalBuffer.Bind();
-  normalMap.Draw();
-  normalBuffer.Unbind();
-}
-void redrawColumn(int jCol) {
-  using namespace gridParams;
-  using namespace textureParams;
-  using namespace noiseParams;
 
-  int jUnit = (jCol + jMax - jBottomLeftUnit) % jMax;
-  vec2 unitNoiseOffset = bottomLeftUnitOffset + offsetGainPerGridColumn * ((float) jUnit);
-
-  framebuffer.Bind();
-  for (int iLig = 0; iLig < iMax; ++iLig) {
-    vec3 iTranslation = {0, ((iBottomLeftUnit + iLig) % iMax) * yHeight, 0};
-    vec3 jTranslation = {jCol * xWidth, 0, 0};
-
-    perlin.Draw(unitNoiseOffset + offsetGainPerGridLine * ((float) iLig),
-                {xScale, yScale},
-                toTextureBottomLeft + iTranslation + jTranslation);
-  }
-  framebuffer.Unbind();
   normalBuffer.Bind();
   normalMap.Draw();
   normalBuffer.Unbind();
 }
 void updatePerlinOffsetLeft() {
-  using namespace gridParams;
-  using namespace textureParams;
-  using namespace noiseParams;
-  jBottomLeftUnit = (jBottomLeftUnit + jMax - 1) % jMax;
-  int jObsoleteCol = jBottomLeftUnit;
-  bottomLeftUnitOffset -= offsetGainPerGridColumn;
-  grid.updateOffset(vec2(bottomLeftUnitOffset.x/jMax, bottomLeftUnitOffset.y/iMax));
-  redrawColumn(jObsoleteCol);
+  updatePerlinOffset(gridParams::J, -1);
 }
 void updatePerlinOffsetRight() {
-  using namespace gridParams;
-  using namespace textureParams;
-  using namespace noiseParams;
-  int jObsoleteCol = jBottomLeftUnit;
-  jBottomLeftUnit = (jBottomLeftUnit + 1) % jMax;
-  bottomLeftUnitOffset += offsetGainPerGridColumn;
-  grid.updateOffset(vec2(bottomLeftUnitOffset.x/jMax, bottomLeftUnitOffset.y/iMax));
-  redrawColumn(jObsoleteCol);
+  updatePerlinOffset(gridParams::J, +1);
 }
 void updatePerlinOffsetBottom() {
-  using namespace gridParams;
-  using namespace textureParams;
-  using namespace noiseParams;
-  iBottomLeftUnit = (iBottomLeftUnit + iMax - 1) % iMax;
-  int iObsoleteLig = iBottomLeftUnit;
-  bottomLeftUnitOffset -= offsetGainPerGridLine;
-  grid.updateOffset(vec2(bottomLeftUnitOffset.x/jMax, bottomLeftUnitOffset.y/iMax));
-  redrawLine(iObsoleteLig);
+  updatePerlinOffset(gridParams::I, -1);
 }
 void updatePerlinOffsetTop() {
-  using namespace gridParams;
-  using namespace textureParams;
-  using namespace noiseParams;
-  int iObsoleteLig = iBottomLeftUnit;
-  iBottomLeftUnit = (iBottomLeftUnit + 1) % iMax;
-  bottomLeftUnitOffset += offsetGainPerGridLine;
-  grid.updateOffset(vec2(bottomLeftUnitOffset.x/jMax, bottomLeftUnitOffset.y/iMax));
-  redrawLine(iObsoleteLig);
+  updatePerlinOffset(gridParams::I, +1);
 }
-
 
 bool keys[1024];
 bool firstMouse = false;
@@ -139,7 +138,6 @@ int window_width = 1280;
 int window_height = 960;
 float lastX = 0.0f;
 float lastY = 0.0f;
-
 
 mat4 projection_matrix;
 mat4 view_matrix;
@@ -150,7 +148,6 @@ GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
 GLfloat lastSec = 0.0;
 GLuint frameCount = 0;
-
 
 void Init() {
     // Initialize camera
@@ -174,9 +171,11 @@ void Init() {
     quad_model_matrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, 0.0f));
 
     //Generate Perlin
-    for (int jCol = 0; jCol < gridParams::jMax; ++jCol) {
-      redrawColumn(jCol);
+    framebuffer.Bind();
+    for (int jCol = 0; jCol < gridParams::coordMax[gridParams::J]; ++jCol) {
+      redrawGridBand(gridParams::J, jCol);
     }
+    framebuffer.Unbind();
 
     normalBuffer.Bind();
     normalMap.Draw();
@@ -332,7 +331,6 @@ int main(int argc, char *argv[]) {
     }
 
     glfwSetErrorCallback(ErrorCallback);
-
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
