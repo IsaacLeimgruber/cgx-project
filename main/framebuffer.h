@@ -4,17 +4,18 @@
 class FrameBuffer {
 
     private:
-        int width_;
-        int height_;
-        GLuint framebuffer_object_id_;
-        GLuint depth_render_buffer_id_;
-        GLuint color_texture_id_;
+        int width;
+        int height;
+        bool depthEnabled;
+        GLuint framebufferObjectId;
+        GLuint depthRenderBufferId;
+        GLuint colorTextureId;
 
     public:
         // warning: overrides viewport!!
         void Bind() {
-            glViewport(0, 0, width_, height_);
-            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_object_id_);
+            glViewport(0, 0, width, height);
+            glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
             const GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
             glDrawBuffers(1 /*length of buffers[]*/, buffers);
         }
@@ -23,18 +24,36 @@ class FrameBuffer {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
-        int Init(int image_width, int image_height, bool use_interpolation = false) {
-            this->width_ = image_width;
-            this->height_ = image_height;
+        /**
+          Initialise a framebuffer object that stores a unique color attachment
+
+          @param    internalFormat:
+                    Specify how the texture components are stored.
+                    This can be GL_R32F GL_RG32F GL_RGB32F GL_RGBA32F
+
+          @param    format:
+                    Specify how many channels the texture stores.
+                    This can be GL_RED GL_RG GL_RGB GL_RGBA
+
+          @param    enableDepthChannel:
+
+          @param    useInterpolation:
+         */
+        int Init(int imageWidth, int imageHeight,
+                 GLint internalFormat, GLint format,
+                 bool enableDepthChannel = false, bool useInterpolation = false) {
+            this->width = imageWidth;
+            this->height = imageHeight;
+            this->depthEnabled = enableDepthChannel;
 
             // create color attachment
             {
-                glGenTextures(1, &color_texture_id_);
-                glBindTexture(GL_TEXTURE_2D, color_texture_id_);
+                glGenTextures(1, &colorTextureId);
+                glBindTexture(GL_TEXTURE_2D, colorTextureId);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-                if(use_interpolation){
+                if(useInterpolation){
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 } else {
@@ -42,32 +61,33 @@ class FrameBuffer {
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 }
 
-                // create texture for the color attachment
-                // see Table.2 on
-                // khronos.org/opengles/sdk/docs/man3/docbook4/xhtml/glTexImage2D.xml
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width_, height_, 0,
-                             GL_RGBA, GL_FLOAT, NULL);
-                // how to load from buffer
+                glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
+                             format, GL_FLOAT, NULL);
             }
 
             // create render buffer (for depth channel)
-            {
-                glGenRenderbuffers(1, &depth_render_buffer_id_);
-                glBindRenderbuffer(GL_RENDERBUFFER, depth_render_buffer_id_);
-                glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, width_, height_);
+            if(depthEnabled){
+                glGenRenderbuffers(1, &depthRenderBufferId);
+                glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBufferId);
+                glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, width, height);
                 glBindRenderbuffer(GL_RENDERBUFFER, 0);
+            } else {
+                depthRenderBufferId = 0;
             }
 
             // tie it all together
             {
-                glGenFramebuffers(1, &framebuffer_object_id_);
-                glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_object_id_);
+                glGenFramebuffers(1, &framebufferObjectId);
+                glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
                 glFramebufferTexture2D(GL_FRAMEBUFFER,
                                        GL_COLOR_ATTACHMENT0 /*location = 0*/,
-                                       GL_TEXTURE_2D, color_texture_id_,
+                                       GL_TEXTURE_2D, colorTextureId,
                                        0 /*level*/);
+
+                if(enableDepthChannel){
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                          GL_RENDERBUFFER, depth_render_buffer_id_);
+                                          GL_RENDERBUFFER, depthRenderBufferId);
+                }
 
                 if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
                     GL_FRAMEBUFFER_COMPLETE) {
@@ -76,13 +96,15 @@ class FrameBuffer {
                 glBindFramebuffer(GL_FRAMEBUFFER, 0); // avoid pollution
             }
 
-            return color_texture_id_;
+            return colorTextureId;
         }
 
         void Cleanup() {
-            glDeleteTextures(1, &color_texture_id_);
-            glDeleteRenderbuffers(1, &depth_render_buffer_id_);
+            glDeleteTextures(1, &colorTextureId);
+            if(depthEnabled){
+                glDeleteRenderbuffers(1, &depthRenderBufferId);
+            }
             glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
-            glDeleteFramebuffers(1, &framebuffer_object_id_);
+            glDeleteFramebuffers(1, &framebufferObjectId);
         }
 };

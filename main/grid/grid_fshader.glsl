@@ -103,7 +103,7 @@ void main() {
          lightingResult +=
                 (vec3(0.7,0.7,0.7) * cosNL * Ld)
                 +
-                (heightCol * pow(max(0, dot(reflectionDir, viewDir_F)), 512) * Ls);
+                (heightCol * pow(max(0, dot(reflectionDir, viewDir_F)), 256) * Ls);
     }
 
     color = vec4(lightingResult, 1.0);

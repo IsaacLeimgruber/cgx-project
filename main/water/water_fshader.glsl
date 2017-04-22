@@ -38,7 +38,7 @@ void main() {
          lightingResult +=
                 (vec3(1,1,1) * cosNL * Ld)
                 +
-                (vec3(0.7,0.7,0.7) * pow(max(0, dot(reflectionDir, viewDir_F)), 200) * Ls);
+                (vec3(0.7,0.7,0.7) * pow(max(0, dot(reflectionDir, viewDir_F)), 150) * Ls);
     }
 
     color = vec4(lightingResult, 0.8f);

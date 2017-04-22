@@ -135,7 +135,6 @@ public:
 
         // Update Front, Right and Up Vectors using the updated Eular angles
         this->updateCameraVectors();
-        debug();
     }
 
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis

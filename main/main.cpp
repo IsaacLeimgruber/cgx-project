@@ -7,7 +7,6 @@
 
 #include "grid/grid.h"
 #include "framebuffer.h"
-#include "framebufferRGBA.h"
 #include "screenquad/screenquad.h"
 #include "perlin/perlin.h"
 #include "camera/camera.h"
@@ -21,9 +20,7 @@ using namespace glm;
 Grid grid;
 Perlin perlin;
 Camera camera;
-FrameBufferRGBA framebuffer;
-FrameBufferRGBA normalBuffer;
-FrameBuffer reflectionBuffer;
+FrameBuffer noiseBuffer, normalBuffer, reflectionBuffer;
 ScreenQuad screenquad;
 NormalMap normalMap;
 Water water;
@@ -62,15 +59,17 @@ void Init() {
     // sets background color
     glClearColor(0.0, 0.0, 0.0, 1.0 /*solid*/);
     perlin.Init();
-    int framebuffer_texture_id = framebuffer.Init(1024, 1024, true);
-    int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, true);
-    int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height, false);
-    normalMap.Init(framebuffer_texture_id);
-    grid.Init(framebuffer_texture_id, normalBuffer_texture_id);
-    grid.useLight(light);
+    int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_R32F, GL_RED, false, true);
+    int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, false, true);
+    int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height, GL_RGBA32F, GL_RGBA, true, true);
+
     screenquad.Init(window_width, window_height, normalBuffer_texture_id);
-    water.Init(reflectionBuffer_texture_id, framebuffer_texture_id, normalBuffer_texture_id);
+    normalMap.Init(noiseBuffer_texture_id);
+    grid.Init(noiseBuffer_texture_id, normalBuffer_texture_id);
+    grid.useLight(light);
+    water.Init(reflectionBuffer_texture_id, noiseBuffer_texture_id, normalBuffer_texture_id);
     water.useLight(light);
+
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
 
@@ -83,9 +82,9 @@ void Init() {
     quad_model_matrix = IDENTITY_MATRIX;
 
     //Generate Perlin
-    framebuffer.Bind();
+    noiseBuffer.Bind();
         perlin.Draw();
-    framebuffer.Unbind();
+    noiseBuffer.Unbind();
 
     normalBuffer.Bind();
         normalMap.Draw();
@@ -322,7 +321,7 @@ int main(int argc, char *argv[]) {
     perlin.Cleanup();
     water.Cleanup();
     reflectionBuffer.Cleanup();
-    framebuffer.Cleanup();
+    noiseBuffer.Cleanup();
     normalMap.Cleanup();
 
     // close OpenGL window and terminate GLFW

@@ -27,10 +27,10 @@ out vec3 viewDir_F;
 
 const float DEGTORAD = 3.14159265359f / 180.0f;
 
-float freqs[5] = float[5](64.0f, 128.0, 128.0, 256.0f, 256.0f);
-float amps[5] =  float[5](0.0015f, 0.001f, 0.001f, 0.0005f, 0.0005f);
+float freqs[5] = float[5](100.0f, 125.0, 150.0, 230.0f, 256.0f);
+float amps[5] =  float[5](0.0010f, 0.001f, 0.001f, 0.0005f, 0.0005f);
 float phis[5] = float[5](1.8f, 2.0f, 3.0f, 5.0f, 6.5f);
-vec2  dirs[5] = vec2[5](vec2(1.0,0.4),vec2(0.7, 0.7),vec2(0.8, 0.5),vec2(1.0,0.4),vec2(1.0, -0.4));
+vec2  dirs[5] = vec2[5](vec2(1.0,0.0),vec2(1.0, 0.5),vec2(1.0, 0.3),vec2(1.0,0.4),vec2(1.0, -0.4));
 float exps[5] = float[5](1.0, 2.0, 2.0, 1.0, 1.0);
 float fades[5] = float[5](0.0, 1.0/5.0, 1.0/5.0, 2.0, 2.0);
 float sinWave[5] = float[5](0, 0, 0, 0, 0);
