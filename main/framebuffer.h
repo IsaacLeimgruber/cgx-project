@@ -13,11 +13,18 @@ class FrameBuffer {
 
     public:
         // warning: overrides viewport!!
-        void Bind() {
-            glViewport(0, 0, width, height);
-            glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
-            const GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
-            glDrawBuffers(1 /*length of buffers[]*/, buffers);
+        void Bind(bool depthAttachment = false) {
+            if(depthAttachment){
+                glViewport(0, 0, width, height);
+                glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+                glDrawBuffer(GL_NONE);
+            }
+            else{
+                glViewport(0, 0, width, height);
+                glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+                const GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
+                glDrawBuffers(1 /*length of buffers[]*/, buffers);
+            }
         }
 
         void Unbind() {
@@ -35,12 +42,18 @@ class FrameBuffer {
                     Specify how many channels the texture stores.
                     This can be GL_RED GL_RG GL_RGB GL_RGBA
 
+          @param    attachment:
+                    GL_COLOR_ATTACHMENT0 for a color texture or GL_DEPTH_ATTACHMENT
+                    for a depth texture. Do not confuse this with the depth channel.
+                    In fact, a depth texture is a depth channel that can be sampled
+                    later on.
+
           @param    enableDepthChannel:
 
           @param    useInterpolation:
          */
         int Init(int imageWidth, int imageHeight,
-                 GLint internalFormat, GLint format,
+                 GLint internalFormat, GLint format, GLint attachment,
                  bool enableDepthChannel = false, bool useInterpolation = false) {
             this->width = imageWidth;
             this->height = imageHeight;
@@ -79,20 +92,52 @@ class FrameBuffer {
             {
                 glGenFramebuffers(1, &framebufferObjectId);
                 glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
-                glFramebufferTexture2D(GL_FRAMEBUFFER,
-                                       GL_COLOR_ATTACHMENT0 /*location = 0*/,
-                                       GL_TEXTURE_2D, colorTextureId,
-                                       0 /*level*/);
+
+                if(attachment == GL_DEPTH_ATTACHMENT){
+                    glFramebufferTexture(GL_FRAMEBUFFER, attachment,
+                                         colorTextureId, 0);
+                    glDrawBuffer(GL_NONE);
+                    glReadBuffer(GL_NONE);
+                } else{
+                    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                           attachment,
+                                           GL_TEXTURE_2D, colorTextureId,
+                                           0 /*level*/);
+                }
 
                 if(enableDepthChannel){
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                           GL_RENDERBUFFER, depthRenderBufferId);
                 }
 
-                if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-                    GL_FRAMEBUFFER_COMPLETE) {
-                    cerr << "!!!ERROR: Framebuffer not OK :(" << endl;
+                switch(glCheckFramebufferStatus(GL_FRAMEBUFFER)){
+                    case GL_FRAMEBUFFER_COMPLETE:
+                        cout << "Framebuffer complete" << endl;
+                    break;
+                    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                        cerr << "Not all framebuffer attachment points are framebuffer" <<
+                                "attachment complete. This means that at least one"<<
+                                "attachment point with a renderbuffer or texture "<<
+                                "attached has its attached object no longer in existence"<<
+                                "or has an attached image with a width or height of "<<
+                                "zero, or the color attachment point has a "<<
+                                "non-color-renderable image attached, or the"<<
+                                "depth attachment point has a non-depth-renderable"<<
+                                "image attached, or the stencil attachment point has a"<<
+                                "non-stencil-renderable image attached." << endl;
+                    break;
+                    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                        cerr << "No images are attached to the framebuffer." << endl;
+                    break;
+                    case GL_FRAMEBUFFER_UNSUPPORTED:
+                        cerr << "The combination of internal formats of the attached"<<
+                                "images violates an implementation-dependent set of"<<
+                                "restrictions." << endl;
+                    break;
+                    default:
+                        cerr << "FRAMEBUFFER ERROR" << endl;
                 }
+
                 glBindFramebuffer(GL_FRAMEBUFFER, 0); // avoid pollution
             }
 

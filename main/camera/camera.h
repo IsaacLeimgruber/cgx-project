@@ -75,7 +75,7 @@ public:
     // Returns the view matrix calculated using EulEr Angles and the LookAt Matrix
     glm::mat4 GetViewMatrix()
     {
-        return glm::lookAt(this->Position, this->Position + this->Front, this->Up);
+        return glm::lookAt(this->Position, this->Position + this->Front, this->WorldUp);
     }
 
     glm::mat4 GetMirroredViewMatrix(float mirrorHeight)
@@ -83,10 +83,7 @@ public:
         glm::vec3 mirrorPos = glm::vec3(this->Position.x, -(this->Position.y) + 2.0 * mirrorHeight, this->Position.z);
         glm::vec3 mirrorFront = glm::vec3(this->Front.x, -this->Front.y, this->Front.z);
 
-        glm::vec3 mirrorUp    = glm::normalize(glm::cross(this->Right, mirrorFront));
-
-        //std::cout <<"POS: " << mirrorPos << " FRONT:" << mirrorFront << " UP:"<< mirrorUp << std::endl;
-        return glm::lookAt(mirrorPos, mirrorPos + mirrorFront, mirrorUp);
+        return glm::lookAt(mirrorPos, mirrorPos + mirrorFront, this->WorldUp);
     }
 
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)

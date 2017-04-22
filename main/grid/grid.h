@@ -12,6 +12,7 @@ class Grid{
         GLuint vertex_buffer_object_position_;  // memory buffer for positions
         GLuint vertex_buffer_object_index_;     // memory buffer for indices
         GLuint program_id_;                     // GLSL shader program ID
+        GLuint shadow_program_id_;
         GLuint debug_program_id_;
         GLuint colorTexture_id_;                     // texture ID
         GLuint normalTexture_id_;
@@ -39,13 +40,18 @@ class Grid{
                                                   "grid_tcshader.glsl",
                                                   "grid_teshader.glsl");
 
+            shadow_program_id_ = icg_helper::LoadShaders("grid_vshader_shadow.glsl",
+                                                  "grid_fshader_shadow.glsl",
+                                                  "grid_tcshader_shadow.glsl",
+                                                  "grid_teshader_shadow.glsl");
+
 
             debug_program_id_ = icg_helper::LoadShaders("grid_vshader_debug.glsl",
                                                   "grid_fshader_debug.glsl",
                                                   "grid_tcshader_debug.glsl",
                                                   "grid_teshader_debug.glsl",
                                                   "grid_gshader_debug.glsl");
-            if(!program_id_ || !debug_program_id_) {
+            if(!program_id_ || !shadow_program_id_ || !debug_program_id_) {
                 exit(EXIT_FAILURE);
             }
 
@@ -200,10 +206,14 @@ class Grid{
                   const glm::mat4 &MV = IDENTITY_MATRIX,
                   const glm::mat4 &NORMALM = IDENTITY_MATRIX,
                   const FractionalView &FV = FractionalView(),
-                  bool mirrorPass = false) {
+                  bool mirrorPass = false,
+                  bool shadowPass = false) {
 
-            glUseProgram(program_id_);
+            GLint program = (shadowPass) ? shadow_program_id_ : program_id_;
+
+            glUseProgram(program);
             glBindVertexArray(vertex_array_id_);
+
             // bind textures
             glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D, colorTexture_id_);
@@ -212,16 +222,16 @@ class Grid{
             glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
 
             // setup MVP
-            glUniformMatrix4fv(MVP_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
-            glUniformMatrix4fv(MV_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
-            glUniformMatrix4fv(NORMALM_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
+            glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
+            glUniformMatrix4fv(glGetUniformLocation(program, "MV"), ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
+            glUniformMatrix4fv(glGetUniformLocation(program, "NORMALM"), ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
 
             // setup zoom and offset, ie. what part of the perlin noise we are sampling
-            glUniform1f(zoom_id_, FV.zoom);
-            glUniform2fv(offset_id_, 1, glm::value_ptr(FV.zoomOffset));
+            glUniform1f(glGetUniformLocation(program, "zoom"), FV.zoom);
+            glUniform2fv(glGetUniformLocation(program, "zoomOffset"), 1, glm::value_ptr(FV.zoomOffset));
 
             // if mirror pass is enabled then we cull underwater fragments
-            glUniform1i(mirrorPass_id_, mirrorPass);
+            glUniform1i(glGetUniformLocation(program, "mirrorPass"), mirrorPass);
 
             glPolygonMode(GL_FRONT_AND_BACK, (wireframeDebugEnabled) ? GL_LINE : GL_FILL);
 

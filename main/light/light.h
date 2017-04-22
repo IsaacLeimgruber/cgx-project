@@ -21,6 +21,10 @@ public:
         this->Ls = Ls;
     }
 
+    glm::vec3 getPos(){
+        return this->lightPos;
+    }
+
     // pass light properties to the shader
     void Setup(GLuint program_id) {
         glUseProgram(program_id);
