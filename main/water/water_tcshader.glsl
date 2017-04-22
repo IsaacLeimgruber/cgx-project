@@ -9,6 +9,8 @@ uniform mat4 model;
 
 uniform sampler2D heightMap;
 
+uniform float zoom;
+uniform vec2 zoomOffset;
 // attributes of the input CPs
 in vec3 vpoint_TC[];
 in vec2 uv_TC[];
@@ -46,7 +48,7 @@ bool offscreen(vec4 v){
 }
 
 bool underHeight(vec2 v){
-    return 1.3 * pow(texture(heightMap, v).r, 3) > 0.1;
+    return 1.3 * pow(texture(heightMap, (v+zoomOffset) * zoom).r, 3) > 0.1f;
 }
 
 void main()

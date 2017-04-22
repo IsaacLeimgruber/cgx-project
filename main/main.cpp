@@ -46,6 +46,12 @@ GLfloat lastFrame = 0.0f;  	// Time of last frame
 GLfloat lastSec = 0.0;
 GLuint frameCount = 0;
 
+struct FractionalView{
+    glm::vec2 zoomOffset = vec2(0.0f);
+    float zoom = 1.0;
+};
+
+FractionalView fractionalView;
 
 void Init() {
     // Initialize camera
@@ -120,7 +126,7 @@ void Display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //TODO: uniformiser la facon dont on passe les matrices au GPU
     grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, 1.0, 1.0)), view_matrix, projection_matrix, false);
-    water.Draw(IDENTITY_MATRIX, view_matrix, projection_matrix);
+    water.Draw(IDENTITY_MATRIX, view_matrix, projection_matrix, fractionalView.zoomOffset, fractionalView.zoom);
     //grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, -1.0, 1.0)), view_matrix, projection_matrix, true);
     //screenquad.Draw();
 
@@ -194,24 +200,30 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 break;
             case GLFW_KEY_H:
                 grid.updateZoomFactor(+0.1);
+                fractionalView.zoom += 0.1;
                 break;
             case GLFW_KEY_G:
                 grid.updateZoomFactor(-0.1);
+                fractionalView.zoom -= 0.1;
                 break;
             case GLFW_KEY_N:
                 grid.toggleDebugMode();
                 water.toggleDebugMode();
                 break;
             case GLFW_KEY_RIGHT:
+                fractionalView.zoomOffset += vec2(-OFFSET_QTY, 0.0);
                 grid.updateOffset(vec2(-OFFSET_QTY, 0.0));
                 break;
             case GLFW_KEY_LEFT:
+                fractionalView.zoomOffset += vec2(OFFSET_QTY, 0.0);
                 grid.updateOffset(vec2(OFFSET_QTY, 0.0));
                 break;
             case GLFW_KEY_UP:
+                fractionalView.zoomOffset += vec2(0.0, -OFFSET_QTY);
                 grid.updateOffset(vec2(0.0, -OFFSET_QTY));
                 break;
             case GLFW_KEY_DOWN:
+                fractionalView.zoomOffset += vec2(0.0, OFFSET_QTY);
                 grid.updateOffset(vec2(0.0, OFFSET_QTY));
                 break;
         }

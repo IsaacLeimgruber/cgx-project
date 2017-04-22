@@ -22,6 +22,7 @@ class Water{
         GLuint N_id_;
         GLuint time_id_;
         GLuint offset_id_;
+        GLuint zoom_id_;
         Light light;
         Material material;
         bool wireframeDebugEnabled;
@@ -152,7 +153,8 @@ class Water{
             N_id_ = glGetUniformLocation(program_id_, "normalMatrix");
 
             time_id_ = glGetUniformLocation(program_id_, "time");
-            offset_id_ = glGetUniformLocation(program_id_, "offset");
+            offset_id_ = glGetUniformLocation(program_id_, "zoomOffset");
+            zoom_id_ = glGetUniformLocation(program_id_, "zoom");
 
             //Tesselation configuration
             glPatchParameteri(GL_PATCH_VERTICES, 4);
@@ -199,7 +201,9 @@ class Water{
 
         void Draw(const glm::mat4 &model = IDENTITY_MATRIX,
                   const glm::mat4 &view = IDENTITY_MATRIX,
-                  const glm::mat4 &projection = IDENTITY_MATRIX) {
+                  const glm::mat4 &projection = IDENTITY_MATRIX,
+                  glm::vec2 offset = glm::vec2(0.0f),
+                  float zoom = 1.0f) {
 
             glm::mat4 normalMatrix = inverse(transpose(view * model));
 
@@ -223,6 +227,8 @@ class Water{
             glUniformMatrix4fv(N_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(normalMatrix));
 
             glUniform1f(time_id_, glfwGetTime());
+            glUniform1f(zoom_id_, zoom);
+            glUniform2fv(offset_id_, 1, glm::value_ptr(offset));
 
             //glPolygonMode(GL_FRONT_AND_BACK, (wireframeDebugEnabled) ? GL_LINE : GL_FILL);
 
@@ -238,6 +244,8 @@ class Water{
                 glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "normalMatrix"), ONE, DONT_TRANSPOSE, glm::value_ptr(normalMatrix));
 
                 glUniform1f(glGetUniformLocation(debug_program_id_, "time"), glfwGetTime());
+                glUniform1f(glGetUniformLocation(debug_program_id_, "zoom"), zoom);
+                glUniform2fv(glGetUniformLocation(debug_program_id_, "zoomOffset"), 1, glm::value_ptr(offset));
 
                 glDrawElements(GL_PATCHES, num_indices_, GL_UNSIGNED_INT, 0);
             }
