@@ -4,12 +4,12 @@
 #include <GLFW/glfw3.h>
 #include "icg_helper.h"
 #include <glm/gtc/matrix_transform.hpp>
-
 #include "grid/grid.h"
 #include "framebuffer.h"
 #include "screenquad/screenquad.h"
 #include "perlin/perlin.h"
 #include "camera/camera.h"
+#include "camera/fractionalview.h"
 #include "normalmap/normalmap.h"
 #include "water/water.h"
 #include "light/light.h"
@@ -36,20 +36,14 @@ float lastY = 0.0f;
 
 const float OFFSET_QTY = 0.04f;
 
-mat4 projection_matrix;
-mat4 view_matrix;
-mat4 quad_model_matrix;
+mat4 projection_matrix, view_matrix, mirrored_view_matrix, quad_model_matrix;
+mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
 
 const GLfloat SEC_DURATION = 1.0;
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
 GLfloat lastSec = 0.0;
 GLuint frameCount = 0;
-
-struct FractionalView{
-    glm::vec2 zoomOffset = vec2(0.0f);
-    float zoom = 1.0;
-};
 
 FractionalView fractionalView;
 
@@ -115,18 +109,26 @@ void Display() {
     }
 
     view_matrix = camera.GetViewMatrix();
-    mat4 mirrored_view_matrix = camera.GetMirroredViewMatrix(0.0f);
-    // reflection computation
+    mirrored_view_matrix = camera.GetMirroredViewMatrix(0.0f);
 
+    MV = view_matrix * quad_model_matrix;
+    MVP = projection_matrix * MV;
+    NORMALM = inverse(transpose(MV));
+
+    mMV = mirrored_view_matrix * quad_model_matrix;
+    mMVP = projection_matrix * mMV;
+    mNORMALM = inverse(transpose(mMV));
+
+    // reflection computation
     reflectionBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, -1.0, 1.0)), view_matrix, projection_matrix, true);
+        grid.Draw(mMVP, mMV, mNORMALM, fractionalView, true);
     reflectionBuffer.Unbind();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //TODO: uniformiser la facon dont on passe les matrices au GPU
-    grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, 1.0, 1.0)), view_matrix, projection_matrix, false);
-    water.Draw(IDENTITY_MATRIX, view_matrix, projection_matrix, fractionalView.zoomOffset, fractionalView.zoom);
+
+    grid.Draw(MVP, MV, NORMALM, fractionalView, false);
+    water.Draw(MVP, MV, NORMALM, fractionalView);
     //grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, -1.0, 1.0)), view_matrix, projection_matrix, true);
     //screenquad.Draw();
 
@@ -199,11 +201,9 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 water.toggleWireframeMode();
                 break;
             case GLFW_KEY_H:
-                grid.updateZoomFactor(+0.1);
                 fractionalView.zoom += 0.1;
                 break;
             case GLFW_KEY_G:
-                grid.updateZoomFactor(-0.1);
                 fractionalView.zoom -= 0.1;
                 break;
             case GLFW_KEY_N:
@@ -212,19 +212,15 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 break;
             case GLFW_KEY_RIGHT:
                 fractionalView.zoomOffset += vec2(-OFFSET_QTY, 0.0);
-                grid.updateOffset(vec2(-OFFSET_QTY, 0.0));
                 break;
             case GLFW_KEY_LEFT:
                 fractionalView.zoomOffset += vec2(OFFSET_QTY, 0.0);
-                grid.updateOffset(vec2(OFFSET_QTY, 0.0));
                 break;
             case GLFW_KEY_UP:
                 fractionalView.zoomOffset += vec2(0.0, -OFFSET_QTY);
-                grid.updateOffset(vec2(0.0, -OFFSET_QTY));
                 break;
             case GLFW_KEY_DOWN:
                 fractionalView.zoomOffset += vec2(0.0, OFFSET_QTY);
-                grid.updateOffset(vec2(0.0, OFFSET_QTY));
                 break;
         }
     } else if(action == GLFW_RELEASE){

@@ -3,7 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "../light/light.h"
 #include "../material/material.h"
-
+#include "../camera/fractionalview.h"
 
 class Grid{
 
@@ -16,23 +16,19 @@ class Grid{
         GLuint colorTexture_id_;                     // texture ID
         GLuint normalTexture_id_;
         GLuint num_indices_;                    // number of vertices to render
-        GLuint M_id_;                           // model matrix ID
-        GLuint V_id_;                           // view matrix ID
-        GLuint P_id_;                           // projection matrix ID
-        GLuint N_id_;
+        GLuint MVP_id_;                           // model matrix ID
+        GLuint MV_id_;                           // view matrix ID
+        GLuint NORMALM_id_;                           // projection matrix ID
         GLuint zoom_id_;
         GLuint offset_id_;
         GLuint mirrorPass_id_;
-        GLfloat zoom;
         Light light;
         Material material;
         bool debug;
         bool wireframeDebugEnabled;
 
-        glm::vec2 offset = glm::vec2(0,0);
-
     public:
-        Grid():light{Light()}, material{Material()}, zoom{1}, debug{false}, wireframeDebugEnabled{false} {
+        Grid():light{Light()}, material{Material()}, debug{false}, wireframeDebugEnabled{false} {
 
         }
 
@@ -148,10 +144,9 @@ class Grid{
             }
 
             // other uniforms
-            M_id_ = glGetUniformLocation(program_id_, "model");
-            V_id_ = glGetUniformLocation(program_id_, "view");
-            P_id_ = glGetUniformLocation(program_id_, "projection");
-            N_id_ = glGetUniformLocation(program_id_, "normalMatrix");
+            MVP_id_ = glGetUniformLocation(program_id_, "MVP");
+            MV_id_ = glGetUniformLocation(program_id_, "MV");
+            NORMALM_id_ = glGetUniformLocation(program_id_, "NORMALM");
 
             zoom_id_ = glGetUniformLocation(program_id_, "zoom");
             offset_id_ = glGetUniformLocation(program_id_, "zoomOffset");
@@ -190,16 +185,6 @@ class Grid{
             wireframeDebugEnabled = !wireframeDebugEnabled;
         }
 
-        void updateZoomFactor(float z){
-            zoom = glm::max(glm::min(4.0f, zoom + z), 0.1f);
-            std::cout << "Zoom factor: " << zoom << std::endl;
-        }
-
-        void updateOffset(glm::vec2 v){
-            offset += v;
-            std::cout << "Offset value: (" << offset.x <<", " << offset.y << ")" << std::endl;
-        }
-
         void Cleanup() {
             glBindVertexArray(0);
             glUseProgram(0);
@@ -211,12 +196,11 @@ class Grid{
             glDeleteTextures(1, &normalTexture_id_);
         }
 
-        void Draw(const glm::mat4 &model = IDENTITY_MATRIX,
-                  const glm::mat4 &view = IDENTITY_MATRIX,
-                  const glm::mat4 &projection = IDENTITY_MATRIX,
+        void Draw(const glm::mat4 &MVP = IDENTITY_MATRIX,
+                  const glm::mat4 &MV = IDENTITY_MATRIX,
+                  const glm::mat4 &NORMALM = IDENTITY_MATRIX,
+                  const FractionalView &FV = FractionalView(),
                   bool mirrorPass = false) {
-
-            glm::mat4 normalMatrix = inverse(transpose(view * model));
 
             glUseProgram(program_id_);
             glBindVertexArray(vertex_array_id_);
@@ -228,14 +212,13 @@ class Grid{
             glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
 
             // setup MVP
-            glUniformMatrix4fv(M_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(model));
-            glUniformMatrix4fv(V_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(view));
-            glUniformMatrix4fv(P_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(projection));
-            glUniformMatrix4fv(N_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(normalMatrix));
+            glUniformMatrix4fv(MVP_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
+            glUniformMatrix4fv(MV_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
+            glUniformMatrix4fv(NORMALM_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
 
             // setup zoom and offset, ie. what part of the perlin noise we are sampling
-            glUniform1f(zoom_id_, zoom);
-            glUniform2fv(offset_id_, 1, glm::value_ptr(offset));
+            glUniform1f(zoom_id_, FV.zoom);
+            glUniform2fv(offset_id_, 1, glm::value_ptr(FV.zoomOffset));
 
             // if mirror pass is enabled then we cull underwater fragments
             glUniform1i(mirrorPass_id_, mirrorPass);
@@ -248,14 +231,13 @@ class Grid{
                 glUseProgram(debug_program_id_);
 
                 // setup MVP
-                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "model"), ONE, DONT_TRANSPOSE, glm::value_ptr(model));
-                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "view"), ONE, DONT_TRANSPOSE, glm::value_ptr(view));
-                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "projection"), ONE, DONT_TRANSPOSE, glm::value_ptr(projection));
-                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "normalMatrix"), ONE, DONT_TRANSPOSE, glm::value_ptr(normalMatrix));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "MVP"), ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "MV"), ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "NORMALM"), ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
 
                 // setup zoom and offset, ie. what part of the perlin noise we are sampling
-                glUniform1f(glGetUniformLocation(debug_program_id_, "zoom"), zoom);
-                glUniform2fv(glGetUniformLocation(debug_program_id_, "zoomOffset"), 1, glm::value_ptr(offset));
+                glUniform1f(glGetUniformLocation(debug_program_id_, "zoom"), FV.zoom);
+                glUniform2fv(glGetUniformLocation(debug_program_id_, "zoomOffset"), 1, glm::value_ptr(FV.zoomOffset));
 
                 // if mirror pass is enabled then we cull underwater fragments
                 glUniform1i(glGetUniformLocation(debug_program_id_, "mirrorPass"), mirrorPass);

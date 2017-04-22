@@ -3,9 +3,9 @@
 // define the number of CPs in the output patch
 layout (vertices = 4) out;
 
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
+uniform mat4 MVP;
+uniform mat4 MV;
+uniform mat4 NORMALM;
 
 // attributes of the input CPs
 in vec3 vpoint_TC[];
@@ -33,8 +33,8 @@ float GetTessLevel(float Distance0, float Distance1)
                (avgDistance - CLOSEST_TESS_DISTANCE) / (FURTHEST_TESS_DISTANCE - CLOSEST_TESS_DISTANCE));
 }
 
-bool offscreen(vec4 v){
-    vec4 vProj = projection * v;
+bool offscreen(vec3 v){
+    vec4 vProj = MVP * vec4(v, 1.0);
     vProj /= vProj.w;
 
     //Rough estimate
@@ -50,14 +50,12 @@ void main()
     vpoint_TE[gl_InvocationID] = vpoint_TC[gl_InvocationID];
 
     // Calculate the distance from the camera to the three control points
-    mat4 MV = view * model;
-
     vec4 v0 = MV * vec4(vpoint_TC[0], 1.0);
     vec4 v1 = MV * vec4(vpoint_TC[1], 1.0);
     vec4 v2 = MV * vec4(vpoint_TC[2], 1.0);
     vec4 v3 = MV * vec4(vpoint_TC[3], 1.0);
 
-    if(all(bvec4(offscreen(v0), offscreen(v1), offscreen(v2), offscreen(v3)))){
+    if(all(bvec4(offscreen(vpoint_TC[0]), offscreen(vpoint_TC[1]), offscreen(vpoint_TC[2]), offscreen(vpoint_TC[3])))){
         // No tesselation means patch is dropped -> save computation time !
         gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = gl_TessLevelOuter[3] = 0;
         gl_TessLevelInner[0] = gl_TessLevelInner[1] = 0;

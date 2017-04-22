@@ -6,17 +6,15 @@ layout(line_strip, max_vertices=12) out;
 
 uniform sampler2D normalMap;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-uniform mat4 normalMatrix;
+uniform mat4 MVP;
+uniform mat4 MV;
+uniform mat4 NORMALM;
 
 uniform vec2 zoomOffset;
 uniform float zoom;
 
 in vec4 vpoint_MV_G[];
-in vec4 vpoint_M_G[];
-in vec3 normal_MV_G[];
+in vec3 normal_G[];
 in vec2 uv_G[];
 in vec3 lightDir_G[];
 in vec3 viewDir_G[];
@@ -36,28 +34,28 @@ void main()
       {
 
         //Display light direction
-        P = vpoint_MV_G[i].xyz;
+        P = gl_in[i].gl_Position.xyz;
         N = lightDir_G[i].xyz;
-        gl_Position = projection * vec4(P, 1.0);
+        gl_Position = MVP * vec4(P, 1.0);
         uv_F = uv_G[i];
         vcolor = RED;
         EmitVertex();
 
-        gl_Position = projection * vec4(P + N * 0.1, 1.0);
+        gl_Position = MVP * vec4(P + N * 0.1, 1.0);
         uv_F = uv_G[i];
         vcolor = RED;
         EmitVertex();
         EndPrimitive();
 
         //Display normal
-        N = normal_MV_G[i];
+        N = normal_G[i];
 
-        gl_Position = projection * vec4(P, 1.0);
+        gl_Position = MVP * vec4(P, 1.0);
         uv_F = uv_G[i];
         vcolor = YELLOW;
         EmitVertex();
 
-        gl_Position = projection * vec4(P + N * 0.1, 1.0);
+        gl_Position = MVP * vec4(P + N * 0.1, 1.0);
         uv_F = uv_G[i];
         vcolor = YELLOW;
         EmitVertex();

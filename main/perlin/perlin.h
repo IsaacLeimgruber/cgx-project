@@ -55,7 +55,7 @@ public:
 
         void Init() {
 
-            initializePermutations(time(NULL));
+            initializePermutations(12);
 
             // compile the shaders
             program_id_ = icg_helper::LoadShaders("perlin_vshader.glsl",

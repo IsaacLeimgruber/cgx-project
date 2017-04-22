@@ -24,7 +24,7 @@ void main() {
 
     vec2 window_size = textureSize(mirrorTex, 0);
     float _u = gl_FragCoord.x / window_size.x;
-    float _v = gl_FragCoord.y / window_size.y;
+    float _v = 1.0 - gl_FragCoord.y / window_size.y;
 
     vec3 reflection = mix(vec3(125,186,217) / 255.0, vec3(texture(mirrorTex, vec2(_u, _v) + reflectOffset_F).rgb), 0.5f);
 

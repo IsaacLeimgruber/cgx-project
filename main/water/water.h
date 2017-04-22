@@ -3,6 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "../light/light.h"
 #include "../material/material.h"
+#include "../camera/fractionalview.h"
 
 class Water{
 
@@ -20,6 +21,8 @@ class Water{
         GLuint V_id_;                           // view matrix ID
         GLuint P_id_;                           // projection matrix ID
         GLuint N_id_;
+        GLuint MVP_id_;
+        GLuint MV_id_;
         GLuint time_id_;
         GLuint offset_id_;
         GLuint zoom_id_;
@@ -147,10 +150,9 @@ class Water{
             }
 
             // other uniforms
-            M_id_ = glGetUniformLocation(program_id_, "model");
-            V_id_ = glGetUniformLocation(program_id_, "view");
-            P_id_ = glGetUniformLocation(program_id_, "projection");
-            N_id_ = glGetUniformLocation(program_id_, "normalMatrix");
+            MVP_id_ = glGetUniformLocation(program_id_, "MVP");
+            MV_id_ = glGetUniformLocation(program_id_, "MV");
+            N_id_ = glGetUniformLocation(program_id_, "NORMALM");
 
             time_id_ = glGetUniformLocation(program_id_, "time");
             offset_id_ = glGetUniformLocation(program_id_, "zoomOffset");
@@ -199,13 +201,10 @@ class Water{
             glDeleteTextures(1, &mirrorTexture_id_);
         }
 
-        void Draw(const glm::mat4 &model = IDENTITY_MATRIX,
-                  const glm::mat4 &view = IDENTITY_MATRIX,
-                  const glm::mat4 &projection = IDENTITY_MATRIX,
-                  glm::vec2 offset = glm::vec2(0.0f),
-                  float zoom = 1.0f) {
-
-            glm::mat4 normalMatrix = inverse(transpose(view * model));
+        void Draw(const glm::mat4 &MVP = IDENTITY_MATRIX,
+                  const glm::mat4 &MV = IDENTITY_MATRIX,
+                  const glm::mat4 &NORMALM = IDENTITY_MATRIX,
+                  const FractionalView &FV = FractionalView()) {
 
             glUseProgram(program_id_);
             glBindVertexArray(vertex_array_id_);
@@ -221,14 +220,13 @@ class Water{
             glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
 
             // setup MVP
-            glUniformMatrix4fv(M_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(model));
-            glUniformMatrix4fv(V_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(view));
-            glUniformMatrix4fv(P_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(projection));
-            glUniformMatrix4fv(N_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(normalMatrix));
+            glUniformMatrix4fv(MVP_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
+            glUniformMatrix4fv(MV_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
+            glUniformMatrix4fv(N_id_, ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
 
             glUniform1f(time_id_, glfwGetTime());
-            glUniform1f(zoom_id_, zoom);
-            glUniform2fv(offset_id_, 1, glm::value_ptr(offset));
+            glUniform1f(zoom_id_, FV.zoom);
+            glUniform2fv(offset_id_, 1, glm::value_ptr(FV.zoomOffset));
 
             //glPolygonMode(GL_FRONT_AND_BACK, (wireframeDebugEnabled) ? GL_LINE : GL_FILL);
 
@@ -238,14 +236,13 @@ class Water{
                 glUseProgram(debug_program_id_);
                 glBindVertexArray(vertex_array_id_);
                 // setup MVP
-                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "model"), ONE, DONT_TRANSPOSE, glm::value_ptr(model));
-                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "view"), ONE, DONT_TRANSPOSE, glm::value_ptr(view));
-                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "projection"), ONE, DONT_TRANSPOSE, glm::value_ptr(projection));
-                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "normalMatrix"), ONE, DONT_TRANSPOSE, glm::value_ptr(normalMatrix));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "MVP"), ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "MV"), ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
+                glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "NORMALM"), ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
 
                 glUniform1f(glGetUniformLocation(debug_program_id_, "time"), glfwGetTime());
-                glUniform1f(glGetUniformLocation(debug_program_id_, "zoom"), zoom);
-                glUniform2fv(glGetUniformLocation(debug_program_id_, "zoomOffset"), 1, glm::value_ptr(offset));
+                glUniform1f(glGetUniformLocation(debug_program_id_, "zoom"), FV.zoom);
+                glUniform2fv(glGetUniformLocation(debug_program_id_, "zoomOffset"), 1, glm::value_ptr(FV.zoomOffset));
 
                 glDrawElements(GL_PATCHES, num_indices_, GL_UNSIGNED_INT, 0);
             }

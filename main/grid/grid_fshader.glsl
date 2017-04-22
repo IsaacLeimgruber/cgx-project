@@ -3,16 +3,16 @@
 uniform vec3 La, Ld, Ls;
 uniform vec3 ka, kd, ks;
 uniform float alpha;
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 normalMatrix;
+uniform mat4 MVP;
+uniform mat4 MV;
+uniform mat4 NORMALM;
 uniform sampler2D heightMap;
 uniform sampler2D normalMap;
 uniform vec2 zoomOffset;
 uniform float zoom;
 uniform bool mirrorPass;
 
-in vec4 vpoint_M_F;
+in vec4 vpoint_F;
 in vec3 lightDir_F;
 in vec3 viewDir_F;
 in vec2 uv_F;
@@ -42,13 +42,13 @@ const vec3  WATER_COLOR_DEEP = vec3(14,48,150),
 void main() {
 
     if(mirrorPass){
-        if(vpoint_M_F.y > 0.0){
+        if(vpoint_F.y < 0.0){
             discard;
         }
     }
 
     vec3 gridNormal = (texture(normalMap, (uv_F+zoomOffset) * zoom).xyz * 2.0) - 1.0f;
-    vec3 normal_MV = (normalMatrix * vec4(gridNormal, 1.0)).xyz;
+    vec3 normal_MV = (NORMALM * vec4(gridNormal, 1.0)).xyz;
 
     vec3 lightDir = normalize(lightDir_F);
 

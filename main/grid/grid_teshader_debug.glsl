@@ -2,10 +2,9 @@
 
 layout(quads, equal_spacing, ccw) in;
 
-uniform mat4 projection;
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 normalMatrix;
+uniform mat4 MVP;
+uniform mat4 MV;
+uniform mat4 NORMALM;
 uniform vec3 lightPos;
 uniform vec2 zoomOffset;
 uniform float zoom;
@@ -18,7 +17,7 @@ in vec2 uv_TE[];
 
 out vec4 vpoint_MV_G;
 out vec4 vpoint_M_G;
-out vec3 normal_MV_G;
+out vec3 normal_G;
 out vec2 uv_G;
 out vec3 lightDir_G;
 out vec3 viewDir_G;
@@ -42,7 +41,6 @@ vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2, vec3 v3)
 
 void main()
 {
-    mat4 VP = projection * view;
 
     // Interpolate the attributes of the output vertex using the barycentric coordinates
     uv_G = interpolate2D(uv_TE[0], uv_TE[1], uv_TE[2], uv_TE[3]);
@@ -51,13 +49,12 @@ void main()
     // Set height for generated (and original) vertices
     vheight_G = 1.3 * pow(texture(heightMap, (uv_G+zoomOffset) * zoom).r, 3);
     vpoint_G.y = vheight_G - 0.1f;
-    vpoint_M_G  = model * vec4(vpoint_G, 1.0);
-    vpoint_MV_G = view * vpoint_M_G;
-    gl_Position = view * model * vec4(vpoint_G,1.0);
+    vpoint_MV_G = MV * vec4(vpoint_G, 1.0);
+    gl_Position = vec4(vpoint_G, 1.0);
 
-    lightDir_G = normalize((view * vec4(lightPos, 1.0)).xyz - vpoint_MV_G.xyz);
+    lightDir_G = normalize(lightPos - vpoint_G.xyz);
     vec3 gridNormal = (texture(normalMap, (uv_G+zoomOffset) * zoom).xyz * 2.0) - 1.0f;
-    normal_MV_G = (normalMatrix * vec4(gridNormal, 1.0)).xyz;
+    normal_G = gridNormal;
 
 
     viewDir_G = -normalize(vpoint_MV_G.xyz);
