@@ -16,24 +16,26 @@ class Grid{
         GLuint debug_program_id_;
         GLuint colorTexture_id_;                     // texture ID
         GLuint normalTexture_id_;
+        GLuint shadowTexture_id_;
         GLuint num_indices_;                    // number of vertices to render
         GLuint MVP_id_;                           // model matrix ID
         GLuint MV_id_;                           // view matrix ID
         GLuint NORMALM_id_;                           // projection matrix ID
+        GLuint SHADOWMVP_id_;
         GLuint zoom_id_;
         GLuint offset_id_;
         GLuint mirrorPass_id_;
-        Light light;
+        Light* light;
         Material material;
         bool debug;
         bool wireframeDebugEnabled;
 
     public:
-        Grid():light{Light()}, material{Material()}, debug{false}, wireframeDebugEnabled{false} {
+        Grid():light{nullptr}, material{Material()}, debug{false}, wireframeDebugEnabled{false} {
 
         }
 
-        void Init(GLuint colorTexture, GLuint normalTexture) {
+        void Init(GLuint colorTexture, GLuint normalTexture, GLuint shadowMap) {
             // compile the shaders.
             program_id_ = icg_helper::LoadShaders("grid_vshader.glsl",
                                                   "grid_fshader.glsl",
@@ -124,13 +126,6 @@ class Grid{
                     glUniform1i(heightMapLocation, 0);
                 glUseProgram(program_id_);
 
-                glBindTexture(GL_TEXTURE_2D, colorTexture_id_);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-                glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-                glBindTexture(GL_TEXTURE_2D, 0);
-
                 // load/Assign normal map
                 this->normalTexture_id_ = normalTexture;
                 GLuint normalMapLocation = glGetUniformLocation(program_id_, "normalMap");
@@ -141,18 +136,17 @@ class Grid{
                     glUniform1i(normalMapLocation, 1);
                 glUseProgram(program_id_);
 
-                glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-                glBindTexture(GL_TEXTURE_2D, 0);
+                // load/Assign shadow map
+                this->shadowTexture_id_ = shadowMap;
+                GLuint shadowMapLocation = glGetUniformLocation(program_id_, "shadowMap");
+                glUniform1i(shadowMapLocation, 2);
             }
 
             // other uniforms
             MVP_id_ = glGetUniformLocation(program_id_, "MVP");
             MV_id_ = glGetUniformLocation(program_id_, "MV");
             NORMALM_id_ = glGetUniformLocation(program_id_, "NORMALM");
+            SHADOWMVP_id_ = glGetUniformLocation(program_id_, "SHADOWMVP");
 
             zoom_id_ = glGetUniformLocation(program_id_, "zoom");
             offset_id_ = glGetUniformLocation(program_id_, "zoomOffset");
@@ -167,11 +161,11 @@ class Grid{
             glUseProgram(0);
         }
 
-        void useLight(Light l){
+        void useLight(Light* l){
             this->light = l;
-            light.Setup(program_id_);
+            light->Setup(program_id_);
             glUseProgram(debug_program_id_);
-                light.Setup(debug_program_id_);
+                light->Setup(debug_program_id_);
             glUseProgram(program_id_);
         }
 
@@ -181,6 +175,10 @@ class Grid{
             glUseProgram(debug_program_id_);
                 material.Setup(debug_program_id_);
             glUseProgram(program_id_);
+        }
+
+        void useShadowMap(GLuint id){
+            this->shadowTexture_id_ = id;
         }
 
         void toggleDebugMode(){
@@ -205,13 +203,18 @@ class Grid{
         void Draw(const glm::mat4 &MVP = IDENTITY_MATRIX,
                   const glm::mat4 &MV = IDENTITY_MATRIX,
                   const glm::mat4 &NORMALM = IDENTITY_MATRIX,
+                  const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
                   const FractionalView &FV = FractionalView(),
                   bool mirrorPass = false,
                   bool shadowPass = false) {
 
             GLint program = (shadowPass) ? shadow_program_id_ : program_id_;
-
             glUseProgram(program);
+
+            //update light
+            if(light != nullptr)
+                light->updatePosUniform(program);
+
             glBindVertexArray(vertex_array_id_);
 
             // bind textures
@@ -221,10 +224,14 @@ class Grid{
             glActiveTexture(GL_TEXTURE0 + 1);
             glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
 
+            glActiveTexture(GL_TEXTURE0 + 2);
+            glBindTexture(GL_TEXTURE_2D, shadowTexture_id_);
+
             // setup MVP
             glUniformMatrix4fv(glGetUniformLocation(program, "MVP"), ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
             glUniformMatrix4fv(glGetUniformLocation(program, "MV"), ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
             glUniformMatrix4fv(glGetUniformLocation(program, "NORMALM"), ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
+            glUniformMatrix4fv(glGetUniformLocation(program, "SHADOWMVP"), ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
 
             // setup zoom and offset, ie. what part of the perlin noise we are sampling
             glUniform1f(glGetUniformLocation(program, "zoom"), FV.zoom);
@@ -239,6 +246,9 @@ class Grid{
 
             if(debug){
                 glUseProgram(debug_program_id_);
+
+                if(light != nullptr)
+                    light->updatePosUniform(debug_program_id_);
 
                 // setup MVP
                 glUniformMatrix4fv(glGetUniformLocation(debug_program_id_, "MVP"), ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
@@ -261,6 +271,10 @@ class Grid{
 
             glActiveTexture(GL_TEXTURE0 + 1);
             glBindTexture(GL_TEXTURE_2D, 0);
+
+            glActiveTexture(GL_TEXTURE0 + 2);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
             glBindVertexArray(0);
             glUseProgram(0);
         }

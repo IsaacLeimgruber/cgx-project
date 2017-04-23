@@ -37,8 +37,15 @@ float lastY = 0.0f;
 const float OFFSET_QTY = 0.04f;
 
 mat4 projection_matrix, view_matrix, mirrored_view_matrix, quad_model_matrix;
-mat4 depth_projection_matrix, depth_view_matrix, depth_model_matrix, depth_mvp;
+mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_matrix, depth_mvp;
 mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
+
+mat4 biasMatrix = mat4(
+0.5, 0.0, 0.0, 0.0,
+0.0, 0.5, 0.0, 0.0,
+0.0, 0.0, 0.5, 0.0,
+0.5, 0.5, 0.5, 1.0
+);
 
 const GLfloat SEC_DURATION = 1.0;
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
@@ -53,7 +60,7 @@ void Init() {
     camera = Camera{vec3(0.0, 2.5, 0.0)};
 
     // Let there be light !
-    light = Light{vec3(4.0, 2.0, 0.0)};
+    light = Light{vec3(0.0, 2.0, -4.0)};
 
     material = Material{};
 
@@ -63,12 +70,12 @@ void Init() {
     int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_R32F, GL_RED, GL_COLOR_ATTACHMENT0, false, true);
     int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, GL_COLOR_ATTACHMENT0, false, true);
     int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height, GL_RGBA32F, GL_RGBA, GL_COLOR_ATTACHMENT0, true, true);
-    int shadowBuffer_texture_id = shadowBuffer.Init(1024, 1024, GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, false, false);
+    int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, false, true);
 
     screenquad.Init(window_width, window_height, shadowBuffer_texture_id);
     normalMap.Init(noiseBuffer_texture_id);
-    grid.Init(noiseBuffer_texture_id, normalBuffer_texture_id);
-    grid.useLight(light);
+    grid.Init(noiseBuffer_texture_id, normalBuffer_texture_id, shadowBuffer_texture_id);
+    grid.useLight(&light);
     water.Init(reflectionBuffer_texture_id, noiseBuffer_texture_id, normalBuffer_texture_id);
     water.useLight(light);
 
@@ -80,11 +87,12 @@ void Init() {
 
     //Initialise matrices
     view_matrix = camera.GetViewMatrix();
-    depth_projection_matrix = ortho(-2.0, 2.0, -2.0, 2.0, 1.0, 5.0);
-    depth_view_matrix = lookAt(vec3(2.0, 2.0, 0.0), vec3(0.0,0.0,0.0), vec3(0, 1, 0));
+    depth_projection_matrix = glm::perspective(glm::radians(35.0f), (GLfloat)window_width / window_height, 3.0f, 6.0f);
+    depth_view_matrix = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 1, 0));
     depth_model_matrix = IDENTITY_MATRIX;
     depth_mvp = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
-    // scaling matrix to scale the cube down to a reasonable size.
+    depth_bias_matrix = biasMatrix * depth_mvp;
+
     quad_model_matrix = IDENTITY_MATRIX;
 
     //Generate Perlin
@@ -114,6 +122,14 @@ void Display() {
         frameCount = 0;
     }
 
+    //Update light pos
+    mat4 rotMatrix = rotate(IDENTITY_MATRIX, currentFrame * 0.5f, vec3(0.0, 1.0, 0.0));
+    vec4 tmp = rotMatrix * vec4(4.0, 2.0, 0.0, 1.0);
+    vec3 pos = vec3(tmp.x, tmp.y, tmp.z);
+    light.setPos(pos);
+
+    //Compute matrices
+
     view_matrix = camera.GetViewMatrix();
     mirrored_view_matrix = camera.GetMirroredViewMatrix(0.0f);
 
@@ -121,26 +137,36 @@ void Display() {
     MVP = projection_matrix * MV;
     NORMALM = inverse(transpose(MV));
 
+    //mirror matrices
     mMV = mirrored_view_matrix * quad_model_matrix;
     mMVP = projection_matrix * mMV;
     mNORMALM = inverse(transpose(mMV));
 
+    //shadow matrices
+    depth_view_matrix = lookAt(light.getPos(), vec3(0.0,0.4,0.0), vec3(0, 1, 0));
+    depth_model_matrix = IDENTITY_MATRIX;
+    depth_mvp = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
+    depth_bias_matrix = biasMatrix * depth_mvp;
+
     // reflection computation
     reflectionBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        grid.Draw(mMVP, mMV, mNORMALM, fractionalView, true);
+        grid.Draw(mMVP, mMV, mNORMALM, IDENTITY_MATRIX, fractionalView, true, false);
     reflectionBuffer.Unbind();
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-   // grid.Draw(MVP, MV, NORMALM, fractionalView, false, false);
-    //water.Draw(MVP, MV, NORMALM, fractionalView);
-    //grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, -1.0, 1.0)), view_matrix, projection_matrix, true);
 
     shadowBuffer.Bind(true);
-    grid.Draw(depth_mvp, depth_projection_matrix * depth_view_matrix, inverse(transpose(depth_projection_matrix * depth_view_matrix)), fractionalView, false, true);
+         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+         grid.Draw(depth_mvp, IDENTITY_MATRIX, IDENTITY_MATRIX, IDENTITY_MATRIX, fractionalView, false, true);
     shadowBuffer.Unbind();
-    screenquad.Draw();
+
+    glViewport(0, 0, window_width, window_height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    grid.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
+    water.Draw(MVP, MV, NORMALM, fractionalView);
+    //grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, -1.0, 1.0)), view_matrix, projection_matrix, true);
+
+    //screenquad.Draw();
 
     frameCount++;
 }

@@ -11,9 +11,9 @@ private:
 public:
 
     Light(glm::vec3 lightPos =  glm::vec3(0.0f, 0.0f, 0.0f),
-          glm::vec3 La =        glm::vec3(1.0f, 1.0f, 1.0f),
-          glm::vec3 Ld =        glm::vec3(0.35, 0.35, 0.35),
-          glm::vec3 Ls =        glm::vec3(0.9f, 0.9f, 0.9f))
+          glm::vec3 La =        glm::vec3(0.55, 0.55, 0.55),
+          glm::vec3 Ld =        glm::vec3(1.1, 1.1, 1.1),
+          glm::vec3 Ls =        glm::vec3(0.1f, 0.1f, 0.1f))
     {
         this->lightPos = lightPos;
         this->La = La;
@@ -25,11 +25,14 @@ public:
         return this->lightPos;
     }
 
+    void setPos(glm::vec3 pos){
+        this->lightPos = pos;
+    }
+
     // pass light properties to the shader
     void Setup(GLuint program_id) {
         glUseProgram(program_id);
 
-        // given in camera space
         GLuint lighPos_id = glGetUniformLocation(program_id, "lightPos");
 
         GLuint La_id = glGetUniformLocation(program_id, "La");
@@ -40,5 +43,10 @@ public:
         glUniform3fv(La_id, ONE, glm::value_ptr(La));
         glUniform3fv(Ld_id, ONE, glm::value_ptr(Ld));
         glUniform3fv(Ls_id, ONE, glm::value_ptr(Ls));
+    }
+
+    void updatePosUniform(GLuint program_id){
+        GLuint lighPos_id = glGetUniformLocation(program_id, "lightPos");
+        glUniform3fv(lighPos_id, ONE, glm::value_ptr(lightPos));
     }
 };

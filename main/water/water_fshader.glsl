@@ -20,13 +20,15 @@ in vec3 viewDir_F;
 
 out vec4 color;
 
+const vec3 WATER_COLOR = vec3(125,186,217) / 255.0;
+
 void main() {
 
     vec2 window_size = textureSize(mirrorTex, 0);
     float _u = gl_FragCoord.x / window_size.x;
     float _v = 1.0 - gl_FragCoord.y / window_size.y;
 
-    vec3 reflection = mix(vec3(125,186,217) / 255.0, vec3(texture(mirrorTex, vec2(_u, _v) + reflectOffset_F).rgb), 0.5f);
+    vec3 reflection = mix(WATER_COLOR, vec3(texture(mirrorTex, vec2(_u, _v) + reflectOffset_F).rgb), 0.5f);
 
     vec3 lightDir = normalize(lightDir_F);
     float cosNL = dot(normal_MV_F, lightDir);
@@ -36,7 +38,7 @@ void main() {
     if(cosNL > 0){
         vec3 reflectionDir = normalize(2*normal_MV_F * cosNL - lightDir);
          lightingResult +=
-                (vec3(1,1,1) * cosNL * Ld)
+                (WATER_COLOR * cosNL * Ld)
                 +
                 (vec3(0.7,0.7,0.7) * pow(max(0, dot(reflectionDir, viewDir_F)), 150) * Ls);
     }
