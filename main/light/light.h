@@ -13,7 +13,7 @@ public:
     Light(glm::vec3 lightPos =  glm::vec3(0.0f, 0.0f, 0.0f),
           glm::vec3 La =        glm::vec3(0.55, 0.55, 0.55),
           glm::vec3 Ld =        glm::vec3(1.1, 1.1, 1.1),
-          glm::vec3 Ls =        glm::vec3(0.1f, 0.1f, 0.1f))
+          glm::vec3 Ls =        glm::vec3(1.0f, 1.0f, 1.0f))
     {
         this->lightPos = lightPos;
         this->La = La;

@@ -4,7 +4,8 @@
 #include <GLFW/glfw3.h>
 #include "icg_helper.h"
 #include <glm/gtc/matrix_transform.hpp>
-#include "grid/grid.h"
+#include "gridmesh.h"
+#include "terrain/terrain.h"
 #include "framebuffer.h"
 #include "screenquad/screenquad.h"
 #include "perlin/perlin.h"
@@ -29,6 +30,7 @@ Material material;
 
 bool keys[1024];
 bool firstMouse = false;
+bool wireframeDebugEnabled = false;
 int window_width = 1280;
 int window_height = 960;
 float lastX = 0.0f;
@@ -76,8 +78,8 @@ void Init() {
     normalMap.Init(noiseBuffer_texture_id);
     grid.Init(noiseBuffer_texture_id, normalBuffer_texture_id, shadowBuffer_texture_id);
     grid.useLight(&light);
-    water.Init(reflectionBuffer_texture_id, noiseBuffer_texture_id, normalBuffer_texture_id);
-    water.useLight(light);
+    water.Init(noiseBuffer_texture_id, reflectionBuffer_texture_id, shadowBuffer_texture_id);
+    water.useLight(&light);
 
     // enable depth test.
     glEnable(GL_DEPTH_TEST);
@@ -122,8 +124,10 @@ void Display() {
         frameCount = 0;
     }
 
+    glPolygonMode(GL_FRONT_AND_BACK, (wireframeDebugEnabled) ? GL_LINE : GL_FILL);
+
     //Update light pos
-    mat4 rotMatrix = rotate(IDENTITY_MATRIX, currentFrame * 0.5f, vec3(0.0, 1.0, 0.0));
+    mat4 rotMatrix = rotate(IDENTITY_MATRIX, currentFrame * 0.1f, vec3(0.0, 1.0, 0.0));
     vec4 tmp = rotMatrix * vec4(4.0, 2.0, 0.0, 1.0);
     vec3 pos = vec3(tmp.x, tmp.y, tmp.z);
     light.setPos(pos);
@@ -163,8 +167,7 @@ void Display() {
     glViewport(0, 0, window_width, window_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     grid.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
-    water.Draw(MVP, MV, NORMALM, fractionalView);
-    //grid.Draw(glm::scale(IDENTITY_MATRIX, vec3(1.0, -1.0, 1.0)), view_matrix, projection_matrix, true);
+    water.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
 
     //screenquad.Draw();
 
@@ -233,8 +236,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
         switch(key){
             case GLFW_KEY_F:
-                grid.toggleWireframeMode();
-                water.toggleWireframeMode();
                 break;
             case GLFW_KEY_H:
                 fractionalView.zoom += 0.1;

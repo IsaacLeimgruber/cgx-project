@@ -11,19 +11,19 @@ copy_files_once(${TEXTURES})
 # list all the files you want to copy everytime
 # you build (ie, you want the shaders there)
 file(GLOB SHADERS
-    grid/grid_vshader.glsl
-    grid/grid_fshader.glsl
-    grid/grid_tcshader.glsl
-    grid/grid_teshader.glsl
-    grid/shadow/grid_vshader_shadow.glsl
-    grid/shadow/grid_fshader_shadow.glsl
-    grid/shadow/grid_tcshader_shadow.glsl
-    grid/shadow/grid_teshader_shadow.glsl
-    grid/debug/grid_vshader_debug.glsl
-    grid/debug/grid_fshader_debug.glsl
-    grid/debug/grid_tcshader_debug.glsl
-    grid/debug/grid_teshader_debug.glsl
-    grid/debug/grid_gshader_debug.glsl
+    terrain/terrain_vshader.glsl
+    terrain/terrain_fshader.glsl
+    terrain/terrain_tcshader.glsl
+    terrain/terrain_teshader.glsl
+    terrain/shadow/terrain_vshader_shadow.glsl
+    terrain/shadow/terrain_fshader_shadow.glsl
+    terrain/shadow/terrain_tcshader_shadow.glsl
+    terrain/shadow/terrain_teshader_shadow.glsl
+    terrain/debug/terrain_vshader_debug.glsl
+    terrain/debug/terrain_fshader_debug.glsl
+    terrain/debug/terrain_tcshader_debug.glsl
+    terrain/debug/terrain_teshader_debug.glsl
+    terrain/debug/terrain_gshader_debug.glsl
     screenquad/screenquad_vshader.glsl
     screenquad/screenquad_fshader.glsl
     perlin/perlin_vshader.glsl
@@ -34,11 +34,11 @@ file(GLOB SHADERS
     water/water_fshader.glsl
     water/water_tcshader.glsl
     water/water_teshader.glsl
-    water/water_vshader_debug.glsl
-    water/water_fshader_debug.glsl
-    water/water_tcshader_debug.glsl
-    water/water_teshader_debug.glsl
-    water/water_gshader_debug.glsl)
+    water/debug/water_vshader_debug.glsl
+    water/debug/water_fshader_debug.glsl
+    water/debug/water_tcshader_debug.glsl
+    water/debug/water_teshader_debug.glsl
+    water/debug/water_gshader_debug.glsl)
     deploy_shaders_to_build_dir(${SHADERS})
 
 add_executable(${EXERCISENAME} ${SOURCES} ${HEADERS} ${SHADERS})
