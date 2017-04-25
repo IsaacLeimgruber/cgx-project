@@ -2,10 +2,11 @@
 uniform sampler2D heightMap;
 uniform float textureWidth;
 uniform float textureHeight;
+uniform float xscale;
+uniform float yscale;
 
 in vec2 uv;
 out vec3 color;
-
 
 void main() {
     float hSpacing = 1.0 / textureWidth;
@@ -28,7 +29,7 @@ void main() {
     vec3 v3 = p3 - p0;
     vec3 v4 = p4 - p0;
 
-    vec3 n = normalize(cross(v1,v2)+
+    vec3 n = normalize(cross(v1,v2) +
                        cross(v2,v3) +
                        cross(v3,v4) +
                        cross(v4,v1));

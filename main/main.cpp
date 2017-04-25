@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     perlin.Init();
     normalMap.Init(framebuffer_id);
     grid.Init(framebuffer_id, normalBuffer_id);
-    //screenquad.Init(window_width, window_height, framebuffer_id);
+    //screenquad.Init(window_width, window_height, normalBuffer_id);
 
     view_matrix = camera.GetViewMatrix();
     quad_model_matrix = translate(mat4(1.0f), vec3(0.0f, -0.25f, 0.0f));
@@ -149,8 +149,8 @@ vec2 transformScreenCoords(GLFWwindow* window, int x, int y) {
 void SetupProjection(GLFWwindow* window, int width, int height) {
     window_width = width;
     window_height = height;
-    cout << "Window has been resized to "
-         << window_width << "x" << window_height << "." << endl;
+    //cout << "Window has been resized to "
+    //     << window_width << "x" << window_height << "." << endl;
     glViewport(0, 0, window_width, window_height);
     projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)window_width / window_height, 0.1f, 1000.0f);
     screenquad.UpdateSize(window_width, window_height);

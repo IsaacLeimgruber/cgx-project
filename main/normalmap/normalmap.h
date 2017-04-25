@@ -15,6 +15,12 @@ private:
         float textureWidth = 1024;
         float textureHeight = 1024;
 
+        int offset_id_;
+        glm::vec2 offset = glm::vec2(0,0);
+
+        int scale_id_;
+        glm::vec2 scale = glm::vec2(1,1);
+
 public:
 
         void Init(GLuint texture) {
@@ -90,6 +96,8 @@ public:
                 glUniform1f(glGetUniformLocation(program_id_, "textureHeight"), textureHeight);
             }
 
+            scale_id_ = glGetUniformLocation(program_id_, "scale");
+            offset_id_ = glGetUniformLocation(program_id_, "offset");
 
             // to avoid the current object being polluted
             glBindVertexArray(0);
@@ -105,18 +113,40 @@ public:
             glDeleteTextures(1, &texture_id_);
         }
 
-        void Draw(std::vector<GLfloat> pos_offset = {0.5f, 0.5f}) {
-            glUseProgram(program_id_);
-            glUniform1fv(glGetUniformLocation(program_id_, "pos_offset"), 1, pos_offset.data());
-            glBindVertexArray(vertex_array_id_);
-            // bind texture
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture_id_);
+        void updateScale(glm::vec2 v){
+          scale = v;
+          //std::cout << "Scale: " << v.x << ", " << v.y << std::endl;
+        }
 
-            // draw
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        void updateOffset(glm::vec2 v){
+          offset = v;
+          //std::cout << "Offset: " << v.x << ", " << v.y << std::endl;
+        }
 
-            glBindVertexArray(0);
-            glUseProgram(0);
+        void Draw(glm::vec2 xyoffset, glm::vec2 xyscale, glm::vec3 translation = glm::vec3(0,0,0)) {
+          Draw(xyoffset.x, xyoffset.y, xyscale.x, xyscale.y, translation);
+        }
+
+        void Draw(float xoffset = 0, float yoffset = 0, float xscale = 1, float yscale = 1, glm::vec3 translation = glm::vec3(0,0,0)) {
+          glUseProgram(program_id_);
+
+          glUniform1f(glGetUniformLocation(program_id_, "xscale"), xscale);
+          glUniform1f(glGetUniformLocation(program_id_, "yscale"), yscale);
+          glUniform1f(glGetUniformLocation(program_id_, "xoffset"), xoffset);
+          glUniform1f(glGetUniformLocation(program_id_, "yoffset"), yoffset);
+          glUniform3fv(glGetUniformLocation(program_id_, "translation"), 1, &translation[0]);
+          glUniform2fv(scale_id_, 1, glm::value_ptr(scale));
+          glUniform2fv(offset_id_, 1, glm::value_ptr(offset));
+
+          glBindVertexArray(vertex_array_id_);
+          // bind texture
+          glActiveTexture(GL_TEXTURE0);
+          glBindTexture(GL_TEXTURE_2D, texture_id_);
+
+          // draw
+          glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+          glBindVertexArray(0);
+          glUseProgram(0);
         }
 };

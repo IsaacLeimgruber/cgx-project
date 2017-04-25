@@ -73,7 +73,8 @@ namespace noiseParams {
 }
 
 namespace gridParams {
-    void redrawGridBand(gridParams::CoordSelector S, int sCoordValue) {
+    template <class Perlin>
+    void redrawGridBand(gridParams::CoordSelector S, int sCoordValue, Perlin& perlin) {
       using namespace textureParams;
       using namespace noiseParams;
       CoordSelector T = (S == I) ? J : I;
@@ -88,6 +89,27 @@ namespace gridParams {
                     translationForGridCoords(gridCoord));
       }
     }
+    template <class Perlin>
+    void redrawGridBand2(gridParams::CoordSelector S, int sCoordValue, Perlin& perlin) {
+      using namespace textureParams;
+      using namespace noiseParams;
+      CoordSelector T = (S == I) ? J : I;
+      gridCoord_t gridCoord;
+      gridCoord_t tileCoord;
+      gridCoord[S] = sCoordValue;
+      tileCoord[S] = coordInBottomLeftReferential(S, gridCoord[S]);
+      for (tileCoord[T] = 0; tileCoord[T] < coordMax[T]; ++tileCoord[T]) {
+        gridCoord[T] = coordInGridReferential(T, tileCoord[T]);
+
+        perlin.updateScale(vec2(1.0/coordMax[J], 1.0/coordMax[I]));
+
+        perlin.updateOffset(vec2(gridCoord[J], gridCoord[I]));
+
+        perlin.Draw({},
+                    textureScale,
+                    translationForGridCoords(gridCoord));
+      }
+    }
 
     void updatePerlinOffset(gridParams::CoordSelector bandSelector, int direction) {
       using namespace gridParams;
@@ -96,17 +118,29 @@ namespace gridParams {
 
       gridCoord_t oldBottomLeftTile = bottomLeftTile;
       updateCoord(bandSelector, direction, bottomLeftTile);
-      int obsoleteBand = (direction < 0) ? bottomLeftTile[bandSelector] : oldBottomLeftTile[bandSelector];
       bottomLeftTileOffset += static_cast<float>(direction) * offsetGainPerGridBand[bandSelector];
-
       grid.updateOffset(vec2(bottomLeftTileOffset.x/coordMax[J], bottomLeftTileOffset.y/coordMax[I]));
 
+      // draw perlin noise
       framebuffer.Bind();
-      redrawGridBand(bandSelector, obsoleteBand);
+      if (direction < 0) {
+        redrawGridBand(bandSelector, bottomLeftTile[bandSelector], perlin);
+      } else {
+        redrawGridBand(bandSelector, oldBottomLeftTile[bandSelector], perlin);
+      }
       framebuffer.Unbind();
 
+      gridCoord_t oldOldBottomLeftTile = oldBottomLeftTile;
+      updateCoord(bandSelector, -direction, oldOldBottomLeftTile);
+
+      // draw normapMap (both obsolete band and previous band to smooth the map)
       normalBuffer.Bind();
-      normalMap.Draw();
+      redrawGridBand2(bandSelector, oldBottomLeftTile[bandSelector], normalMap);
+      if (direction < 0) {
+        redrawGridBand2(bandSelector, bottomLeftTile[bandSelector], normalMap);
+      } else {
+        redrawGridBand2(bandSelector, oldOldBottomLeftTile[bandSelector], normalMap);
+      }
       normalBuffer.Unbind();
     }
 }
@@ -114,7 +148,7 @@ namespace gridParams {
  void drawPerlin(FrameBuffer& framebuffer) {
    framebuffer.Bind();
    for (int jCol = 0; jCol < gridParams::coordMax[gridParams::J]; ++jCol) {
-     gridParams::redrawGridBand(gridParams::J, jCol);
+     gridParams::redrawGridBand(gridParams::J, jCol, perlin);
    }
    framebuffer.Unbind();
  }

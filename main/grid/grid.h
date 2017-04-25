@@ -197,12 +197,12 @@ class Grid : public Material, public Light{
 
         void updateZoomFactor(float z){
             zoom = glm::max(glm::min(4.0f, zoom + z), 0.1f);
-            std::cout << "Zoom factor: " << zoom << std::endl;
+            //std::cout << "Zoom factor: " << zoom << std::endl;
         }
 
         void updateOffset(glm::vec2 v){
             offset = v;
-            std::cout << "Offset: " << v.x << ", " << v.y << std::endl;
+            //std::cout << "Offset: " << v.x << ", " << v.y << std::endl;
         }
 
         void Cleanup() {
