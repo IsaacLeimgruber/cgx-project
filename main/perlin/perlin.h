@@ -55,7 +55,7 @@ public:
 
         void Init() {
 
-            initializePermutations(12);
+            initializePermutations(time(NULL));
 
             // compile the shaders
             program_id_ = icg_helper::LoadShaders("perlin_vshader.glsl",
@@ -127,9 +127,20 @@ public:
             glDeleteTextures(1, &texture_id_);
         }
 
-        void Draw(std::vector<GLfloat> pos_offset = {0.5f, 0.5f}) {
+        void Draw(glm::vec2 xyoffset, glm::vec2 xyscale, glm::vec3 translation = glm::vec3(0,0,0)) {
+          Draw(xyoffset.x, xyoffset.y, xyscale.x, xyscale.y, translation);
+        }
+
+        void Draw(float xoffset = 0, float yoffset = 0, float xscale = 1, float yscale = 1, glm::vec3 translation = glm::vec3(0,0,0)) {
             glUseProgram(program_id_);
-            glUniform1fv(glGetUniformLocation(program_id_, "pos_offset"), 1, pos_offset.data());
+
+            glUniform1f(glGetUniformLocation(program_id_, "xscale"), xscale);
+            glUniform1f(glGetUniformLocation(program_id_, "yscale"), yscale);
+            glUniform1f(glGetUniformLocation(program_id_, "xoffset"), xoffset);
+            glUniform1f(glGetUniformLocation(program_id_, "yoffset"), yoffset);
+            glUniform3fv(glGetUniformLocation(program_id_, "translation"), 1, &translation[0]);
+            //glUniform1f(glGetUniformLocation(program_id_, "scale"), scale);
+
             glBindVertexArray(vertex_array_id_);
             // bind texture
             glActiveTexture(GL_TEXTURE0);

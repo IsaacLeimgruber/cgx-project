@@ -1,5 +1,6 @@
 // glew must be before glfw
 #include <iostream>
+#include <array>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "icg_helper.h"
@@ -57,34 +58,39 @@ GLuint frameCount = 0;
 
 FractionalView fractionalView;
 
+#include "infinite_grid.h"
+
 void Init() {
-    // Initialize camera
-    camera = Camera{vec3(0.0, 2.5, 0.0)};
+    using namespace noiseParams;
 
-    // Let there be light !
-    light = Light{vec3(0.0, 2.0, -4.0)};
-
-    material = Material{};
-
-    // sets background color
     glClearColor(0.0, 0.0, 0.0, 1.0 /*solid*/);
-    perlin.Init();
-    int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_R32F, GL_RED, GL_COLOR_ATTACHMENT0, false, true);
-    int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, GL_COLOR_ATTACHMENT0, false, true);
-    int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height, GL_RGBA32F, GL_RGBA, GL_COLOR_ATTACHMENT0, true, true);
-    int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, false, true);
 
-    screenquad.Init(window_width, window_height, shadowBuffer_texture_id);
+    camera = Camera{vec3(0.0, 2.5, 0.0)};
+    light = Light{vec3(0.0, 2.0, -4.0)};
+    material = Material{};
+    perlin.Init();
+    int noiseBuffer_texture_id = noiseBuffer.Init(noiseBufferWidth, noiseBufferHeight,
+                                                  GL_R32F, GL_RED, GL_COLOR_ATTACHMENT0,
+                                                  false, true);
+    int normalBuffer_texture_id = normalBuffer.Init(noiseBufferWidth, noiseBufferHeight,
+                                                    GL_RGB32F, GL_RGB, GL_COLOR_ATTACHMENT0,
+                                                    false, true);
+    int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height,
+                                                            GL_RGBA32F, GL_RGBA,
+                                                            GL_COLOR_ATTACHMENT0,
+                                                            true, true);
+    int shadowBuffer_texture_id = shadowBuffer.Init(2*noiseBufferWidth, 2*noiseBufferHeight,
+                                                    GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT,
+                                                    false, true);
+
+    screenquad.Init(window_width, window_height, normalBuffer_texture_id);
     normalMap.Init(noiseBuffer_texture_id);
     grid.Init(noiseBuffer_texture_id, normalBuffer_texture_id, shadowBuffer_texture_id);
     grid.useLight(&light);
     water.Init(noiseBuffer_texture_id, reflectionBuffer_texture_id, shadowBuffer_texture_id);
     water.useLight(&light);
 
-    // enable depth test.
     glEnable(GL_DEPTH_TEST);
-
-    // enable culling
     glCullFace(GL_BACK);
 
     //Initialise matrices
@@ -94,18 +100,12 @@ void Init() {
     depth_model_matrix = IDENTITY_MATRIX;
     depth_mvp = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix = biasMatrix * depth_mvp;
-
     quad_model_matrix = IDENTITY_MATRIX;
 
-    //Generate Perlin
-    noiseBuffer.Bind();
-        perlin.Draw();
-    noiseBuffer.Unbind();
-
+    drawPerlin(noiseBuffer);
     normalBuffer.Bind();
-        normalMap.Draw();
+    normalMap.Draw();
     normalBuffer.Unbind();
-
 
     //Initialise boolean keys array
     for(int i=0; i < 1024; i++){
@@ -166,9 +166,9 @@ void Display() {
 
     glViewport(0, 0, window_width, window_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     grid.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
     water.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
-
     //screenquad.Draw();
 
     frameCount++;
@@ -213,8 +213,8 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
     window_width = width;
     window_height = height;
 
-    cout << "Window has been resized to "
-         << window_width << "x" << window_height << "." << endl;
+    //cout << "Window has been resized to "
+    //     << window_width << "x" << window_height << "." << endl;
 
     glViewport(0, 0, window_width, window_height);
 
@@ -248,16 +248,16 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 water.toggleDebugMode();
                 break;
             case GLFW_KEY_RIGHT:
-                fractionalView.zoomOffset += vec2(-OFFSET_QTY, 0.0);
+                updatePerlinOffsetRight();
                 break;
             case GLFW_KEY_LEFT:
-                fractionalView.zoomOffset += vec2(OFFSET_QTY, 0.0);
+                updatePerlinOffsetLeft();
                 break;
             case GLFW_KEY_UP:
-                fractionalView.zoomOffset += vec2(0.0, -OFFSET_QTY);
+                updatePerlinOffsetTop();
                 break;
             case GLFW_KEY_DOWN:
-                fractionalView.zoomOffset += vec2(0.0, OFFSET_QTY);
+                updatePerlinOffsetBottom();
                 break;
         }
     } else if(action == GLFW_RELEASE){
@@ -352,10 +352,10 @@ int main(int argc, char *argv[]) {
     // update the window size with the framebuffer size (on hidpi screens the
     // framebuffer is bigger)
     glfwGetFramebufferSize(window, &window_width, &window_height);
-    SetupProjection(window, window_width, window_height);
 
     // render loop
     while(!glfwWindowShouldClose(window)){
+        SetupProjection(window, window_width, window_height);
         Display();
         glfwSwapBuffers(window);
         glfwPollEvents();
