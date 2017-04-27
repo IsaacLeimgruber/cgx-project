@@ -38,7 +38,7 @@ class Water: public GridMesh{
             int width;
             int height;
             int nb_component;
-            unsigned char* image = stbi_load("waterNormalMap2_perlinStretch.tga", &width,
+            unsigned char* image = stbi_load("waterNormalMap2.tga", &width,
                                                              &height, &nb_component, 0);
 
             if(image == nullptr) {

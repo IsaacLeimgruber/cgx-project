@@ -20,15 +20,18 @@ in vec2 uv_TE[];
 out vec2 uv_F;
 out vec2 reflectOffset_F;
 out vec3 vpoint_F;
+out vec3 vpoint_MV_F;
+out vec3 normal_F;
 out vec3 normal_MV_F;
 out vec3 lightDir_F;
-out vec3 viewDir_F;
+out vec3 viewDir_MV_F;
 out vec4 shadowCoord_F;
 
 const float DEGTORAD = 3.14159265359f / 180.0f;
+const vec3 Y = vec3(0.0, 1.0, 0.0);
 
-float freqs[5] = float[5](100.0f, 125.0, 150.0, 230.0f, 256.0f);
-float amps[5] =  float[5](0.0008f, 0.0008f, 0.0007f, 0.0005f, 0.0005f);
+float freqs[5] = float[5](30.0f, 60.0, 120.0, 160.0f, 180.0f);
+float amps[5] =  float[5](0.002f, 0.0016f, 0.001f, 0.0007f, 0.0007f);
 float phis[5] = float[5](1.8f, 2.0f, 3.0f, 5.0f, 6.5f);
 vec2  dirs[5] = vec2[5](vec2(0.0,1.0),vec2(0.5, 1.0),vec2(0.3, 1.0),vec2(0.4, 1.0),vec2(-0.2, 1.0));
 float exps[5] = float[5](1.0, 2.0, 2.0, 1.0, 1.0);
@@ -85,25 +88,15 @@ void main()
         waveNormal += vec3(-ddx[i], 1.0, ddy[i]);
     }
 
-    vec3 rippleNormal =  texture(normalMap, (uv_F + vec2(0.0, 0.01 * time))* 5.0).rgb * 2.0 - 1.0f;
-    rippleNormal = vec3(rippleNormal.x, rippleNormal.z, -rippleNormal.y);
-    waveNormal = normalize(waveNormal + 0.7 * rippleNormal);
-
-    //Flat normal is the projection of the wave normal onto the mirror surface
-    vec3 flatNormal = waveNormal - dot(waveNormal, vec3(0.0, 1.0, 0.0)) * vec3(0.0, 1.0, 0.0);
-
-    //Compute how the flat normal look in camera space
-    vec3 eyeNormal = (NORMALM * vec4(flatNormal, 1.0)).xyz;
-
-    //Compute distortion
-    reflectOffset_F = normalize(eyeNormal.xy) * length (flatNormal) * 0.3;
-
+    waveNormal = normalize(waveNormal);
+    normal_F = waveNormal;
 
     vec4 vpoint_MV = MV * vec4(vpoint_F, 1.0);
     // Lighting
     normal_MV_F = normalize((NORMALM * vec4(waveNormal, 1.0)).xyz);
     lightDir_F = normalize((MV * vec4(lightPos, 1.0)).xyz - vpoint_MV.xyz);
-    viewDir_F = -normalize(vpoint_MV.xyz);
+    viewDir_MV_F = -normalize(vpoint_MV.xyz);
+    vpoint_MV_F = vpoint_MV.xyz;
 
     gl_Position = MVP * vec4(vpoint_F, 1.0);
     shadowCoord_F = SHADOWMVP * vec4(vpoint_F, 1.0);

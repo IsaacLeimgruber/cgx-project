@@ -67,12 +67,12 @@ void Init() {
     material = Material{};
 
     // sets background color
-    glClearColor(0.0, 0.0, 0.0, 1.0 /*solid*/);
+    glClearColor(0.0, 0.8, 1.0, 1.0 /*solid*/);
     perlin.Init();
     int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_R32F, GL_RED, GL_COLOR_ATTACHMENT0, false, true);
     int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, GL_COLOR_ATTACHMENT0, false, true);
-    int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height, GL_RGBA32F, GL_RGBA, GL_COLOR_ATTACHMENT0, true, true);
-    int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, false, true);
+    int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height, GL_RGBA32F, GL_RGBA, GL_COLOR_ATTACHMENT0, true, true, true);
+    int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, false, true, true);
 
     screenquad.Init(window_width, window_height, shadowBuffer_texture_id);
     normalMap.Init(noiseBuffer_texture_id);
@@ -125,7 +125,7 @@ void Display() {
     }
 
     //Update light pos
-    mat4 rotMatrix = rotate(IDENTITY_MATRIX, currentFrame * 0.05f, vec3(0.0, 1.0, 0.0));
+    mat4 rotMatrix = rotate(IDENTITY_MATRIX, currentFrame * 0.1f, vec3(0.0, 1.0, 0.0));
     vec4 tmp = rotMatrix * vec4(4.0, 2.0, 0.0, 1.0);
     vec3 pos = vec3(tmp.x, tmp.y, tmp.z);
     light.setPos(pos);

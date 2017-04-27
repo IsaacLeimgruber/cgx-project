@@ -54,7 +54,7 @@ class FrameBuffer {
          */
         int Init(int imageWidth, int imageHeight,
                  GLint internalFormat, GLint format, GLint attachment,
-                 bool enableDepthChannel = false, bool useInterpolation = false) {
+                 bool enableDepthChannel = false, bool useInterpolation = false, bool mirrorRepeat = false) {
             this->width = imageWidth;
             this->height = imageHeight;
             this->depthEnabled = enableDepthChannel;
@@ -63,9 +63,14 @@ class FrameBuffer {
             {
                 glGenTextures(1, &colorTextureId);
                 glBindTexture(GL_TEXTURE_2D, colorTextureId);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
+                if(mirrorRepeat){
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+                } else {
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                }
                 if(useInterpolation){
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

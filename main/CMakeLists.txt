@@ -6,6 +6,9 @@ file(GLOB_RECURSE HEADERS "*.h")
 # these files are copied only once
 file(GLOB TEXTURES
     grid/grid_texture.tga
+    water/waterNormalMap.tga
+    water/waterNormalMap2.tga
+    water/waterNormalMap2_256.tga
     water/waterNormalMap_custom.tga
     water/waterNormalMap_perlinNoStretch.tga
     water/waterNormalMap_perlinStretch.tga

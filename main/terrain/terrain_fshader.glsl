@@ -34,7 +34,7 @@ const float WATER_HEIGHT = 0.1,
 
 const float GRASS_TRANSITION = SAND_HEIGHT + (1.0/5.0) * (GRASS_HEIGHT - SAND_HEIGHT);
 
-const vec3  WATER_COLOR_DEEP = vec3(0,8,80),
+const vec3  WATER_COLOR_DEEP = vec3(0,30,120),
             WATER_COLOR = vec3(125,186,217),
             SAND_COLOR = vec3(189,173,94),
             GRASS_COLOR = vec3(52,103,0),
@@ -135,7 +135,7 @@ void main() {
     float angle = randomAngle(vpoint_F.xyz, 15);
     float s = sin(angle);
     float c = cos(angle);
-    float PCFRadius = 1/500.0;
+    float PCFRadius = 1/300.0;
     for(int i=0; i < numSamplingPositions; i++)
     {
       // rotate offset
