@@ -10,7 +10,7 @@ const float waterHeight = 0.0f;
 void main() {
 
     //Outputs UV coordinate
-    uv_TC = (gridPos + vec2(1.0, 1.0)) * 0.5;
+    uv_TC = (gridPos + vec2(1.0f, 1.0f)) * 0.5f;
 
     vpoint_TC = vec3(gridPos.x, waterHeight, -gridPos.y);
 

@@ -67,7 +67,7 @@ void Init() {
     material = Material{};
 
     // sets background color
-    glClearColor(0.0, 0.8, 1.0, 1.0 /*solid*/);
+    glClearColor(0.0f, 0.8f, 1.0f, 1.0f /*solid*/);
     perlin.Init();
     int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_R32F, GL_RED, GL_COLOR_ATTACHMENT0, false, true);
     int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, GL_COLOR_ATTACHMENT0, false, true);
@@ -80,12 +80,6 @@ void Init() {
     grid.useLight(&light);
     water.Init(noiseBuffer_texture_id, reflectionBuffer_texture_id, shadowBuffer_texture_id);
     water.useLight(&light);
-
-    // enable depth test.
-    glEnable(GL_DEPTH_TEST);
-
-    // enable culling
-    glCullFace(GL_BACK);
 
     //Initialise matrices
     view_matrix = camera.GetViewMatrix();
@@ -238,10 +232,10 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 grid.toggleWireFrame();
                 break;
             case GLFW_KEY_H:
-                fractionalView.zoom += 0.1;
+                fractionalView.zoom += 0.1f;
                 break;
             case GLFW_KEY_G:
-                fractionalView.zoom -= 0.1;
+                fractionalView.zoom -= 0.1f;
                 break;
             case GLFW_KEY_N:
                 grid.toggleDebugMode();
@@ -305,7 +299,8 @@ int main(int argc, char *argv[]) {
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    //Only for MacOSX
+    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window = glfwCreateWindow(window_width, window_height,
@@ -321,9 +316,13 @@ int main(int argc, char *argv[]) {
     // Cursor is captured and hidden
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    // enable depth test.
+    glEnable(GL_DEPTH_TEST);
+    // enable culling
+    glCullFace(GL_BACK);
     // Enable transparent materials
-    glEnable (GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // set the callback for escape key
     glfwSetKeyCallback(window, KeyCallback);
@@ -367,6 +366,7 @@ int main(int argc, char *argv[]) {
     reflectionBuffer.Cleanup();
     noiseBuffer.Cleanup();
     normalMap.Cleanup();
+    shadowBuffer.Cleanup();
 
     // close OpenGL window and terminate GLFW
     glfwDestroyWindow(window);

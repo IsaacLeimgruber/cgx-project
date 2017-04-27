@@ -42,7 +42,7 @@ class GridMesh{
             std::vector<GLfloat> vertices;
             std::vector<GLuint> indices;
 
-            float spacing = 2.f/(grid_dim - 1.0);
+            float spacing = 2.f/(grid_dim - 1.0f);
 
             /*
              * grid is 2 units wide, should contain 100 points -> spacing is 2/100
@@ -166,6 +166,7 @@ class GridMesh{
             glDeleteTextures(1, &heightMapTexture_id_);
             glDeleteTextures(1, &normalTexture_id_);
             glDeleteTextures(1, &mirrorTexture_id_);
+            glDeleteTextures(1, &shadowTexture_id_);
         }
 
         void Draw(const glm::mat4 &MVP = IDENTITY_MATRIX,

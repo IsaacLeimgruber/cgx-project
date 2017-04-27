@@ -23,7 +23,7 @@ out vec3 lightDir_F;
 out vec3 viewDir_F;
 out float vheight_F;
 
-vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2, vec2 v3)
+vec2 interpolate2D(in vec2 v0, in vec2 v1, in vec2 v2, in vec2 v3)
 {
     vec2 xlerp1 = mix(v0, v1, gl_TessCoord.x);
     vec2 xlerp2 = mix(v3, v2, gl_TessCoord.x);
@@ -31,7 +31,7 @@ vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2, vec2 v3)
     return mix(xlerp1, xlerp2, gl_TessCoord.y);
 }
 
-vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2, vec3 v3)
+vec3 interpolate3D(in vec3 v0, in vec3 v1, in vec3 v2, in vec3 v3)
 {
     vec3 xlerp1 = mix(v0, v1, gl_TessCoord.x);
     vec3 xlerp2 = mix(v3, v2, gl_TessCoord.x);
@@ -47,12 +47,12 @@ void main()
     vpoint_F = vec4(interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]), 1.0f);
 
     // Set height for generated (and original) vertices
-    vheight_F = 1.3 * pow(texture(heightMap, (uv_F+zoomOffset) * zoom).r, 3);
+    vheight_F = 1.3f * pow(texture(heightMap, (uv_F+zoomOffset) * zoom).r, 3);
     vpoint_F.y = vheight_F - 0.1f;
 
     vec4 vpoint_MV = MV * vpoint_F;
     //Lighting
-    lightDir_F = normalize((MV * vec4(lightPos, 1.0)).xyz - vpoint_MV.xyz);
+    lightDir_F = normalize((MV * vec4(lightPos, 1.0f)).xyz - vpoint_MV.xyz);
     viewDir_F = -normalize(vpoint_MV.xyz);
 
     gl_Position = MVP * vpoint_F;

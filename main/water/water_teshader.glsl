@@ -28,19 +28,19 @@ out vec3 viewDir_MV_F;
 out vec4 shadowCoord_F;
 
 const float DEGTORAD = 3.14159265359f / 180.0f;
-const vec3 Y = vec3(0.0, 1.0, 0.0);
+const vec3 Y = vec3(0.0, 1.0f, 0.0f);
 
-float freqs[5] = float[5](30.0f, 60.0, 120.0, 160.0f, 180.0f);
+float freqs[5] = float[5](30.0f, 60.0f, 120.0f, 160.0f, 180.0f);
 float amps[5] =  float[5](0.002f, 0.0016f, 0.001f, 0.0007f, 0.0007f);
 float phis[5] = float[5](1.8f, 2.0f, 3.0f, 5.0f, 6.5f);
-vec2  dirs[5] = vec2[5](vec2(0.0,1.0),vec2(0.5, 1.0),vec2(0.3, 1.0),vec2(0.4, 1.0),vec2(-0.2, 1.0));
-float exps[5] = float[5](1.0, 2.0, 2.0, 1.0, 1.0);
-float fades[5] = float[5](0.0, 1.0/5.0, 1.0/5.0, 2.0, 2.0);
-float sinWave[5] = float[5](0, 0, 0, 0, 0);
-float ddx[5] = float[5](0, 0, 0, 0, 0);
-float ddy[5] = float[5](0, 0, 0, 0, 0);
+vec2  dirs[5] = vec2[5](vec2(0.0f,1.0f),vec2(0.5f, 1.0f),vec2(0.3f, 1.0f),vec2(0.4f, 1.0f),vec2(-0.2f, 1.0f));
+float exps[5] = float[5](1.0f, 2.0f, 2.0f, 1.0f, 1.0f);
+float fades[5] = float[5](0.0f, 1.0f/5.0f, 1.0f/5.0f, 2.0f, 2.0f);
+float sinWave[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+float ddx[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+float ddy[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
-vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2, vec2 v3)
+vec2 interpolate2D(in vec2 v0, in vec2 v1, in vec2 v2, in vec2 v3)
 {
     vec2 xlerp1 = mix(v0, v1, gl_TessCoord.x);
     vec2 xlerp2 = mix(v3, v2, gl_TessCoord.x);
@@ -48,7 +48,7 @@ vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2, vec2 v3)
     return mix(xlerp1, xlerp2, gl_TessCoord.y);
 }
 
-vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2, vec3 v3)
+vec3 interpolate3D(in vec3 v0, in vec3 v1, in vec3 v2, in vec3 v3)
 {
     vec3 xlerp1 = mix(v0, v1, gl_TessCoord.x);
     vec3 xlerp2 = mix(v3, v2, gl_TessCoord.x);
@@ -71,34 +71,34 @@ void main()
         float waveParam = (dot(dirs[i], uv_F) * freqs[i]) + (phis[i] * time);
 
         //Bring sin in [0,1] for later exponentiation
-        float sinTmp = (sin(waveParam) + 1.0)/2.0;
+        float sinTmp = (sin(waveParam) + 1.0f)/2.0f;
 
         //First sin^k, then bring back to [-1, 1] and multiply by amplitude
-        sinWave[i] = amps[i] * ( 2.0 * pow(sinTmp, exps[i])-1.0);
+        sinWave[i] = amps[i] * ( 2.0f * pow(sinTmp, exps[i])-1.0f);
 
         //Compute derivate of the wave
-        float commonPartialDerivative = exps[i]  * freqs[i] * amps[i] * pow(sinTmp, exps[i]-1.0) * cos(waveParam);
+        float commonPartialDerivative = exps[i]  * freqs[i] * amps[i] * pow(sinTmp, exps[i] - 1.0f) * cos(waveParam);
         ddx[i] = dirs[i].x * commonPartialDerivative;
         ddy[i] = dirs[i].y * commonPartialDerivative;
     }
 
-    vec3 waveNormal = vec3(0.0);
+    vec3 waveNormal = vec3(0.0f);
     for(int i = 0; i < 5; i++){
         vpoint_F.y += sinWave[i];
-        waveNormal += vec3(-ddx[i], 1.0, ddy[i]);
+        waveNormal += vec3(-ddx[i], 1.0f, ddy[i]);
     }
 
     waveNormal = normalize(waveNormal);
     normal_F = waveNormal;
 
-    vec4 vpoint_MV = MV * vec4(vpoint_F, 1.0);
+    vec4 vpoint_MV = MV * vec4(vpoint_F, 1.0f);
     // Lighting
-    normal_MV_F = normalize((NORMALM * vec4(waveNormal, 1.0)).xyz);
-    lightDir_F = normalize((MV * vec4(lightPos, 1.0)).xyz - vpoint_MV.xyz);
+    normal_MV_F = normalize((NORMALM * vec4(waveNormal, 1.0f)).xyz);
+    lightDir_F = normalize((MV * vec4(lightPos, 1.0f)).xyz - vpoint_MV.xyz);
     viewDir_MV_F = -normalize(vpoint_MV.xyz);
     vpoint_MV_F = vpoint_MV.xyz;
 
-    gl_Position = MVP * vec4(vpoint_F, 1.0);
-    shadowCoord_F = SHADOWMVP * vec4(vpoint_F, 1.0);
+    gl_Position = MVP * vec4(vpoint_F, 1.0f);
+    shadowCoord_F = SHADOWMVP * vec4(vpoint_F, 1.0f);
 }
 

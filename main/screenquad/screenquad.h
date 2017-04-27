@@ -9,11 +9,11 @@ class ScreenQuad {
         GLuint vertex_buffer_object_;   // memory buffer
         GLuint texture_id_;             // texture ID
 
-        float screenquad_width_;
-        float screenquad_height_;
+        int screenquad_width_;
+        int screenquad_height_;
 
     public:
-        void Init(float screenquad_width, float screenquad_height,
+        void Init(int screenquad_width, int screenquad_height,
                   GLuint texture) {
 
             // set screenquad size
