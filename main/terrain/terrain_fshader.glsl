@@ -1,4 +1,4 @@
-#version 330
+#version 410 core
 
 uniform vec3 La, Ld, Ls;
 uniform vec3 ka, kd, ks;
@@ -127,7 +127,7 @@ void main() {
     float cosNL = dot(normal_MV, lightDir);
 
     float bias = 0.005*tan(acos(max(0, cosNL)));
-    bias = 0.005 + clamp(bias, 0,0.01);
+    bias = 0.005 + clamp(bias, 0.0f ,0.01f);
 
     float visibility = 0;
 

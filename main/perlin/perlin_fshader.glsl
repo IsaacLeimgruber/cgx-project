@@ -1,4 +1,4 @@
-#version 330 core
+#version 410 core
 in vec2 uv;
 out vec4 color;
 uniform int p[512];

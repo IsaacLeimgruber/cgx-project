@@ -72,7 +72,7 @@ void main() {
     vec3 normal_MV = normalize((NORMALM * vec4(completeNormal, 1.0)).xyz);
     float cosNL = dot(normal_MV, lightDir);
     float bias = 0.005*tan(acos(max(0, cosNL)));
-    bias = 0.005 + clamp(bias, 0,0.01);
+    bias = 0.005 + clamp(bias, 0.0f, 0.01f);
 
     // generate random rotation angle for each fragment
     float angle = randomAngle(gl_FragCoord.xyz, 15);

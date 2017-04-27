@@ -1,4 +1,4 @@
-#version 410
+#version 410 core
 layout(triangles) in;
 
 // Three lines will be generated: 6 vertices

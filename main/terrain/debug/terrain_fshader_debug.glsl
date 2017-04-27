@@ -1,4 +1,5 @@
-#version 330
+#version 410 core
+
 uniform sampler2D normalMap;
 in vec4 vpoint_MV_F;
 in vec4 vpoint_M_F;

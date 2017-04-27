@@ -34,6 +34,7 @@ class Grid: public GridMesh{
                                                   "terrain_teshader_debug.glsl",
                                                   "terrain_gshader_debug.glsl");
             if(!program_id_ || !shadow_program_id_ || !debug_program_id_) {
+                cin.get();
                 exit(EXIT_FAILURE);
             }
 

@@ -26,6 +26,7 @@ class Water: public GridMesh{
                                                   "water_teshader_debug.glsl",
                                                   "water_gshader_debug.glsl");
             if(!program_id_ || !debug_program_id_) {
+                cin.get();
                 exit(EXIT_FAILURE);
             }
 
