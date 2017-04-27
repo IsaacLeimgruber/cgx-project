@@ -14,7 +14,7 @@ void main() {
     //Outputs UV coordinate for fragment shader. Grid coordinates are in [-1, 1] x [-1, 1]
     uv_TC = (gridPos + vec2(1.0, 1.0)) * 0.5;
 
-    float vheight = 1.3 * pow(texture(heightMap, (uv_TC+zoomOffset) * zoom).r, 3) -0.1f;
+    float vheight = texture(heightMap, (uv_TC+zoomOffset) * zoom).r;
 
     //Already sets displacement so we can cull patches that fall outside the view frustrum
     vpoint_TC = vec3(gridPos.x, vheight, -gridPos.y);
