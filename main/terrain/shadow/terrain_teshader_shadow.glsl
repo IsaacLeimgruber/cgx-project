@@ -2,9 +2,7 @@
 
 layout(quads, fractional_even_spacing, ccw) in;
 
-uniform mat4 MVP;
-uniform mat4 MV;
-uniform mat4 NORMALM;
+uniform mat4 SHADOWMVP;
 uniform vec2 zoomOffset;
 uniform float zoom;
 
@@ -45,5 +43,5 @@ void main()
     vheight_F = 1.3 * pow(texture(heightMap, (uv_F+zoomOffset) * zoom).r, 3);
     vpoint_F.y = vheight_F - 0.1f;
 
-    gl_Position = MVP * vpoint_F;
+    gl_Position = SHADOWMVP * vpoint_F;
 }

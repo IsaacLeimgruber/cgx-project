@@ -1,6 +1,7 @@
 #version 410 core
 uniform sampler2D heightMap;
 uniform sampler2D mirrorMap;
+uniform sampler2D normalMap;
 uniform sampler2DShadow shadowMap;
 
 uniform vec3 La, Ld, Ls;
@@ -56,9 +57,9 @@ void main() {
     float _v = 1.0 - gl_FragCoord.y / window_size.y;
 
     vec3 reflection = mix(WATER_COLOR, vec3(texture(mirrorMap, vec2(_u, _v) + reflectOffset_F).rgb), 0.5f);
-
+    vec3 normal = normalize(normal_MV_F);
     vec3 lightDir = normalize(lightDir_F);
-    float cosNL = dot(normal_MV_F, lightDir);
+    float cosNL = dot(normal, lightDir);
 
     float bias = 0.005*tan(acos(max(0, cosNL)));
     bias = 0.005 + clamp(bias, 0,0.01);
@@ -83,12 +84,13 @@ void main() {
     vec3 lightingResult = (reflection * La);
 
     if(cosNL > 0){
-        vec3 reflectionDir = normalize(2*normal_MV_F * cosNL - lightDir);
+        vec3 reflectionDir = normalize(2.0 *normal * cosNL - lightDir);
          lightingResult += visibility *
                 ((WATER_COLOR * cosNL * Ld)
                 +
-                (vec3(0.7,0.7,0.7) * pow(max(0, dot(reflectionDir, viewDir_F)), 150) * Ls));
+                (vec3(1.0, 1.0, 1.0) * pow(max(0, dot(reflectionDir, viewDir_F)), 300) * Ls));
     }
 
-    color = vec4(lightingResult, 0.8f);
+    color = vec4(lightingResult, 0.6f);
+    //color = texture(normalMap, (uv_F + vec2(0.0, 0.01 * time))* 10.0);
 }

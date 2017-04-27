@@ -15,9 +15,9 @@ out vec3 vpoint_TE[];
 out vec2 uv_TE[];
 
 const float CLOSEST_TESS_DISTANCE = 0.2f;
-const float FURTHEST_TESS_DISTANCE = 3.5f;
-const float MIN_TESSELATION = 8.0f;
-const float MAX_TESSELATION = 8.0f;
+const float FURTHEST_TESS_DISTANCE = 2.5f;
+const float MIN_TESSELATION = 2.0f;
+const float MAX_TESSELATION = 32.0f;
 
 float GetTessLevel(float Distance0, float Distance1)
 {
@@ -54,38 +54,33 @@ void main()
     vec4 v2 = MV * vec4(vpoint_TC[2], 1.0);
     vec4 v3 = MV * vec4(vpoint_TC[3], 1.0);
 
-    if(all(bvec4(offscreen(vpoint_TC[0]), offscreen(vpoint_TC[1]), offscreen(vpoint_TC[2]), offscreen(vpoint_TC[3])))){
-        // No tesselation means patch is dropped -> save computation time !
-        gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = gl_TessLevelOuter[3] = 0;
-        gl_TessLevelInner[0] = gl_TessLevelInner[1] = 0;
-    } else {
 
-       float EyeToVertexDistance0 = length(v0);
-       float EyeToVertexDistance1 = length(v1);
-       float EyeToVertexDistance2 = length(v2);
-       float EyeToVertexDistance3 = length(v3);
+   float EyeToVertexDistance0 = length(v0);
+   float EyeToVertexDistance1 = length(v1);
+   float EyeToVertexDistance2 = length(v2);
+   float EyeToVertexDistance3 = length(v3);
 
-       /*   Calculate the tessellation levels
-       *
-       *    Points are given to vertex shader in counter-clockwise order
-       *    OL = outer tesselation level
-       *    IL = inner tesselation level IL0 = horizontal IL1 = vertical
-       *
-       *    3-------2
-       *    |       |
-       *    |       |
-       *    0-------1
-       *
-       *  OL 0 = 0-3
-       *  OL 1 = 0-1
-       *  OL 2 = 2-1
-       *  OL 3 = 2-3
-       */
-       gl_TessLevelOuter[0] = GetTessLevel(EyeToVertexDistance0, EyeToVertexDistance3);
-       gl_TessLevelOuter[1] = GetTessLevel(EyeToVertexDistance1, EyeToVertexDistance0);
-       gl_TessLevelOuter[2] = GetTessLevel(EyeToVertexDistance2, EyeToVertexDistance1);
-       gl_TessLevelOuter[3] = GetTessLevel(EyeToVertexDistance3, EyeToVertexDistance2);
-       gl_TessLevelInner[0] = (gl_TessLevelOuter[1] + gl_TessLevelOuter[3]) / 2.0;
-       gl_TessLevelInner[1] = (gl_TessLevelOuter[0] + gl_TessLevelOuter[2]) / 2.0;
-    }
+   /*   Calculate the tessellation levels
+   *
+   *    Points are given to vertex shader in counter-clockwise order
+   *    OL = outer tesselation level
+   *    IL = inner tesselation level IL0 = horizontal IL1 = vertical
+   *
+   *    3-------2
+   *    |       |
+   *    |       |
+   *    0-------1
+   *
+   *  OL 0 = 0-3
+   *  OL 1 = 0-1
+   *  OL 2 = 2-1
+   *  OL 3 = 2-3
+   */
+   gl_TessLevelOuter[0] = GetTessLevel(EyeToVertexDistance0, EyeToVertexDistance3);
+   gl_TessLevelOuter[1] = GetTessLevel(EyeToVertexDistance1, EyeToVertexDistance0);
+   gl_TessLevelOuter[2] = GetTessLevel(EyeToVertexDistance2, EyeToVertexDistance1);
+   gl_TessLevelOuter[3] = GetTessLevel(EyeToVertexDistance3, EyeToVertexDistance2);
+   gl_TessLevelInner[0] = (gl_TessLevelOuter[1] + gl_TessLevelOuter[3]) / 2.0;
+   gl_TessLevelInner[1] = (gl_TessLevelOuter[0] + gl_TessLevelOuter[2]) / 2.0;
+
 }

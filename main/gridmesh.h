@@ -150,6 +150,10 @@ class GridMesh{
             debug = !debug;
         }
 
+        void toggleWireFrame(){
+            wireframeDebugEnabled = !wireframeDebugEnabled;
+        }
+
         void Cleanup() {
             glBindVertexArray(0);
             glUseProgram(0);
@@ -176,6 +180,7 @@ class GridMesh{
 
         void drawFrame(){
             glBindVertexArray(vertex_array_id_);
+            glPolygonMode(GL_FRONT_AND_BACK, (wireframeDebugEnabled) ? GL_LINE : GL_FILL);
             glDrawElements(GL_PATCHES, num_indices_, GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);
         }

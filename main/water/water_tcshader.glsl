@@ -20,7 +20,7 @@ out vec2 uv_TE[];
 
 const float CLOSEST_TESS_DISTANCE = 0.2f;
 const float FURTHEST_TESS_DISTANCE = 2.5f;
-const float MIN_TESSELATION = 1.0f;
+const float MIN_TESSELATION = 2.0f;
 const float MAX_TESSELATION = 32.0f;
 
 float GetTessLevel(float Distance0, float Distance1)

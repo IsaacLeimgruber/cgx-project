@@ -27,15 +27,14 @@ out vec4 shadowCoord_F;
 
 const float DEGTORAD = 3.14159265359f / 180.0f;
 
-float freqs[5] = float[5](100.0f, 125.0, 150.0, 230.0f, 256.0f);
-float amps[5] =  float[5](0.0008f, 0.0008f, 0.0007f, 0.0005f, 0.0005f);
-float phis[5] = float[5](1.8f, 2.0f, 3.0f, 5.0f, 6.5f);
-vec2  dirs[5] = vec2[5](vec2(0.0,1.0),vec2(0.5, 1.0),vec2(0.3, 1.0),vec2(0.4, 1.0),vec2(-0.2, 1.0));
-float exps[5] = float[5](1.0, 2.0, 2.0, 1.0, 1.0);
-float fades[5] = float[5](0.0, 1.0/5.0, 1.0/5.0, 2.0, 2.0);
-float sinWave[5] = float[5](0, 0, 0, 0, 0);
-float ddx[5] = float[5](0, 0, 0, 0, 0);
-float ddy[5] = float[5](0, 0, 0, 0, 0);
+float amps[6] =     float[6](0.005f,        0.004f,         0.0025f,        0.0025f,            0.001f,          0.00f);
+float freqs[6] =    float[6](10.0f,         60.0,           80.0,           135.0,              140.0f,         160.0f);
+float qs[6] =       float[6](0.5,           1.0,            1.0,            1.5,                0.5,            0.5);
+float phis[6] =     float[6](1.0f,          1.2f,           1.4f,           1.5f,               1.8f,           2.0f);
+vec2  dirs[6] =     vec2[6](vec2(1.0,0.0),  vec2(1.0, 1.0), vec2(1.0, 0.5), vec2(-0.8, -1.0),   vec2(1.0,-1.0), vec2(-1.0, 1.0));
+vec3 sinWave[6] =   vec3[6](vec3(0.0),      vec3(0.0),      vec3(0.0),      vec3(0.0),          vec3(0.0),      vec3(0.0));
+float ddx[6] =      float[6](0, 0, 0, 0, 0, 0);
+float ddy[6] =      float[6](0, 0, 0, 0, 0, 0);
 
 vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2, vec2 v3)
 {
@@ -55,39 +54,41 @@ vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2, vec3 v3)
 
 void main()
 {
-    for(int i = 0; i < 5; i++){
-       dirs[i] = normalize(dirs[i]);
-    }
+    for(int i = 0; i < 6; i++){
+            dirs[i] = normalize(dirs[i]);
+        }
 
     // Interpolate the attributes of the output vertex using the barycentric coordinates
     uv_F = interpolate2D(uv_TE[0], uv_TE[1], uv_TE[2], uv_TE[3]);
     vec3 vpoint_F = interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]);
 
-    for(int i = 0; i < 5; i++){
+    for(int i = 0; i < 6; i++){
 
-        float waveParam = (dot(dirs[i], uv_F) * freqs[i]) + (phis[i] * time);
+        float waveParam = dot(freqs[i] * dirs[i], uv_F) + (phis[i] * time);
+        float qi = qs[i]/(6.0 * freqs[i] * amps[i]);
+        float xOffset = qi * amps[i] * dirs[i].x * cos(waveParam);
+        float yOffset = qi * amps[i] * dirs[i].y * cos(waveParam);
 
         //Bring sin in [0,1] for later exponentiation
-        float sinTmp = (sin(waveParam) + 1.0)/2.0;
+        float sinTmp = amps[i] * (sin(waveParam));
 
         //First sin^k, then bring back to [-1, 1] and multiply by amplitude
-        sinWave[i] = amps[i] * ( 2.0 * pow(sinTmp, exps[i])-1.0);
+        sinWave[i] = vec3(xOffset, sinTmp, -yOffset);
+        vpoint_F += sinWave[i];
+    }
 
+    vec3 waveNormal = vec3(0.0, 1.0, 0.0);
+    for(int i = 0; i < 6; i++){
         //Compute derivate of the wave
-        float commonPartialDerivative = exps[i]  * freqs[i] * amps[i] * pow(sinTmp, exps[i]-1.0) * cos(waveParam);
-        ddx[i] = dirs[i].x * commonPartialDerivative;
-        ddy[i] = dirs[i].y * commonPartialDerivative;
+        float dParam = dot(freqs[i] * dirs[i], uv_F) + (phis[i] * time);
+        float fa = freqs[i] * amps[i];
+        float s = sin(dParam);
+        float c = cos(dParam);
+        float qi = qs[i]/(6.0 * freqs[i] * amps[i]);
+        waveNormal += vec3(-(dirs[i].x * fa * c), -(qi * fa * s), dirs[i].y * fa * c);
     }
 
-    vec3 waveNormal = vec3(0.0);
-    for(int i = 0; i < 5; i++){
-        vpoint_F.y += sinWave[i];
-        waveNormal += vec3(-ddx[i], 1.0, ddy[i]);
-    }
-
-    vec3 rippleNormal =  texture(normalMap, (uv_F + vec2(0.0, 0.01 * time))* 5.0).rgb * 2.0 - 1.0f;
-    rippleNormal = vec3(rippleNormal.x, rippleNormal.z, -rippleNormal.y);
-    waveNormal = normalize(waveNormal + 0.7 * rippleNormal);
+    waveNormal = normalize(waveNormal);
 
     //Flat normal is the projection of the wave normal onto the mirror surface
     vec3 flatNormal = waveNormal - dot(waveNormal, vec3(0.0, 1.0, 0.0)) * vec3(0.0, 1.0, 0.0);
@@ -108,4 +109,3 @@ void main()
     gl_Position = MVP * vec4(vpoint_F, 1.0);
     shadowCoord_F = SHADOWMVP * vec4(vpoint_F, 1.0);
 }
-

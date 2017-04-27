@@ -124,10 +124,8 @@ void Display() {
         frameCount = 0;
     }
 
-    glPolygonMode(GL_FRONT_AND_BACK, (wireframeDebugEnabled) ? GL_LINE : GL_FILL);
-
     //Update light pos
-    mat4 rotMatrix = rotate(IDENTITY_MATRIX, currentFrame * 0.1f, vec3(0.0, 1.0, 0.0));
+    mat4 rotMatrix = rotate(IDENTITY_MATRIX, currentFrame * 0.05f, vec3(0.0, 1.0, 0.0));
     vec4 tmp = rotMatrix * vec4(4.0, 2.0, 0.0, 1.0);
     vec3 pos = vec3(tmp.x, tmp.y, tmp.z);
     light.setPos(pos);
@@ -161,7 +159,7 @@ void Display() {
 
     shadowBuffer.Bind(true);
          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-         grid.Draw(depth_mvp, IDENTITY_MATRIX, IDENTITY_MATRIX, IDENTITY_MATRIX, fractionalView, false, true);
+         grid.Draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
     shadowBuffer.Unbind();
 
     glViewport(0, 0, window_width, window_height);
@@ -236,6 +234,8 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
         switch(key){
             case GLFW_KEY_F:
+                water.toggleWireFrame();
+                grid.toggleWireFrame();
                 break;
             case GLFW_KEY_H:
                 fractionalView.zoom += 0.1;

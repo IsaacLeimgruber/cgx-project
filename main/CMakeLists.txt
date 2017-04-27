@@ -5,7 +5,12 @@ file(GLOB_RECURSE HEADERS "*.h")
 
 # these files are copied only once
 file(GLOB TEXTURES
-    grid/grid_texture.tga)
+    grid/grid_texture.tga
+    water/waterNormalMap_custom.tga
+    water/waterNormalMap_perlinNoStretch.tga
+    water/waterNormalMap_perlinStretch.tga
+    water/waterNormalMap2_perlinStretch.tga
+    water/waterNormalMap3_perlinStretch.tga)
 copy_files_once(${TEXTURES})
 
 # list all the files you want to copy everytime

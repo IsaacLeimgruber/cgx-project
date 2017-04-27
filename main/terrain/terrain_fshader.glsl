@@ -34,7 +34,7 @@ const float WATER_HEIGHT = 0.1,
 
 const float GRASS_TRANSITION = SAND_HEIGHT + (1.0/5.0) * (GRASS_HEIGHT - SAND_HEIGHT);
 
-const vec3  WATER_COLOR_DEEP = vec3(14,48,150),
+const vec3  WATER_COLOR_DEEP = vec3(0,8,80),
             WATER_COLOR = vec3(125,186,217),
             SAND_COLOR = vec3(189,173,94),
             GRASS_COLOR = vec3(52,103,0),
@@ -87,7 +87,7 @@ void main() {
     float slope = dot(gridNormal, vert);//range [-1, 1], highest slope when 0
 
         if(vheight_F <= WATER_HEIGHT){
-            heightCol = mix(WATER_COLOR_DEEP, WATER_COLOR, (vheight_F) / (WATER_HEIGHT));
+            heightCol = mix(WATER_COLOR_DEEP, SAND_COLOR, (vheight_F) / (WATER_HEIGHT));
 
         } else if(vheight_F > WATER_HEIGHT && vheight_F <= SAND_HEIGHT){
             heightCol = SAND_COLOR;
