@@ -17,14 +17,14 @@ out vec2 uv_TE[];
 const float CLOSEST_TESS_DISTANCE = 0.2f;
 const float FURTHEST_TESS_DISTANCE = 2.5f;
 const float MIN_TESSELATION = 2.0f;
-const float MAX_TESSELATION = 32.0f;
+const float MAX_TESSELATION = 16.0f;
 
 float GetTessLevel(float Distance0, float Distance1)
 {
     float avgDistance = (Distance0 + Distance1) / 2.0;
 
     //Clamp average between closest and furthest tesselation distance
-    avgDistance = clamp(CLOSEST_TESS_DISTANCE, FURTHEST_TESS_DISTANCE, avgDistance);
+    avgDistance = clamp(avgDistance, CLOSEST_TESS_DISTANCE, FURTHEST_TESS_DISTANCE);
 
     //More tesselation the closer we are from the point
     return mix(MAX_TESSELATION,

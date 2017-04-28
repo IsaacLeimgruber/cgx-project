@@ -21,7 +21,7 @@ using namespace glm;
 Grid grid;
 Perlin perlin;
 Camera camera;
-FrameBuffer noiseBuffer, normalBuffer, reflectionBuffer, shadowBuffer;
+FrameBuffer screenBuffer, noiseBuffer, normalBuffer, reflectionBuffer, shadowBuffer;
 ScreenQuad screenquad;
 NormalMap normalMap;
 Water water;
@@ -31,8 +31,13 @@ Material material;
 bool keys[1024];
 bool firstMouse = false;
 bool wireframeDebugEnabled = false;
-int window_width = 1280;
-int window_height = 960;
+// OS window dimensions, ignored if fullscreen
+int window_width = 1440;
+int window_height = 1080;
+const bool FULLSCREEN = false;
+// native render dimensions
+int screenWidth = 1280;
+int screenHeight = 960;
 float lastX = 0.0f;
 float lastY = 0.0f;
 
@@ -69,12 +74,13 @@ void Init() {
     // sets background color
     glClearColor(0.0f, 0.8f, 1.0f, 1.0f /*solid*/);
     perlin.Init();
+    int screenBuffer_texture_id = screenBuffer.Init(screenWidth, screenHeight, GL_RGB32F, GL_RGB, GL_COLOR_ATTACHMENT0, true, true, false);
     int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_R32F, GL_RED, GL_COLOR_ATTACHMENT0, false, true);
     int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, GL_COLOR_ATTACHMENT0, false, true);
-    int reflectionBuffer_texture_id = reflectionBuffer.Init(window_width, window_height, GL_RGBA32F, GL_RGBA, GL_COLOR_ATTACHMENT0, true, true, true);
+    int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA32F, GL_RGBA, GL_COLOR_ATTACHMENT0, true, true, true);
     int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, false, true, true);
 
-    screenquad.Init(window_width, window_height, shadowBuffer_texture_id);
+    screenquad.Init(screenWidth, screenHeight, screenBuffer_texture_id);
     normalMap.Init(noiseBuffer_texture_id);
     grid.Init(noiseBuffer_texture_id, normalBuffer_texture_id, shadowBuffer_texture_id);
     grid.useLight(&light);
@@ -83,7 +89,7 @@ void Init() {
 
     //Initialise matrices
     view_matrix = camera.GetViewMatrix();
-    depth_projection_matrix = glm::perspective(glm::radians(35.0f), (GLfloat)window_width / window_height, 3.0f, 6.0f);
+    depth_projection_matrix = glm::perspective(glm::radians(35.0f), (GLfloat)screenWidth / screenHeight, 3.0f, 6.0f);
     depth_view_matrix = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 1, 0));
     depth_model_matrix = IDENTITY_MATRIX;
     depth_mvp = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
@@ -156,13 +162,16 @@ void Display() {
          grid.Draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
     shadowBuffer.Unbind();
 
-    glViewport(0, 0, window_width, window_height);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    grid.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
-    water.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
-
-    //screenquad.Draw();
-
+    screenBuffer.Bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        grid.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
+        water.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
+        // Set target to default but not read so we can swap textures
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glViewport(0, 0, window_width, window_height);
+        glBlitFramebuffer(0, 0, screenWidth, screenHeight, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        screenquad.Draw();
+    screenBuffer.Unbind();
     frameCount++;
 }
 
@@ -197,7 +206,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
   camera.ProcessMouseScroll(yoffset);
-  projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)window_width / (GLfloat)window_height, 0.1f, 100.0f);
+  projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 100.0f);
 }
 
 // Gets called when the windows/framebuffer is resized.
@@ -210,8 +219,8 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
 
     glViewport(0, 0, window_width, window_height);
 
-    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)window_width / window_height, 0.1f, 1000.0f);
-    screenquad.UpdateSize(window_width, window_height);
+    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 1000.0f);
+    //screenquad.UpdateSize(window_width, window_height);
 }
 
 void ErrorCallback(int error, const char* description) {
@@ -296,15 +305,26 @@ int main(int argc, char *argv[]) {
     }
 
     glfwSetErrorCallback(ErrorCallback);
-
+    glfwWindowHint(GLFW_REFRESH_RATE, 0);
+    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     //Only for MacOSX
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(window_width, window_height,
-                                          "Procedural terrain", NULL, NULL);
+    GLFWwindow* window;
+    GLFWmonitor* monitor = NULL;
+
+    if(FULLSCREEN){
+        monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        window_width = mode->width;
+        window_height = mode->height;
+    }
+
+    window = glfwCreateWindow(window_width, window_height,"Procedural terrain", monitor, NULL);
+
     if(!window) {
         glfwTerminate();
         return EXIT_FAILURE;
@@ -315,6 +335,7 @@ int main(int argc, char *argv[]) {
 
     // Cursor is captured and hidden
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSwapInterval(1);
 
     // enable depth test.
     glEnable(GL_DEPTH_TEST);

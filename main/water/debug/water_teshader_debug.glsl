@@ -17,15 +17,15 @@ out vec3 waveNormal_G;
 
 const float DEGTORAD = 3.14159265359f / 180.0f;
 
-float freqs[5] = float[5](100.0f, 125.0, 150.0, 230.0f, 256.0f);
-float amps[5] =  float[5](0.0008f, 0.0008f, 0.0007f, 0.0005f, 0.0005f);
-float phis[5] = float[5](1.8f, 2.0f, 3.0f, 5.0f, 6.5f);
-vec2  dirs[5] = vec2[5](vec2(0.0,1.0),vec2(0.5, 1.0),vec2(0.3, 1.0),vec2(0.4, 1.0),vec2(-0.2, 1.0));
-float exps[5] = float[5](1.0, 2.0, 2.0, 1.0, 1.0);
-float fades[5] = float[5](0.0, 1.0/5.0, 1.0/5.0, 2.0, 2.0);
-float sinWave[5] = float[5](0, 0, 0, 0, 0);
-float ddx[5] = float[5](0, 0, 0, 0, 0);
-float ddy[5] = float[5](0, 0, 0, 0, 0);
+float freqs[5] = float[5](30.0f, 60.0f, 120.0f, 160.0f, 170.0f);
+float amps[5] =  float[5](0.002f, 0.0016f, 0.001f, 0.0007f, 0.0007f);
+float phis[5] = float[5](1.8f, 2.0f, 2.1f, 5.0f, 6.5f);
+vec2  dirs[5] = vec2[5](vec2(0.0f,1.0f),vec2(0.5f, 1.0f),vec2(0.3f, 1.0f),vec2(0.4f, 1.0f),vec2(-0.2f, 1.0f));
+float exps[5] = float[5](1.0f, 2.0f, 2.0f, 1.0f, 1.0f);
+float fades[5] = float[5](0.0f, 1.0f/5.0f, 1.0f/5.0f, 2.0f, 2.0f);
+float sinWave[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+float ddx[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+float ddy[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
 vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2, vec2 v3)
 {
@@ -75,9 +75,9 @@ void main()
         waveNormal += vec3(-ddx[i], 1.0, ddy[i]);
     }
 
-    vec3 rippleNormal =  texture(normalMap, (uv_G + vec2(0.0, 0.01 * time))* 5.0).rgb * 2.0 - 1.0f;
+    vec3 rippleNormal =  texture(normalMap, (uv_G + vec2(0.0, 0.005 * time))* 12.0).rgb * 2.0 - 1.0f;
     rippleNormal = vec3(rippleNormal.x, rippleNormal.z, -rippleNormal.y);
-    waveNormal = normalize(waveNormal + 0.7 * rippleNormal);
+    waveNormal = normalize(waveNormal + 0.3f * rippleNormal);
 
     //Flat normal is the projection of the wave normal onto the mirror surface
     vec3 flatNormal = waveNormal - dot(waveNormal, vec3(0.0, 1.0, 0.0)) * vec3(0.0, 1.0, 0.0);

@@ -30,9 +30,9 @@ out vec4 shadowCoord_F;
 const float DEGTORAD = 3.14159265359f / 180.0f;
 const vec3 Y = vec3(0.0, 1.0f, 0.0f);
 
-float freqs[5] = float[5](30.0f, 60.0f, 120.0f, 160.0f, 180.0f);
+float freqs[5] = float[5](30.0f, 60.0f, 120.0f, 160.0f, 170.0f);
 float amps[5] =  float[5](0.002f, 0.0016f, 0.001f, 0.0007f, 0.0007f);
-float phis[5] = float[5](1.8f, 2.0f, 3.0f, 5.0f, 6.5f);
+float phis[5] = float[5](1.8f, 2.0f, 2.1f, 5.0f, 6.5f);
 vec2  dirs[5] = vec2[5](vec2(0.0f,1.0f),vec2(0.5f, 1.0f),vec2(0.3f, 1.0f),vec2(0.4f, 1.0f),vec2(-0.2f, 1.0f));
 float exps[5] = float[5](1.0f, 2.0f, 2.0f, 1.0f, 1.0f);
 float fades[5] = float[5](0.0f, 1.0f/5.0f, 1.0f/5.0f, 2.0f, 2.0f);

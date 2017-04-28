@@ -7,24 +7,22 @@ class FrameBuffer {
         int width;
         int height;
         bool depthEnabled;
-        GLuint framebufferObjectId;
         GLuint depthRenderBufferId;
         GLuint colorTextureId;
+        GLuint framebufferObjectId;
 
     public:
         // warning: overrides viewport!!
         void Bind(bool depthAttachment = false) {
+            glViewport(0, 0, width, height);
+            glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
             if(depthAttachment){
-                glViewport(0, 0, width, height);
-                glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
                 glDrawBuffer(GL_NONE);
                 glReadBuffer(GL_NONE);
             }
             else{
-                glViewport(0, 0, width, height);
-                glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
-                const GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
-                glDrawBuffers(1 /*length of buffers[]*/, buffers);
+                glDrawBuffer(GL_COLOR_ATTACHMENT0);
+                glReadBuffer(GL_COLOR_ATTACHMENT0);
             }
         }
 
