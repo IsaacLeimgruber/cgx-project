@@ -11,12 +11,16 @@ uniform sampler2D heightMap;
 uniform float zoom;
 uniform vec2 zoomOffset;
 // attributes of the input CPs
-in vec3 vpoint_TC[];
+in float terrainHeight_TC[];
 in vec2 uv_TC[];
+in vec2 terrainGradient_TC[];
+in vec3 vpoint_TC[];
 
 // attributes of the output CPs
+out float terrainHeight_TE[];
 out vec3 vpoint_TE[];
 out vec2 uv_TE[];
+out vec2 terrainGradient_TE[];
 
 const float CLOSEST_TESS_DISTANCE = 0.2f;
 const float FURTHEST_TESS_DISTANCE = 2.5f;
@@ -46,8 +50,8 @@ bool offscreen(in vec3 v){
             any(greaterThan(vProj.xy, vec2(2.0f)));
 }
 
-bool underHeight(in vec2 v){
-    return 1.3f * pow(texture(heightMap, (v+zoomOffset) * zoom).r, 3) > 0.1f;
+bool underHeight(in int i){
+    return terrainHeight_TC[i] > 0.1;
 }
 
 void main()
@@ -55,6 +59,8 @@ void main()
     // Set the control points of the output patch
     uv_TE[gl_InvocationID] = uv_TC[gl_InvocationID];
     vpoint_TE[gl_InvocationID] = vpoint_TC[gl_InvocationID];
+    terrainGradient_TE[gl_InvocationID] = terrainGradient_TC[gl_InvocationID];
+    terrainHeight_TE[gl_InvocationID] = terrainHeight_TC[gl_InvocationID];
 
     // Calculate the distance from the camera to the three control points
     vec4 v0 = MV * vec4(vpoint_TC[0], 1.0f);
@@ -63,7 +69,7 @@ void main()
     vec4 v3 = MV * vec4(vpoint_TC[3], 1.0f);
 
     if(all(bvec4(offscreen(vpoint_TC[0]), offscreen(vpoint_TC[1]), offscreen(vpoint_TC[2]), offscreen(vpoint_TC[3])))
-       || all(bvec4(underHeight(uv_TE[0]), underHeight(uv_TE[1]), underHeight(uv_TE[2]), underHeight(uv_TE[3])))){
+       || all(bvec4(underHeight(0), underHeight(1), underHeight(2), underHeight(3)))){
         // No tesselation means patch is dropped -> save computation time !
         gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = gl_TessLevelOuter[3] = 0;
         gl_TessLevelInner[0] = gl_TessLevelInner[1] = 0;

@@ -98,7 +98,7 @@ void main() {
     vec2 reflectOffset = normalize(eyeNormal.xy) * length (flatNormal) * 0.3f;
 
     vec3 reflection = texture(mirrorMap, vec2(_u, _v) + reflectOffset).rgb;
-    vec3 lightingResult = (reflection * La);
+    vec3 lightingResult = (reflection* La);
 
     if(cosNL > 0.0){
         vec3 reflectionDir = normalize(2.0f * normal_MV * cosNL - lightDir);

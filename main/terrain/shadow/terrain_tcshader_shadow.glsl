@@ -19,9 +19,9 @@ const float FURTHEST_TESS_DISTANCE = 2.5f;
 const float MIN_TESSELATION = 2.0f;
 const float MAX_TESSELATION = 16.0f;
 
-float GetTessLevel(float Distance0, float Distance1)
+float GetTessLevel(in float Distance0, in float Distance1)
 {
-    float avgDistance = (Distance0 + Distance1) / 2.0;
+    float avgDistance = (Distance0 + Distance1) / 2.0f;
 
     //Clamp average between closest and furthest tesselation distance
     avgDistance = clamp(avgDistance, CLOSEST_TESS_DISTANCE, FURTHEST_TESS_DISTANCE);
@@ -37,9 +37,9 @@ bool offscreen(vec3 v){
     vProj /= vProj.w;
 
     //Rough estimate
-    return  any(bvec2(vProj.z < -1.1, vProj.z > 1.1)) ||
-            any(lessThan(vProj.xy, vec2(-2))) ||
-            any(greaterThan(vProj.xy, vec2(2)));
+    return  any(bvec2(vProj.z < -1.1f, vProj.z > 1.1f)) ||
+            any(lessThan(vProj.xy, vec2(-2.0f))) ||
+            any(greaterThan(vProj.xy, vec2(2.0f)));
 }
 
 void main()
