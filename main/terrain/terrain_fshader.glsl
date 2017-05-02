@@ -31,7 +31,7 @@ const float WATER_HEIGHT = 0.1f,
 
 const float GRASS_TRANSITION = SAND_HEIGHT + (1.0f/5.0f) * (GRASS_HEIGHT - SAND_HEIGHT);
 
-const vec3  WATER_COLOR_DEEP = vec3(0.0f,30.0f,120.0f),
+const vec3  WATER_COLOR_DEEP = vec3(70.0f,70.0f,70.0f),
             WATER_COLOR = vec3(125.0f,186.0f,217.0f),
             SAND_COLOR = vec3(189.0f,173.0f,94.0f),
             GRASS_COLOR = vec3(52.0f,103.0f,0.0f),

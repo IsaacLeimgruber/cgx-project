@@ -9,6 +9,8 @@
 class Grid: public GridMesh{
 
     private:
+    GLuint mirrorPassId;
+    GLuint mirrorPassDebugId;
 
     public:
         Grid(){
@@ -50,6 +52,13 @@ class Grid: public GridMesh{
             //Tesselation configuration
             glPatchParameteri(GL_PATCH_VERTICES, 4);
 
+            setupLocations();
+            mirrorPassId = glGetUniformLocation(program_id_, "mirrorPass");
+
+            glUseProgram(debug_program_id_);
+            mirrorPassDebugId = glGetUniformLocation(debug_program_id_, "mirrorPass");
+            glUseProgram(program_id_);
+
             // to avoid the current object being polluted
             glBindVertexArray(0);
             glUseProgram(0);
@@ -69,9 +78,11 @@ class Grid: public GridMesh{
                   bool shadowPass = false) {
 
             current_program_id_= (shadowPass) ? shadow_program_id_ : program_id_;
+            currentProgramIds = (shadowPass) ? shadowProgramIds : normalProgramIds;
+
             glUseProgram(current_program_id_);
 
-            glUniformMatrix4fv(glGetUniformLocation(current_program_id_, "SHADOWMVP"), ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
+            glUniformMatrix4fv(currentProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
 
             activateTextureUnits();
 
@@ -80,7 +91,7 @@ class Grid: public GridMesh{
                 light->updatePosUniform(current_program_id_);
 
             // if mirror pass is enabled then we cull underwater fragments
-            glUniform1i(glGetUniformLocation(current_program_id_, "mirrorPass"), mirrorPass);
+            glUniform1i(mirrorPassId, mirrorPass);
 
             setupMVP(MVP, MV, NORMALM);
             setupOffset(FV);
@@ -91,20 +102,22 @@ class Grid: public GridMesh{
                 //New rendering on top of the previous one
                 glUseProgram(debug_program_id_);
                 current_program_id_ = debug_program_id_;
+                currentProgramIds = debugProgramIds;
 
-                if(light != nullptr)
+                if(light != nullptr){
                     light->updatePosUniform(current_program_id_);
+                }
 
                 setupMVP(MVP, MV, NORMALM);
                 setupOffset(FV);
 
                 // if mirror pass is enabled then we cull underwater fragments
-                glUniform1i(glGetUniformLocation(current_program_id_, "mirrorPass"), mirrorPass);
+                glUniform1i(mirrorPassDebugId, mirrorPass);
 
                 drawFrame();
             }
 
-            deactivateTextureUnits();
+            //deactivateTextureUnits();
             glUseProgram(0);
         }
 };

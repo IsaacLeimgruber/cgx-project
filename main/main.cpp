@@ -31,11 +31,14 @@ Material material;
 bool keys[1024];
 bool firstMouse = false;
 bool wireframeDebugEnabled = false;
-// OS window dimensions, ignored if fullscreen
+// Window size in screen coordinates
+int window_width_sc;
+int window_height_sc;
+// OpenGL window dimensions in pixels, ignored if fullscreen
 int window_width = 1440;
 int window_height = 1080;
 const bool FULLSCREEN = false;
-// native render dimensions
+// native render dimensions in pixels
 int screenWidth = 1280;
 int screenHeight = 960;
 float lastX = 0.0f;
@@ -77,8 +80,8 @@ void Init() {
     int screenBuffer_texture_id = screenBuffer.Init(screenWidth, screenHeight, GL_RGB32F, GL_RGB, GL_COLOR_ATTACHMENT0, true, true, false);
     int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_R32F, GL_RED, GL_COLOR_ATTACHMENT0, false, true);
     int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, GL_COLOR_ATTACHMENT0, false, true);
-    int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA32F, GL_RGBA, GL_COLOR_ATTACHMENT0, true, true, true);
-    int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, false, true, true);
+    int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_COLOR_ATTACHMENT0, true, true, true);
+    int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, false, true, true);
 
     screenquad.Init(screenWidth, screenHeight, screenBuffer_texture_id);
     normalMap.Init(noiseBuffer_texture_id);
@@ -177,13 +180,9 @@ void Display() {
 
 // transforms glfw screen coordinates into normalized OpenGL coordinates.
 vec2 TransformScreenCoords(GLFWwindow* window, int x, int y) {
-    // the framebuffer and the window doesn't necessarily have the same size
-    // i.e. hidpi screens. so we need to get the correct one
-    int width;
-    int height;
-    glfwGetWindowSize(window, &width, &height);
-    return vec2(2.0f * (float)x / width - 1.0f,
-                1.0f - 2.0f * (float)y / height);
+
+    return vec2(2.0f * (float)x / window_width_sc - 1.0f,
+                1.0f - 2.0f * (float)y / window_height_sc);
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
@@ -220,7 +219,7 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, window_width, window_height);
 
     projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 1000.0f);
-    //screenquad.UpdateSize(window_width, window_height);
+    glfwGetWindowSize(window, &window_width_sc, &window_height_sc);
 }
 
 void ErrorCallback(int error, const char* description) {
@@ -335,7 +334,7 @@ int main(int argc, char *argv[]) {
 
     // Cursor is captured and hidden
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     // enable depth test.
     glEnable(GL_DEPTH_TEST);

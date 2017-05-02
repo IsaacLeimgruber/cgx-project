@@ -35,7 +35,7 @@ const float DEGTORAD = 3.14159265359f / 180.0f;
 const vec3 Y = vec3(0.0, 1.0f, 0.0f);
 
 float freqs[5] = float[5](30.0f, 60.0f, 65.0f, 80.0f, 85.0f);
-float amps[5] =  float[5](0.008f, 0.006f, 0.005f, 0.003f, 0.002f);
+float amps[5] =  float[5](0.006f, 0.006f, 0.005f, 0.003f, 0.002f);
 float phis[5] = float[5](1.8f, 2.0f, 2.1f, 2.4f, 2.8f);
 vec2 dirs[5] = vec2[5](vec2(0.0f,1.0f),vec2(0.5f, 1.0f),vec2(0.3f, 1.0f),vec2(0.4f, 1.0f),vec2(-0.2f, 1.0f));
 float exps[5] = float[5](1.0f, 2.0f, 2.0f, 2.0f, 3.0f);
@@ -85,7 +85,7 @@ void main()
 
     for(int i = 0; i < 5; i++){
 
-        amps[i] *= max(1.0f, min(4.0f, exp(tHeight * 18.0f)) *  dot(dirs[i], tGradient));
+        amps[i] *= max(1.0f, min(2.0f, exp(tHeight * 18.0f)) *  dot(dirs[i], tGradient));
         freqs[i] *=  min(1.05f, exp(tHeight * 0.8));
         //phis[i] *=  min(1.3f, exp(tHeight * 0.9));
 

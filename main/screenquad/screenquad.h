@@ -104,12 +104,6 @@ class ScreenQuad {
             glUseProgram(program_id_);
             glBindVertexArray(vertex_array_id_);
 
-            // window size uniforms
-            glUniform1f(glGetUniformLocation(program_id_, "tex_width"),
-                        this->screenquad_width_);
-            glUniform1f(glGetUniformLocation(program_id_, "tex_height"),
-                        this->screenquad_height_);
-
             // bind texture
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, texture_id_);

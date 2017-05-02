@@ -10,6 +10,9 @@ class Water: public GridMesh{
 
     private:
 
+    GLuint time_id;
+    GLuint timeDebug_id;
+
     public:
         Water(){
 
@@ -74,6 +77,11 @@ class Water: public GridMesh{
             //Tesselation configuration
             glPatchParameteri(GL_PATCH_VERTICES, 4);
 
+            setupLocations();
+            time_id = glGetUniformLocation(program_id_, "time");
+            glUseProgram(debug_program_id_);
+            timeDebug_id = glGetUniformLocation(debug_program_id_, "time");
+
             // to avoid the current object being polluted
             glBindVertexArray(0);
             glUseProgram(0);
@@ -87,12 +95,13 @@ class Water: public GridMesh{
 
             glUseProgram(program_id_);
             current_program_id_ = program_id_;
+            currentProgramIds = normalProgramIds;
 
-            glUniformMatrix4fv(glGetUniformLocation(current_program_id_, "SHADOWMVP"), ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
+            glUniformMatrix4fv(normalProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
+            glUniform1f(time_id, glfwGetTime());
 
-            glUniform1f(glGetUniformLocation(current_program_id_, "time"), glfwGetTime());
             if(light != nullptr)
-                light->updatePosUniform(program_id_);
+                light->updatePosUniform(current_program_id_);
 
             activateTextureUnits();
             setupMVP(MVP, MV, NORMALM);
@@ -104,14 +113,17 @@ class Water: public GridMesh{
                 //New rendering on top of the previous one
                 glUseProgram(debug_program_id_);
                 current_program_id_ = debug_program_id_;
-                glUniform1f(glGetUniformLocation(current_program_id_, "time"), glfwGetTime());
+                currentProgramIds = debugProgramIds;
+                glUniform1f(timeDebug_id, glfwGetTime());
                 setupMVP(MVP, MV, NORMALM);
                 setupOffset(FV);
 
                 drawFrame();
             }
 
-            deactivateTextureUnits();
+
+            //deactivateTextureUnits();
             glUseProgram(0);
         }
+
 };

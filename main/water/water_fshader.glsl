@@ -8,7 +8,6 @@ uniform sampler2DShadow shadowMap;
 uniform mat4 NORMALM;
 uniform vec3 viewPos;
 uniform vec3 La, Ld, Ls;
-uniform vec3 ka, kd, ks;
 uniform float alpha;
 
 uniform float time;
@@ -108,7 +107,7 @@ void main() {
                 (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 512.0) * Ls));
     }
 
-    float reflectionAlpha = mix(0.98f, 0.5f, clamp(
+    float reflectionAlpha = mix(0.98f, 0.3f, clamp(
                                 (dot(viewDir, normal_MV) - cosWaterReflectionAngle) / (1.0f - cosWaterReflectionAngle)
                                 *
                                 (waterReflectionDistance + vpoint_MV_F.z),

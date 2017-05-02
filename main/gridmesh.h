@@ -5,6 +5,10 @@
 #include "material/material.h"
 #include "camera/fractionalview.h"
 
+struct ProgramIds{
+    GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id, zoom_id, zoomOffset_id;
+};
+
 class GridMesh{
 
     protected:
@@ -15,10 +19,14 @@ class GridMesh{
         GLuint current_program_id_;
         GLuint shadow_program_id_;
         GLuint debug_program_id_;
-        GLuint heightMapTexture_id_;                     // texture ID
+        GLuint heightMapTexture_id_;            // texture ID
         GLuint normalTexture_id_;
         GLuint shadowTexture_id_;
         GLuint mirrorTexture_id_;
+
+        //IDs needed in the draw call
+        ProgramIds currentProgramIds, normalProgramIds, shadowProgramIds, debugProgramIds;
+
         GLuint num_indices_;
         Light* light;
         Material material;
@@ -28,10 +36,6 @@ class GridMesh{
 
     public:
         GridMesh():light{nullptr}, material{Material()}, debug{false}, wireframeDebugEnabled{false} {
-
-        }
-
-        void Init(){
 
         }
 
@@ -85,13 +89,41 @@ class GridMesh{
             glEnableVertexAttribArray(loc_position);
             glVertexAttribPointer(loc_position, 2, GL_FLOAT, DONT_NORMALIZE,
                                   ZERO_STRIDE, ZERO_BUFFER_OFFSET);
+
+        }
+
+        void setupLocations(){
+            //Setup debug and normal program locations
+            normalProgramIds.MVP_id = glGetUniformLocation(program_id_, "MVP");
+            normalProgramIds.MV_id = glGetUniformLocation(program_id_, "MV");
+            normalProgramIds.NORMALM_id = glGetUniformLocation(program_id_, "NORMALM");
+            normalProgramIds.SHADOWMVP_id = glGetUniformLocation(program_id_, "SHADOWMVP");
+            normalProgramIds.zoom_id = glGetUniformLocation(program_id_, "zoom");
+            normalProgramIds.zoomOffset_id = glGetUniformLocation(program_id_, "zoomOffset");
+
+            glUseProgram(shadow_program_id_);
+            shadowProgramIds.MVP_id = glGetUniformLocation(shadow_program_id_, "MVP");
+            shadowProgramIds.MV_id = glGetUniformLocation(shadow_program_id_, "MV");
+            shadowProgramIds.NORMALM_id = glGetUniformLocation(shadow_program_id_, "NORMALM");
+            shadowProgramIds.SHADOWMVP_id = glGetUniformLocation(shadow_program_id_, "SHADOWMVP");
+            shadowProgramIds.zoom_id = glGetUniformLocation(shadow_program_id_, "zoom");
+            shadowProgramIds.zoomOffset_id = glGetUniformLocation(shadow_program_id_, "zoomOffset");
+
+            glUseProgram(debug_program_id_);
+            debugProgramIds.MVP_id = glGetUniformLocation(debug_program_id_, "MVP");
+            debugProgramIds.MV_id = glGetUniformLocation(debug_program_id_, "MV");
+            debugProgramIds.NORMALM_id = glGetUniformLocation(debug_program_id_, "NORMALM");
+            debugProgramIds.SHADOWMVP_id = glGetUniformLocation(debug_program_id_, "SHADOWMVP");
+            debugProgramIds.zoom_id = glGetUniformLocation(debug_program_id_, "zoom");
+            debugProgramIds.zoomOffset_id = glGetUniformLocation(debug_program_id_, "zoomOffset");
+
+            glUseProgram(program_id_);
         }
 
         void useLight(Light* l){
             this->light = l;
-            light->Setup(program_id_);
-            glUseProgram(debug_program_id_);
-                light->Setup(debug_program_id_);
+            light->registerProgram(program_id_);
+            light->registerProgram(debug_program_id_);
             glUseProgram(program_id_);
         }
 
@@ -169,15 +201,6 @@ class GridMesh{
             glDeleteTextures(1, &shadowTexture_id_);
         }
 
-        void Draw(const glm::mat4 &MVP = IDENTITY_MATRIX,
-                  const glm::mat4 &MV = IDENTITY_MATRIX,
-                  const glm::mat4 &NORMALM = IDENTITY_MATRIX,
-                  const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
-                  const FractionalView &FV = FractionalView(),
-                  bool mirrorPass = false,
-                  bool shadowPass = false) {
-
-        }
 
         void drawFrame(){
             glBindVertexArray(vertex_array_id_);
@@ -189,16 +212,17 @@ class GridMesh{
         void setupMVP(const glm::mat4 &MVP,
                       const glm::mat4 &MV,
                       const glm::mat4 &NORMALM){
+
             // setup MVP
-            glUniformMatrix4fv(glGetUniformLocation(current_program_id_, "MVP"), ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
-            glUniformMatrix4fv(glGetUniformLocation(current_program_id_, "MV"), ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
-            glUniformMatrix4fv(glGetUniformLocation(current_program_id_, "NORMALM"), ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
+            glUniformMatrix4fv(currentProgramIds.MVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
+            glUniformMatrix4fv(currentProgramIds.MV_id, ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
+            glUniformMatrix4fv(currentProgramIds.NORMALM_id, ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
         }
 
         void setupOffset(const FractionalView FV){
             // setup zoom and offset, ie. what part of the perlin noise we are sampling
-            glUniform1f(glGetUniformLocation(current_program_id_, "zoom"), FV.zoom);
-            glUniform2fv(glGetUniformLocation(current_program_id_, "zoomOffset"), 1, glm::value_ptr(FV.zoomOffset));
+            glUniform1f(currentProgramIds.zoom_id, FV.zoom);
+            glUniform2fv(currentProgramIds.zoomOffset_id, 1, glm::value_ptr(FV.zoomOffset));
         }
 
         void activateTextureUnits(){
