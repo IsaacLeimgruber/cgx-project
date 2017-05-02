@@ -15,10 +15,12 @@
 #include "water/water.h"
 #include "light/light.h"
 #include "material/material.h"
+#include "skybox/skybox.h"
 
 using namespace glm;
 
 Grid grid;
+Skybox skybox;
 Perlin perlin;
 Camera camera;
 FrameBuffer screenBuffer, noiseBuffer, normalBuffer, reflectionBuffer, shadowBuffer;
@@ -90,6 +92,8 @@ void Init() {
     water.Init(noiseBuffer_texture_id, reflectionBuffer_texture_id, shadowBuffer_texture_id);
     water.useLight(&light);
 
+    skybox.Init();
+
     //Initialise matrices
     view_matrix = camera.GetViewMatrix();
     depth_projection_matrix = glm::perspective(glm::radians(35.0f), (GLfloat)screenWidth / screenHeight, 3.0f, 6.0f);
@@ -153,9 +157,11 @@ void Display() {
     depth_mvp = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix = biasMatrix * depth_mvp;
 
+
     // reflection computation
     reflectionBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        skybox.Draw(mirrored_view_matrix, projection_matrix);
         grid.Draw(mMVP, mMV, mNORMALM, IDENTITY_MATRIX, fractionalView, true, false);
     reflectionBuffer.Unbind();
 
@@ -167,7 +173,9 @@ void Display() {
 
     screenBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        skybox.Draw(view_matrix, projection_matrix);
         grid.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
+
         water.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
         // Set target to default but not read so we can swap textures
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

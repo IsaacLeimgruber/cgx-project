@@ -6,6 +6,10 @@ uniform mat4 NORMALM;
 uniform sampler2DShadow shadowMap;
 uniform sampler2D heightMap;
 uniform sampler2D normalMap;
+uniform sampler2D grassTex;
+uniform sampler2D snowTex;
+uniform sampler2D sandTex;
+uniform sampler2D rockTex;
 uniform vec3 La, Ld, Ls;
 uniform vec2 zoomOffset;
 uniform float zoom;
@@ -30,14 +34,6 @@ const float WATER_HEIGHT = 0.1f,
             SNOW_HEIGHT = 1.0f;
 
 const float GRASS_TRANSITION = SAND_HEIGHT + (1.0f/5.0f) * (GRASS_HEIGHT - SAND_HEIGHT);
-
-const vec3  WATER_COLOR_DEEP = vec3(70.0f,70.0f,70.0f),
-            WATER_COLOR = vec3(125.0f,186.0f,217.0f),
-            SAND_COLOR = vec3(189.0f,173.0f,94.0f),
-            GRASS_COLOR = vec3(52.0f,103.0f,0.0f),
-            ROCK_COLOR = vec3(140.0f,140.0f,140.0f),
-            SNOW_COLOR = vec3(231.0f,249.0f,251.0f);
-
 
 const int numSamplingPositions = 9;
 uniform vec2 kernel[9] = vec2[]
@@ -79,6 +75,12 @@ void main() {
     vec3 lightDir = normalize(lightDir_F);
 
     vec3 heightCol = vec3(0.0f);
+    vec3 GRASS_COLOR = 255.0 * texture(grassTex, (uv_F+zoomOffset) * zoom * 60.0f).rgb;
+    vec3 ROCK_COLOR = 255.0 * texture(rockTex, (uv_F+zoomOffset) * zoom * 5.0f).rgb;
+    vec3 WATER_COLOR = ROCK_COLOR;
+    vec3 WATER_COLOR_DEEP = ROCK_COLOR;
+    vec3 SAND_COLOR = 255.0 * texture(sandTex, (uv_F+zoomOffset) * zoom * 30.0f).rgb;
+    vec3 SNOW_COLOR = 255.0 * texture(snowTex, (uv_F+zoomOffset) * zoom * 60.0f).rgb;
     vec3 vert = vec3(0.0f, 1.0f, 0.0f);
     float slope = dot(gridNormal, vert);//range [-1, 1], highest slope when 0
 

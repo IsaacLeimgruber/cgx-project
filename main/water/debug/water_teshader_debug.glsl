@@ -95,7 +95,7 @@ void main()
         waveNormal += vec3(-ddx[i], 1.0, ddy[i]);
     }
 
-    vec3 rippleNormal =  texture(normalMap, (uv_G + vec2(0.0, 0.005 * time))* 12.0).rgb * 2.0 - 1.0f;
+    vec3 rippleNormal =  texture(normalMap, (uv_G + vec2(0.0, 0.005 * time))* 15.0).rgb * 2.0 - 1.0f;
     rippleNormal = vec3(rippleNormal.x, rippleNormal.z, -rippleNormal.y);
     waveNormal = normalize(waveNormal + 0.3f * rippleNormal);
 

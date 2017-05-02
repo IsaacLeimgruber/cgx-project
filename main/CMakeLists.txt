@@ -13,7 +13,20 @@ file(GLOB TEXTURES
     water/waterNormalMap_perlinNoStretch.tga
     water/waterNormalMap_perlinStretch.tga
     water/waterNormalMap2_perlinStretch.tga
-    water/waterNormalMap3_perlinStretch.tga)
+    water/waterNormalMap3_perlinStretch.tga
+    terrain/textures/grass512.tga
+    terrain/textures/rock512.tga
+    terrain/textures/rock512_2.tga
+    terrain/textures/rock512_3.tga
+    terrain/textures/rock512_4.tga
+    terrain/textures/sand256.tga
+    terrain/textures/snow512.tga
+    skybox/bigSky/left.png
+    skybox/bigSky/right.png
+    skybox/bigSky/top.png
+    skybox/bigSky/bottom.png
+    skybox/bigSky/front.png
+    skybox/bigSky/back.png)
 copy_files_once(${TEXTURES})
 
 # list all the files you want to copy everytime
@@ -32,6 +45,8 @@ file(GLOB SHADERS
     terrain/debug/terrain_tcshader_debug.glsl
     terrain/debug/terrain_teshader_debug.glsl
     terrain/debug/terrain_gshader_debug.glsl
+    skybox/skybox_fshader.glsl
+    skybox/skybox_vshader.glsl
     screenquad/screenquad_vshader.glsl
     screenquad/screenquad_fshader.glsl
     perlin/perlin_vshader.glsl

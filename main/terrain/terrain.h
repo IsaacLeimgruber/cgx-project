@@ -5,12 +5,14 @@
 #include "../light/light.h"
 #include "../material/material.h"
 #include "../camera/fractionalview.h"
+#include "../utils.h"
 
 class Grid: public GridMesh{
 
     private:
     GLuint mirrorPassId;
     GLuint mirrorPassDebugId;
+    GLuint grassTextureId, rockTextureId, sandTextureId, snowTextureId;
 
     public:
         Grid(){
@@ -48,6 +50,18 @@ class Grid: public GridMesh{
             loadHeightMap(heightMap);
             loadNormalMap(normalMap);
             loadShadowMap(shadowMap);
+
+            // load terrain-specific textures
+            {
+                grassTextureId = Utils::loadImage("grass512.tga");
+                rockTextureId = Utils::loadImage("rock512.tga");
+                sandTextureId = Utils::loadImage("sand256.tga");
+                snowTextureId = Utils::loadImage("snow512.tga");
+                glUniform1i(glGetUniformLocation(program_id_, "grassTex"), 4);
+                glUniform1i(glGetUniformLocation(program_id_, "rockTex"), 5);
+                glUniform1i(glGetUniformLocation(program_id_, "sandTex"), 6);
+                glUniform1i(glGetUniformLocation(program_id_, "snowTex"), 7);
+            }
 
             //Tesselation configuration
             glPatchParameteri(GL_PATCH_VERTICES, 4);
@@ -119,5 +133,17 @@ class Grid: public GridMesh{
 
             //deactivateTextureUnits();
             glUseProgram(0);
+        }
+
+        void activateTextureUnits(){
+            GridMesh::activateTextureUnits();
+            glActiveTexture(GL_TEXTURE0 + 4);
+            glBindTexture(GL_TEXTURE_2D, grassTextureId);
+            glActiveTexture(GL_TEXTURE0 + 5);
+            glBindTexture(GL_TEXTURE_2D, rockTextureId);
+            glActiveTexture(GL_TEXTURE0 + 6);
+            glBindTexture(GL_TEXTURE_2D, sandTextureId);
+            glActiveTexture(GL_TEXTURE0 + 7);
+            glBindTexture(GL_TEXTURE_2D, snowTextureId);
         }
 };

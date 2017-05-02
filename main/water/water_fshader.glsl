@@ -25,7 +25,7 @@ in vec4 shadowCoord_F;
 
 out vec4 color;
 
-const vec3 WATER_COLOR = vec3(125.0f,186.0f,217.0f) / 255.0f;
+const vec3 WATER_COLOR = vec3(75.0f,126.0f,157.0f) / 255.0f;
 const vec3 Y = vec3(0.0f, 1.0f, 0.0f);
 const float cosWaterReflectionAngle = 0.2f;
 const float waterReflectionDistance = 1.0f;
@@ -65,7 +65,7 @@ void main() {
     float _v = 1.0f - gl_FragCoord.y / window_size.y;
     float visibility = 0.0f;
 
-    vec3 rippleNormal = texture(normalMap, (uv_F + vec2(0.0f, 0.005f * time))* 12.0f).rgb * 2.0f - 1.0f;
+    vec3 rippleNormal = texture(normalMap, (uv_F + vec2(0.0f, 0.005f * time))* 15.0f).rgb * 2.0f - 1.0f;
     rippleNormal = vec3(rippleNormal.x, rippleNormal.z, -rippleNormal.y);
     vec3 completeNormal = normalize(normal + 0.3f * rippleNormal);
 
@@ -97,17 +97,17 @@ void main() {
     vec2 reflectOffset = normalize(eyeNormal.xy) * length (flatNormal) * 0.3f;
 
     vec3 reflection = texture(mirrorMap, vec2(_u, _v) + reflectOffset).rgb;
-    vec3 lightingResult = (reflection* La);
+    vec3 lightingResult = (reflection * La);
 
     if(cosNL > 0.0){
         vec3 reflectionDir = normalize(2.0f * normal_MV * cosNL - lightDir);
          lightingResult += visibility *
-                ((vec3(0.2f, 0.2f, 0.2f) * cosNL * Ld)
+                ((reflection * vec3(0.8f, 0.8f, 0.8f) * cosNL * Ld)
                 +
                 (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 512.0) * Ls));
     }
 
-    float reflectionAlpha = mix(0.98f, 0.3f, clamp(
+    float reflectionAlpha = mix(0.9f, 0.3f, clamp(
                                 (dot(viewDir, normal_MV) - cosWaterReflectionAngle) / (1.0f - cosWaterReflectionAngle)
                                 *
                                 (waterReflectionDistance + vpoint_MV_F.z),
