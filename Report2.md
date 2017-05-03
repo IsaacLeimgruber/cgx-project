@@ -17,7 +17,7 @@ Doing the same for other colors, we obtained a full-textured terrain.
 ### Skybox
 The loadCubemap method takes a vector of "string" as parameter which contains the filenames of the textures for the respective skybox faces. The method uses the strings to bind the textures to the cubemap object.
 
-In the Init() method, we start by declaring the skybox vertices the correspond to the vertices constituing each face of the skybox, since we have 6 faces, and that each face need 6 vertices (to define the two primitive triangles), we end up with 36 vertices.
+In the Init() method, we start by declaring the skybox vertices that correspond to the vertices constituing each face of the skybox, since we have 6 faces, and that each face need 6 vertices (to define the two primitive triangles), we end up with 36 vertices.
 
 At last, we display our skybox, making sure we set the skybox's view matrix to be the camera's view matrix in order to never naviguate outside of the skybox (the box follow the camera, which gives the impression that the sky environment is infinite).
 
