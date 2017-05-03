@@ -37,12 +37,12 @@ bool wireframeDebugEnabled = false;
 int window_width_sc;
 int window_height_sc;
 // OpenGL window dimensions in pixels, ignored if fullscreen
-int window_width = 1440;
-int window_height = 1080;
+int window_width = 1600;
+int window_height = 1200;
 const bool FULLSCREEN = false;
 // native render dimensions in pixels
-int screenWidth = 1280;
-int screenHeight = 960;
+int screenWidth = 1440;
+int screenHeight = 1080;
 float lastX = 0.0f;
 float lastY = 0.0f;
 
