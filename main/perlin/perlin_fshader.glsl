@@ -215,24 +215,26 @@ vec3 sdnoise(vec2 pos) {
 float fBm(vec2 P) {
         int octaves = 8;
         float persistence = 0.45;
-        float total = 0;
-        float frequency = 0.5;
+
+        float frequency = 0.7;
         float amplitude = 1;
-        float maxValue = 0; // Used for normalizing result to 0.0 - 1.0
+        float initial = snoise(P * 0.1);
+        float maxValue = initial; // Used for normalizing result to 0.0 - 1.0
+        float total = initial;
         for(int i = 0; i < octaves; i++) {
-                total += snoise(P * frequency) * amplitude;
-                maxValue += amplitude;
+                total += initial * snoise(P * frequency) * amplitude;
+                maxValue += initial * amplitude;
                 amplitude *= persistence;
-                frequency *= 1.85;
+                frequency *= 1.9;
         }
-        return total/maxValue + 0.3;
+        return total/maxValue + 0.2;
 }
 vec3 dfBm(vec2 P) {
         int octaves = 8;
         float persistence = 0.45;
         vec3 total = vec3(0,0,0);
         vec3 noise = vec3(0,0,0);
-        float frequency = 0.5;
+        float frequency = 0.7;
         float amplitude = 1;
         float maxValue = 0; // Used for normalizing result to 0.0 - 1.0
         for(int i = 0; i < octaves; i++) {
@@ -242,7 +244,7 @@ vec3 dfBm(vec2 P) {
                 total += noise;
                 maxValue += amplitude;
                 amplitude *= persistence;
-                frequency *= 1.85;
+                frequency *= 1.9;
         }
         return total/maxValue + vec3(0.3, 0, 0);
 }
