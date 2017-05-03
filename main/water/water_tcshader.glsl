@@ -6,13 +6,14 @@ layout (vertices = 4) out;
 uniform mat4 MVP;
 uniform mat4 MV;
 
+uniform sampler2D heightMap;
+
 uniform float zoom;
 uniform vec2 zoomOffset;
 // attributes of the input CPs
 in float terrainHeight_TC[];
 in vec2 uv_TC[];
 in vec2 terrainGradient_TC[];
-
 in vec3 vpoint_TC[];
 
 // attributes of the output CPs
