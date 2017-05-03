@@ -219,7 +219,7 @@ class GridMesh{
             glUniformMatrix4fv(currentProgramIds.NORMALM_id, ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
         }
 
-        void setupOffset(const FractionalView FV){
+        void setupOffset(const FractionalView& FV){
             // setup zoom and offset, ie. what part of the perlin noise we are sampling
             glUniform1f(currentProgramIds.zoom_id, FV.zoom);
             glUniform2fv(currentProgramIds.zoomOffset_id, 1, glm::value_ptr(FV.zoomOffset));

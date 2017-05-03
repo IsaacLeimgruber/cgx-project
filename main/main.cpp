@@ -66,6 +66,7 @@ GLfloat lastSec = 0.0;
 GLuint frameCount = 0;
 
 FractionalView fractionalView;
+FractionalView perlinOffset;
 
 void Init() {
     // Initialize camera
@@ -104,9 +105,8 @@ void Init() {
 
     quad_model_matrix = IDENTITY_MATRIX;
 
-    //Generate Perlin
     noiseBuffer.Bind();
-        perlin.Draw();
+        perlin.Draw(perlinOffset);
     noiseBuffer.Unbind();
 
     normalBuffer.Bind();
@@ -121,6 +121,14 @@ void Init() {
 }
 
 void Display() {
+    noiseBuffer.Bind();
+    perlin.Draw(perlinOffset);
+    noiseBuffer.Unbind();
+
+    normalBuffer.Bind();
+    normalMap.Draw();
+    normalBuffer.Unbind();
+
     GLfloat currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
@@ -257,18 +265,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
                 grid.toggleDebugMode();
                 water.toggleDebugMode();
                 break;
-            case GLFW_KEY_RIGHT:
-                fractionalView.zoomOffset += vec2(-OFFSET_QTY, 0.0);
-                break;
-            case GLFW_KEY_LEFT:
-                fractionalView.zoomOffset += vec2(OFFSET_QTY, 0.0);
-                break;
-            case GLFW_KEY_UP:
-                fractionalView.zoomOffset += vec2(0.0, -OFFSET_QTY);
-                break;
-            case GLFW_KEY_DOWN:
-                fractionalView.zoomOffset += vec2(0.0, OFFSET_QTY);
-                break;
         }
     } else if(action == GLFW_RELEASE){
       keys[key] = false;
@@ -299,6 +295,14 @@ void doMovement()
       camera.ProcessKeyboard(ROTATE_DOWN, deltaTime);
   if(keys[GLFW_KEY_L])
       camera.ProcessKeyboard(ROTATE_RIGHT, deltaTime);
+  if(keys[GLFW_KEY_RIGHT])
+      perlinOffset.zoomOffset += vec2(-OFFSET_QTY, 0.0);
+  if(keys[GLFW_KEY_LEFT])
+      perlinOffset.zoomOffset += vec2(OFFSET_QTY, 0.0);
+  if(keys[GLFW_KEY_UP])
+      perlinOffset.zoomOffset += vec2(0.0, -OFFSET_QTY);
+  if(keys[GLFW_KEY_DOWN])
+      perlinOffset.zoomOffset += vec2(0.0, OFFSET_QTY);
 }
 
 int main(int argc, char *argv[]) {
@@ -317,7 +321,7 @@ int main(int argc, char *argv[]) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     //Only for MacOSX
-    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window;

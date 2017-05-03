@@ -11,6 +11,7 @@ private:
         GLuint program_id_;             // GLSL shader program ID
         GLuint vertex_buffer_object_;   // memory buffer
         GLuint texture_id_;             // texture ID
+        int pos_offset_id;
 
         float screenquad_width_;
         float screenquad_height_;
@@ -115,6 +116,7 @@ public:
             // to avoid the current object being polluted
             glBindVertexArray(0);
             glUniform1iv(glGetUniformLocation(program_id_, "p"), 512, p);
+            pos_offset_id = glGetUniformLocation(program_id_, "pos_offset");
             glUseProgram(0);
         }
 
@@ -127,9 +129,9 @@ public:
             glDeleteTextures(1, &texture_id_);
         }
 
-        void Draw(std::vector<GLfloat> pos_offset = {0.5f, 0.5f}) {
+        void Draw(FractionalView const& pos_offset) {
             glUseProgram(program_id_);
-            glUniform1fv(glGetUniformLocation(program_id_, "pos_offset"), 1, pos_offset.data());
+            glUniform2fv(pos_offset_id, 1, glm::value_ptr(pos_offset.zoomOffset));
             glBindVertexArray(vertex_array_id_);
             // bind texture
             glActiveTexture(GL_TEXTURE0);
