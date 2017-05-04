@@ -56,6 +56,24 @@ float randomAngle(in vec3 seed, in float freq)
    return random(seed, freq) * 6.283285f;
 }
 
+const float fogStart = 2.5f;
+const float fogEnd = 5.0f;
+
+vec3 applyFog( in vec3  rgb,       // original color of the pixel
+               in float distance,  // camera to point distance
+               in vec3 rayDir,
+               in vec3 sunDir)
+{
+    float d = clamp( (distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
+    float fogAmount = clamp(1.0 - exp(-d * 3.0), 0.0, 1.0);
+    float rgbAmount = clamp(exp(-d * 2.0), 0.0, 1.0);
+    float sunAmount = max( dot( rayDir, sunDir ), 0.0 );
+    vec3  fogColor  = mix( vec3(0.8,0.8,0.8), // greyish
+                           vec3(1.0,0.9,0.7), // yellowish
+                           pow(sunAmount,16.0) );
+    return rgb * rgbAmount + fogColor * fogAmount;
+}
+
 void main() {
     vec2 window_size = textureSize(mirrorMap, 0);
     vec3 lightDir = normalize(lightDir_F);
@@ -94,12 +112,9 @@ void main() {
     //Compute how the flat normal look in camera space
     vec3 eyeNormal = (NORMALM * vec4(flatNormal, 1.0f)).xyz;
     //Compute distortion
-    vec2 reflectOffset = normalize(eyeNormal.xy) * length (flatNormal) * 0.3f;
+    vec2 reflectOffset = normalize(eyeNormal.xy) * length (flatNormal) * 0.15f;
 
-    _u = clamp(_u + reflectOffset.x, 0.0f, 1.0f);
-    _v = clamp(_v + reflectOffset.y, 0.0f, 1.0f);
-
-    vec3 reflection = texture(mirrorMap, vec2(_u, _v)).rgb;
+    vec3 reflection = texture(mirrorMap, vec2(_u, _v) + reflectOffset).rgb;
     vec3 lightingResult = (reflection * La);
 
     if(cosNL > 0.0){
@@ -116,6 +131,7 @@ void main() {
                                 (waterReflectionDistance + vpoint_MV_F.z),
                                 0.0f, 1.0f));
 
+    lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -vpoint_MV_F.xyz, vec3(0.0,0.0,0.0));
     color = vec4(lightingResult, reflectionAlpha);
     //color = vec4(shadowCoord_F);
 }

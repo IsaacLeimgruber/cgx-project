@@ -19,6 +19,7 @@ in vec2 uv_TE[];
 out vec4 vpoint_F;
 out vec4 shadowCoord_F;
 out vec2 uv_F;
+out vec4 vpoint_MV_F;
 out vec3 lightDir_F;
 out vec3 viewDir_F;
 out float vheight_F;
@@ -50,10 +51,10 @@ void main()
     vheight_F = 1.3f * pow(texture(heightMap, (uv_F+zoomOffset) * zoom).r, 3);
     vpoint_F.y = vheight_F - 0.1f;
 
-    vec4 vpoint_MV = MV * vpoint_F;
+    vpoint_MV_F = MV * vpoint_F;
     //Lighting
-    lightDir_F = normalize((MV * vec4(lightPos, 1.0f)).xyz - vpoint_MV.xyz);
-    viewDir_F = -normalize(vpoint_MV.xyz);
+    lightDir_F = normalize((MV * vec4(lightPos, 1.0f)).xyz - vpoint_MV_F.xyz);
+    viewDir_F = -normalize(vpoint_MV_F.xyz);
 
     gl_Position = MVP * vpoint_F;
     shadowCoord_F = SHADOWMVP * vpoint_F;

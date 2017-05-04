@@ -1,7 +1,8 @@
 #pragma once
 #include "icg_helper.h"
+#include "../light/light.h"
 
-class Skybox {
+class Skybox{
 
 private:
     GLuint vertex_array_id_;        // vertex array object
@@ -10,6 +11,7 @@ private:
     GLuint texture_id_;             // texture ID
     GLuint skyboxVAO, skyboxVBO;
     GLuint cubemapTexture;
+    Light* light;
 
 private:
     GLuint loadCubemap(vector<const GLchar*> faces)
@@ -138,6 +140,11 @@ public:
         // to avoid the current object being polluted
         glBindVertexArray(0);
         glUseProgram(0);
+    }
+
+    void useLight(Light* l){
+        this->light = l;
+        light->registerProgram(program_id_);
     }
 
     void Cleanup() {
