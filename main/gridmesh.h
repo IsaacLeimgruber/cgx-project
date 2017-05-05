@@ -225,13 +225,15 @@ class GridMesh{
             glUniform2fv(currentProgramIds.zoomOffset_id, 1, glm::value_ptr(FV.zoomOffset));
         }
 
-        void activateTextureUnits(){
+        void activateTextureUnits(bool normalTexture = true){
             // bind textures
             glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D, heightMapTexture_id_);
 
-            glActiveTexture(GL_TEXTURE0 + 1);
-            glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
+            if (normalTexture) {
+                glActiveTexture(GL_TEXTURE0 + 1);
+                glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
+            }
 
             glActiveTexture(GL_TEXTURE0 + 2);
             glBindTexture(GL_TEXTURE_2D, shadowTexture_id_);
@@ -240,7 +242,7 @@ class GridMesh{
             glBindTexture(GL_TEXTURE_2D, mirrorTexture_id_);
         }
 
-        void deactivateTextureUnits(){
+        void deactivateTextureUnits() {
             // unbind textures
             glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D, 0);

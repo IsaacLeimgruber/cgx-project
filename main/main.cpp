@@ -11,7 +11,6 @@
 #include "perlin/perlin.h"
 #include "camera/camera.h"
 #include "camera/fractionalview.h"
-#include "normalmap/normalmap.h"
 #include "water/water.h"
 #include "light/light.h"
 #include "material/material.h"
@@ -26,10 +25,9 @@ Camera camera;
 ColorAndWritableDepthFBO screenQuadBuffer;
 ColorAndDepthFBO  reflectionBuffer;
 DepthFBO shadowBuffer;
-ColorFBO noiseBuffer, normalBuffer;
+ColorFBO noiseBuffer;
 FastRenderFBO screenBuffer;
 ScreenQuad screenquad;
-NormalMap normalMap;
 Water water;
 Light light;
 Material material;
@@ -87,13 +85,11 @@ void Init() {
     screenBuffer.Init(screenWidth, screenHeight, GL_RGB16F);
     screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGB16F, GL_RGB, GL_DEPTH_COMPONENT16, GL_FLOAT, true, false);
     int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, GL_FLOAT, true);
-    int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, GL_RGB16F, GL_RGB, GL_FLOAT, true);
     int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
 
     screenquad.Init(screenWidth, screenHeight, screenQuadBuffer.getColorTexture(), screenQuadBuffer.getDepthTexture());
-    normalMap.Init(noiseBuffer_texture_id);
-    grid.Init(noiseBuffer_texture_id, normalBuffer_texture_id, shadowBuffer_texture_id);
+    grid.Init(noiseBuffer_texture_id, shadowBuffer_texture_id);
     grid.useLight(&light);
     water.Init(noiseBuffer_texture_id, reflectionBuffer_texture_id, shadowBuffer_texture_id);
     water.useLight(&light);
@@ -114,11 +110,6 @@ void Init() {
         perlin.Draw(perlinOffset);
     noiseBuffer.Unbind();
 
-    normalBuffer.Bind();
-        normalMap.Draw();
-    normalBuffer.Unbind();
-
-
     //Initialise boolean keys array
     for(int i=0; i < 1024; i++){
         keys[i] = false;
@@ -129,10 +120,6 @@ void Display() {
     noiseBuffer.Bind();
     perlin.Draw(perlinOffset);
     noiseBuffer.Unbind();
-
-    normalBuffer.Bind();
-    normalMap.Draw();
-    normalBuffer.Unbind();
 
     GLfloat currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
@@ -401,7 +388,6 @@ int main(int argc, char *argv[]) {
     water.Cleanup();
     reflectionBuffer.Cleanup();
     noiseBuffer.Cleanup();
-    normalMap.Cleanup();
     shadowBuffer.Cleanup();
 
     // close OpenGL window and terminate GLFW

@@ -9,7 +9,6 @@ uniform mat4 SHADOWMVP;
 uniform vec3 lightPos;
 
 uniform sampler2D heightMap;
-uniform sampler2D normalMap;
 
 in vec3 vpoint_TE[];
 in vec2 uv_TE[];

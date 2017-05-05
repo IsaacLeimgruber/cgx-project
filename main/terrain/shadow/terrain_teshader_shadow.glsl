@@ -5,7 +5,6 @@ layout(quads, fractional_even_spacing, ccw) in;
 uniform mat4 SHADOWMVP;
 
 uniform sampler2D heightMap;
-uniform sampler2D normalMap;
 
 in vec3 vpoint_TE[];
 in vec2 uv_TE[];
