@@ -15,12 +15,12 @@
 #include "water/water.h"
 #include "light/light.h"
 #include "material/material.h"
-#include "skybox/skybox.h"
+#include "skydome/skyDome.h"
 
 using namespace glm;
 
 Grid grid;
-Skybox skybox;
+SkyDome skyDome;
 Perlin perlin;
 Camera camera;
 ColorAndWritableDepthFBO screenQuadBuffer;
@@ -98,7 +98,7 @@ void Init() {
     water.Init(noiseBuffer_texture_id, reflectionBuffer_texture_id, shadowBuffer_texture_id);
     water.useLight(&light);
 
-    skybox.Init();
+    skyDome.Init();
 
     //Initialise matrices
     view_matrix = camera.GetViewMatrix();
@@ -174,7 +174,7 @@ void Display() {
     // reflection computation
     reflectionBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        skybox.Draw(mirrored_view_matrix, projection_matrix);
+        skyDome.Draw(mirrored_view_matrix, projection_matrix);
         grid.Draw(mMVP, mMV, mNORMALM, IDENTITY_MATRIX, fractionalView, true, false);
     reflectionBuffer.Unbind();
 
@@ -186,7 +186,7 @@ void Display() {
 
     screenBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        skybox.Draw(view_matrix, projection_matrix);
+        skyDome.Draw(view_matrix, projection_matrix);
         grid.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
         water.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
 
