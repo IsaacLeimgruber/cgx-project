@@ -129,9 +129,9 @@ public:
             glDeleteTextures(1, &texture_id_);
         }
 
-        void Draw(FractionalView const& pos_offset) {
+        void Draw(glm::vec2 const& pos_offset) {
             glUseProgram(program_id_);
-            glUniform2fv(pos_offset_id, 1, glm::value_ptr(pos_offset.zoomOffset));
+            glUniform2fv(pos_offset_id, 1, glm::value_ptr(pos_offset));
             glBindVertexArray(vertex_array_id_);
             // bind texture
             glActiveTexture(GL_TEXTURE0);

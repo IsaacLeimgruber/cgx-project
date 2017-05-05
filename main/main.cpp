@@ -8,7 +8,7 @@
 #include "terrain/terrain.h"
 #include "framebuffer.h"
 #include "screenquad/screenquad.h"
-#include "perlin/perlin.h"
+#include "perlin/perlin_texture.h"
 #include "camera/camera.h"
 #include "camera/fractionalview.h"
 #include "water/water.h"
@@ -20,15 +20,14 @@ using namespace glm;
 
 Grid grid;
 Skybox skybox;
-Perlin perlin;
 Camera camera;
 ColorAndDepthFBO screenQuadBuffer, reflectionBuffer;
 DepthFBO shadowBuffer;
-ColorFBO noiseBuffer;
 ScreenQuad screenquad;
 Water water;
 Light light;
 Material material;
+PerlinTexture perlinTexture;
 
 bool keys[1024];
 bool firstMouse = false;
@@ -66,7 +65,6 @@ GLfloat lastSec = 0.0;
 GLuint frameCount = 0;
 
 FractionalView fractionalView;
-FractionalView perlinOffset;
 
 void Init() {
     // Initialize camera
@@ -79,9 +77,8 @@ void Init() {
 
     // sets background color
     glClearColor(0.0f, 0.8f, 1.0f, 1.0f /*solid*/);
-    perlin.Init();
     int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGB16F, GL_RGB, GL_FLOAT, false, false);
-    int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, GL_FLOAT, true);
+    int noiseBuffer_texture_id = perlinTexture.init();
     int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
 
@@ -104,9 +101,7 @@ void Init() {
 
     quad_model_matrix = IDENTITY_MATRIX;
 
-    noiseBuffer.Bind();
-        perlin.Draw(perlinOffset);
-    noiseBuffer.Unbind();
+    perlinTexture.recompute();
 
     //Initialise boolean keys array
     for(int i=0; i < 1024; i++){
@@ -115,9 +110,7 @@ void Init() {
 }
 
 void Display() {
-    noiseBuffer.Bind();
-        perlin.Draw(perlinOffset);
-    noiseBuffer.Unbind();
+    perlinTexture.recompute();
 
     GLfloat currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
@@ -285,13 +278,13 @@ void doMovement()
     if(keys[GLFW_KEY_L])
         camera.ProcessKeyboard(ROTATE_RIGHT, deltaTime);
     if(keys[GLFW_KEY_RIGHT])
-        perlinOffset.zoomOffset += vec2(-OFFSET_QTY, 0.0);
+        perlinTexture.move(vec2(-OFFSET_QTY, 0.0));
     if(keys[GLFW_KEY_LEFT])
-        perlinOffset.zoomOffset += vec2(OFFSET_QTY, 0.0);
+        perlinTexture.move(vec2(OFFSET_QTY, 0.0));
     if(keys[GLFW_KEY_UP])
-        perlinOffset.zoomOffset += vec2(0.0, -OFFSET_QTY);
+        perlinTexture.move(vec2(0.0, -OFFSET_QTY));
     if(keys[GLFW_KEY_DOWN])
-        perlinOffset.zoomOffset += vec2(0.0, OFFSET_QTY);
+        perlinTexture.move(vec2(0.0, OFFSET_QTY));
 }
 
 int main(int argc, char *argv[]) {
@@ -382,10 +375,9 @@ int main(int argc, char *argv[]) {
     }
 
     grid.Cleanup();
-    perlin.Cleanup();
+    perlinTexture.cleanup();
     water.Cleanup();
     reflectionBuffer.Cleanup();
-    noiseBuffer.Cleanup();
     shadowBuffer.Cleanup();
 
     // close OpenGL window and terminate GLFW
