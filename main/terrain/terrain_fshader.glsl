@@ -5,7 +5,6 @@ uniform mat4 MV;
 uniform mat4 NORMALM;
 uniform sampler2DShadow shadowMap;
 uniform sampler2D heightMap;
-uniform sampler2D normalMap;
 uniform sampler2D grassTex;
 uniform sampler2D snowTex;
 uniform sampler2D sandTex;
@@ -87,7 +86,8 @@ void main() {
         }
     }
 
-    vec3 gridNormal = (texture(normalMap, uv_F).xyz * 2.0f) - 1.0f;
+    vec2 normalDxDy = texture(heightMap, uv_F).yz;
+    vec3 gridNormal = normalize(vec3(-normalDxDy.x, 1, +normalDxDy.y));
     vec3 normal_MV = (NORMALM * vec4(gridNormal, 1.0f)).xyz;
 
     vec3 lightDir = normalize(lightDir_F);
