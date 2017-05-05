@@ -231,32 +231,40 @@ vec3 add_constant(float constant, vec3 f) {
 
 vec3 dfBm(vec2 P) {
 
-    // ================ =================
-    // sum octaves
-    int octaves = 8;
-    float persistence = 0.45;
-    float freq = 0.7;
-    float amplitude = 1;
-    float maxAmplitude = 1; // Used for normalizing result to 0.0 - 1.0
+    // the master octave
+    vec3 f0 = sdnoise_freq(0.3, P);
+
+    int octaves;
+    float persistence;
+    float freq;
+    float freqGain;
+    float amplitude;
+
+    octaves = 8;
+    persistence = 0.45;
+    freq = 0.7;
+    freqGain = 1.9;
+    amplitude = 1;
+
     vec3 f = vec3(1, 0, 0);
     for(int i = 0; i < octaves; i++) {
         f += sdnoise_freq(freq, P) * amplitude;
-        maxAmplitude += amplitude;
         amplitude *= persistence;
-        freq *= 1.9;
+        freq *= freqGain;
     }
 
-    // ================ =================
-    // scale by a master octave
-    vec3 f0 = sdnoise_freq(0.1, P);
+    // scale by the master octave
     f = multiply(f, f0);
-    maxAmplitude *= f0.r;
 
-    return add_constant(0.2, f/maxAmplitude);
+    return f;
 }
 //----------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------
 
 void main() {
+    vec3 noise = dfBm(uv + pos_offset);
+
+    //scale to ensure everything is btwn 0 and 1
+    //noise.y =
     color = vec4(dfBm(uv + pos_offset), 1.0f);
 }
