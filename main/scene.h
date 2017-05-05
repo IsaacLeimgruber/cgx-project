@@ -33,9 +33,12 @@ public:
               bool mirrorPass = false,
               bool shadowPass = false)
     {
-        grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, mirrorPass, shadowPass);
-        if (!mirrorPass && !shadowPass)
-            water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV);
+        glm::vec2 tranlation{0, 0};
+
+        grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, mirrorPass, shadowPass, tranlation);
+        if (!mirrorPass && !shadowPass) {
+            water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, tranlation);
+        }
     }
 
     void moveNoise(glm::vec2 update) {

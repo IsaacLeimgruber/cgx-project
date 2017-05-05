@@ -13,6 +13,7 @@ class Grid: public GridMesh{
     GLuint mirrorPassId;
     GLuint mirrorPassDebugId;
     GLuint grassTextureId, rockTextureId, sandTextureId, snowTextureId;
+    GLuint translationId;
 
     public:
         Grid(){
@@ -67,6 +68,7 @@ class Grid: public GridMesh{
 
             setupLocations();
             mirrorPassId = glGetUniformLocation(program_id_, "mirrorPass");
+            translationId = glGetUniformLocation(program_id_, "translation");
 
             glUseProgram(debug_program_id_);
             mirrorPassDebugId = glGetUniformLocation(debug_program_id_, "mirrorPass");
@@ -76,7 +78,6 @@ class Grid: public GridMesh{
             glBindVertexArray(0);
             glUseProgram(0);
         }
-
 
         void useShadowMap(GLuint id){
             this->shadowTexture_id_ = id;
@@ -88,7 +89,8 @@ class Grid: public GridMesh{
                   const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
                   const FractionalView &FV = FractionalView(),
                   bool mirrorPass = false,
-                  bool shadowPass = false) {
+                  bool shadowPass = false,
+                  const glm::vec2 &translation = glm::vec2(0, 0)) {
 
             current_program_id_= (shadowPass) ? shadow_program_id_ : program_id_;
             currentProgramIds = (shadowPass) ? shadowProgramIds : normalProgramIds;
@@ -96,7 +98,7 @@ class Grid: public GridMesh{
             glUseProgram(current_program_id_);
 
             glUniformMatrix4fv(currentProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
-
+            glUniform2fv(translationId, 1, glm::value_ptr(translation));
             activateTextureUnits();
 
             //update light

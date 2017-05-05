@@ -3,6 +3,7 @@
 uniform sampler2D heightMap;
 uniform vec2 zoomOffset;
 uniform float zoom;
+uniform vec2 translation;
 
 in vec2 gridPos;
 
@@ -28,6 +29,6 @@ void main() {
     terrainHeight_TC = height;
 
 
-    vpoint_TC = vec3(gridPos.x, waterHeight, -gridPos.y);
+    vpoint_TC = vec3(gridPos.x + translation.x, waterHeight, -gridPos.y - translation.y);
 
 }

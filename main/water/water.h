@@ -13,6 +13,7 @@ class Water: public GridMesh{
 
     GLuint time_id;
     GLuint timeDebug_id;
+    GLuint translationId;
 
     public:
         Water(){
@@ -52,6 +53,9 @@ class Water: public GridMesh{
 
             setupLocations();
             time_id = glGetUniformLocation(program_id_, "time");
+            translationId = glGetUniformLocation(program_id_, "translation");
+
+
             glUseProgram(debug_program_id_);
             timeDebug_id = glGetUniformLocation(debug_program_id_, "time");
 
@@ -64,7 +68,8 @@ class Water: public GridMesh{
                   const glm::mat4 &MV = IDENTITY_MATRIX,
                   const glm::mat4 &NORMALM = IDENTITY_MATRIX,
                   const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
-                  const FractionalView &FV = FractionalView()) {
+                  const FractionalView &FV = FractionalView(),
+                  const glm::vec2 translation = glm::vec2(0, 0)) {
 
             glUseProgram(program_id_);
             current_program_id_ = program_id_;
@@ -72,6 +77,7 @@ class Water: public GridMesh{
 
             glUniformMatrix4fv(normalProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
             glUniform1f(time_id, glfwGetTime());
+            glUniform2fv(translationId, 1, glm::value_ptr(translation));
 
             if(light != nullptr)
                 light->updatePosUniform(current_program_id_);
