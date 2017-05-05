@@ -172,6 +172,6 @@ void main() {
                 (vec3(0.1f,0.1f,0.1f) * pow(max(0, dot(reflectionDir, viewDir_F)), 256) * Ls));
     }
 
-    lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -viewDir_F, lightDir);
+    //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -viewDir_F, lightDir);
     color = vec4(lightingResult, 1.0f);
 }

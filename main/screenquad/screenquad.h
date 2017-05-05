@@ -8,13 +8,14 @@ class ScreenQuad {
         GLuint program_id_;             // GLSL shader program ID
         GLuint vertex_buffer_object_;   // memory buffer
         GLuint texture_id_;             // texture ID
+        GLuint depthTexture_id_;
 
         int screenquad_width_;
         int screenquad_height_;
 
     public:
         void Init(int screenquad_width, int screenquad_height,
-                  GLuint texture) {
+                  GLuint texture , GLuint depthTexture) {
 
             // set screenquad size
             this->screenquad_width_ = screenquad_width;
@@ -77,8 +78,13 @@ class ScreenQuad {
             // load/Assign texture
             this->texture_id_ = texture;
             glBindTexture(GL_TEXTURE_2D, texture_id_);
-            GLuint tex_id = glGetUniformLocation(program_id_, "tex");
+            GLuint tex_id = glGetUniformLocation(program_id_, "colorTex");
             glUniform1i(tex_id, 0 /*GL_TEXTURE0*/);
+
+            this->depthTexture_id_ = depthTexture;
+            glBindTexture(GL_TEXTURE_2D, depthTexture_id_);
+            GLuint depthTex_id = glGetUniformLocation(program_id_, "depthTex");
+            glUniform1i(depthTex_id, 1 /*GL_TEXTURE1*/);
             glBindTexture(GL_TEXTURE_2D, 0);
 
             // to avoid the current object being polluted
@@ -107,8 +113,11 @@ class ScreenQuad {
             // bind texture
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, texture_id_);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, depthTexture_id_);
 
             // draw
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
             glBindVertexArray(0);

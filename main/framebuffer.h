@@ -3,165 +3,410 @@
 
 class FrameBuffer {
 
-    private:
-        int width;
-        int height;
-        bool depthEnabled;
-        GLuint depthRenderBufferId;
-        GLuint colorTextureId;
-        GLuint framebufferObjectId;
+protected:
+    int width;
+    int height;
+    GLuint framebufferObjectId;
 
-    public:
-        // warning: overrides viewport!!
-        void Bind(bool depthAttachment = false) {
-            glViewport(0, 0, width, height);
+public:
+    // warning: overrides viewport!!
+    virtual void Bind() = 0;
+
+    virtual void Unbind() {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void checkFrameBufferStatus(){
+        switch(glCheckFramebufferStatus(GL_FRAMEBUFFER)){
+        case GL_FRAMEBUFFER_COMPLETE:
+            cout << "Framebuffer complete" << endl;
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            cerr << "Not all framebuffer attachment points are framebuffer" <<
+                    "attachment complete. This means that at least one"<<
+                    "attachment point with a renderbuffer or texture "<<
+                    "attached has its attached object no longer in existence"<<
+                    "or has an attached image with a width or height of "<<
+                    "zero, or the color attachment point has a "<<
+                    "non-color-renderable image attached, or the"<<
+                    "depth attachment point has a non-depth-renderable"<<
+                    "image attached, or the stencil attachment point has a"<<
+                    "non-stencil-renderable image attached." << endl;
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            cerr << "No images are attached to the framebuffer." << endl;
+            break;
+        case GL_FRAMEBUFFER_UNSUPPORTED:
+            cerr << "The combination of internal formats of the attached"<<
+                    "images violates an implementation-dependent set of"<<
+                    "restrictions." << endl;
+            break;
+        default:
+            cerr << "FRAMEBUFFER ERROR" << endl;
+        }
+    }
+
+    virtual void Cleanup() {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
+        glDeleteFramebuffers(1, &framebufferObjectId);
+    }
+};
+
+class DepthFBO: public FrameBuffer{
+
+private:
+    GLuint depthTextureId;
+
+public:
+    int Init(int imageWidth, int imageHeight,
+             GLint internalFormat, GLint type){
+
+
+        this->width = imageWidth;
+        this->height = imageHeight;
+
+        // create color attachment
+        {
+            glGenTextures(1, &depthTextureId);
+            glBindTexture(GL_TEXTURE_2D, depthTextureId);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LESS);
+
+
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
+                         GL_DEPTH_COMPONENT, type, NULL);
+        }
+
+        // tie it all together
+        {
+            glGenFramebuffers(1, &framebufferObjectId);
             glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
-            if(depthAttachment){
-                glDrawBuffer(GL_NONE);
-                glReadBuffer(GL_NONE);
-            }
-            else{
-                glDrawBuffer(GL_COLOR_ATTACHMENT0);
-                glReadBuffer(GL_COLOR_ATTACHMENT0);
-            }
+
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                 depthTextureId, 0);
+            glDrawBuffer(GL_NONE);
+            glReadBuffer(GL_NONE);
+
+            this->checkFrameBufferStatus();
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); // avoid pollution
         }
 
-        void Unbind() {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
+        return depthTextureId;
+    }
 
-        /**
-          Initialise a framebuffer object that stores a unique color attachment
+    void Bind(){
+        glViewport(0, 0, width, height);
+        glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+    }
 
-          @param    internalFormat:
-                    Specify how the texture components are stored.
-                    This can be GL_R32F GL_RG32F GL_RGB32F GL_RGBA32F
+    void Cleanup(){
+        glDeleteTextures(1, &depthTextureId);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
+        glDeleteFramebuffers(1, &framebufferObjectId);
+    }
+};
 
-          @param    format:
-                    Specify how many channels the texture stores.
-                    This can be GL_RED GL_RG GL_RGB GL_RGBA
+class ColorFBO: public FrameBuffer{
 
-          @param    attachment:
-                    GL_COLOR_ATTACHMENT0 for a color texture or GL_DEPTH_ATTACHMENT
-                    for a depth texture. Do not confuse this with the depth channel.
-                    In fact, a depth texture is a depth channel that can be sampled
-                    later on.
+private:
+    GLuint colorTextureId;
+public:
+    int Init(int imageWidth, int imageHeight,
+             GLint internalFormat, GLint format, GLint type, bool useInterpolation){
+        this->width = imageWidth;
+        this->height = imageHeight;
 
-          @param    enableDepthChannel:
+        // create color attachment
+        {
+            glGenTextures(1, &colorTextureId);
+            glBindTexture(GL_TEXTURE_2D, colorTextureId);
 
-          @param    useInterpolation:
-         */
-        int Init(int imageWidth, int imageHeight,
-                 GLint internalFormat, GLint format, GLint attachment,
-                 bool enableDepthChannel = false, bool useInterpolation = false, bool mirrorRepeat = false) {
-            this->width = imageWidth;
-            this->height = imageHeight;
-            this->depthEnabled = enableDepthChannel;
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-            // create color attachment
-            {
-                glGenTextures(1, &colorTextureId);
-                glBindTexture(GL_TEXTURE_2D, colorTextureId);
-
-                if(mirrorRepeat){
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-                } else {
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                }
-
-                if(useInterpolation || GL_DEPTH_ATTACHMENT){
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                } else {
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                }
-
-                if(attachment == GL_DEPTH_ATTACHMENT){
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LESS);
-                }
-
-                glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
-                             format, GL_FLOAT, NULL);
-            }
-
-            // create render buffer (for depth channel)
-            if(depthEnabled){
-                glGenRenderbuffers(1, &depthRenderBufferId);
-                glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBufferId);
-                glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, width, height);
-                glBindRenderbuffer(GL_RENDERBUFFER, 0);
+            if(useInterpolation){
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             } else {
-                depthRenderBufferId = 0;
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             }
 
-            // tie it all together
-            {
-                glGenFramebuffers(1, &framebufferObjectId);
-                glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
-
-                if(attachment == GL_DEPTH_ATTACHMENT){
-                    glFramebufferTexture(GL_FRAMEBUFFER, attachment,
-                                         colorTextureId, 0);
-                    glDrawBuffer(GL_NONE);
-                    glReadBuffer(GL_NONE);
-                } else{
-                    glFramebufferTexture2D(GL_FRAMEBUFFER,
-                                           attachment,
-                                           GL_TEXTURE_2D, colorTextureId,
-                                           0 /*level*/);
-                }
-
-                if(enableDepthChannel){
-                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                          GL_RENDERBUFFER, depthRenderBufferId);
-                }
-
-                switch(glCheckFramebufferStatus(GL_FRAMEBUFFER)){
-                    case GL_FRAMEBUFFER_COMPLETE:
-                        cout << "Framebuffer complete" << endl;
-                    break;
-                    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                        cerr << "Not all framebuffer attachment points are framebuffer" <<
-                                "attachment complete. This means that at least one"<<
-                                "attachment point with a renderbuffer or texture "<<
-                                "attached has its attached object no longer in existence"<<
-                                "or has an attached image with a width or height of "<<
-                                "zero, or the color attachment point has a "<<
-                                "non-color-renderable image attached, or the"<<
-                                "depth attachment point has a non-depth-renderable"<<
-                                "image attached, or the stencil attachment point has a"<<
-                                "non-stencil-renderable image attached." << endl;
-                    break;
-                    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                        cerr << "No images are attached to the framebuffer." << endl;
-                    break;
-                    case GL_FRAMEBUFFER_UNSUPPORTED:
-                        cerr << "The combination of internal formats of the attached"<<
-                                "images violates an implementation-dependent set of"<<
-                                "restrictions." << endl;
-                    break;
-                    default:
-                        cerr << "FRAMEBUFFER ERROR" << endl;
-                }
-
-                glBindFramebuffer(GL_FRAMEBUFFER, 0); // avoid pollution
-            }
-
-            return colorTextureId;
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
+                         format, type, NULL);
         }
 
-        void Cleanup() {
-            glDeleteTextures(1, &colorTextureId);
-            if(depthEnabled){
-                glDeleteRenderbuffers(1, &depthRenderBufferId);
-            }
-            glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
-            glDeleteFramebuffers(1, &framebufferObjectId);
+        // tie it all together
+        {
+            glGenFramebuffers(1, &framebufferObjectId);
+            glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+
+            glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                   GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, colorTextureId,
+                                   0 /*level*/);
+
+
+            checkFrameBufferStatus();
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); // avoid pollution
         }
+
+        return colorTextureId;
+    }
+
+    void Bind(){
+        glViewport(0, 0, width, height);
+        glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+    }
+
+    void Cleanup() {
+        glDeleteTextures(1, &colorTextureId);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
+        glDeleteFramebuffers(1, &framebufferObjectId);
+    }
+};
+
+class ColorAndDepthFBO: public FrameBuffer{
+
+private:
+    GLuint colorTextureId;
+    GLuint depthRenderBufferId;
+
+public:
+    virtual void Bind() {
+        glViewport(0, 0, width, height);
+        glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+    }
+
+    int Init(int imageWidth, int imageHeight,
+             GLint internalFormat, GLint format, GLint type, bool useInterpolation = false, bool mirrorRepeat = false) {
+        this->width = imageWidth;
+        this->height = imageHeight;
+
+        // create color attachment
+        {
+            glGenTextures(1, &colorTextureId);
+            glBindTexture(GL_TEXTURE_2D, colorTextureId);
+
+            if(mirrorRepeat){
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+            } else {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            }
+
+            if(useInterpolation){
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            } else {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            }
+
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
+                         format, type, NULL);
+        }
+
+        // create render buffer (for depth channel)
+
+        glGenRenderbuffers(1, &depthRenderBufferId);
+        glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBufferId);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+
+        // tie it all together
+        {
+            glGenFramebuffers(1, &framebufferObjectId);
+            glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+
+            glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                   GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, colorTextureId,
+                                   0 /*level*/);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                      GL_RENDERBUFFER, depthRenderBufferId);
+
+            checkFrameBufferStatus();
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); // avoid pollution
+        }
+
+        return colorTextureId;
+    }
+
+
+    void Cleanup() {
+        glDeleteTextures(1, &colorTextureId);
+        glDeleteRenderbuffers(1, &depthRenderBufferId);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
+        glDeleteFramebuffers(1, &framebufferObjectId);
+    }
+};
+
+class ColorAndWritableDepthFBO: public FrameBuffer{
+
+private:
+    GLuint colorTextureId;
+    GLuint depthTextureId;
+
+public:
+    void Bind() {
+        glViewport(0, 0, width, height);
+        glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+    }
+
+    int Init(int imageWidth, int imageHeight,
+             GLint internalFormat, GLint format,
+             GLint internalDepthFormat, GLint type, bool useInterpolation = false, bool mirrorRepeat = false) {
+        this->width = imageWidth;
+        this->height = imageHeight;
+
+        // create color attachment
+        {
+            glGenTextures(1, &colorTextureId);
+            glBindTexture(GL_TEXTURE_2D, colorTextureId);
+
+            if(mirrorRepeat){
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+            } else {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            }
+
+            if(useInterpolation){
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            } else {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            }
+
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
+                         format, type, NULL);
+        }
+
+        // create depth attachment (can be sampled)
+
+        {
+            glGenTextures(1, &depthTextureId);
+            glBindTexture(GL_TEXTURE_2D, depthTextureId);
+
+            if(mirrorRepeat){
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+            } else {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            }
+
+            if(useInterpolation){
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            } else {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            }
+
+            glTexImage2D(GL_TEXTURE_2D, 0, internalDepthFormat, width, height, 0,
+                         GL_DEPTH_COMPONENT, type, NULL);
+        }
+
+
+        // tie it all together
+        {
+            glGenFramebuffers(1, &framebufferObjectId);
+            glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+
+            glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                   GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, colorTextureId,
+                                   0 /*level*/);
+            glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                   GL_DEPTH_ATTACHMENT,
+                                   GL_TEXTURE_2D, depthTextureId,
+                                   0);
+
+            checkFrameBufferStatus();
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); // avoid pollution
+        }
+
+        return colorTextureId;
+    }
+
+    GLuint getDepthTexture(){
+        return this->depthTextureId;
+    }
+
+    GLuint getColorTexture(){
+        return this->colorTextureId;
+    }
+
+    void Cleanup() {
+        glDeleteTextures(1, &colorTextureId);
+        glDeleteRenderbuffers(1, &depthTextureId);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
+        glDeleteFramebuffers(1, &framebufferObjectId);
+    }
+};
+
+class FastRenderFBO: public FrameBuffer{
+
+private:
+    GLuint renderBufferId;
+    GLuint colorTextureId;
+public:
+    void Bind() {
+        glViewport(0, 0, width, height);
+        glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+    }
+
+    int Init(int imageWidth, int imageHeight, GLenum internalFormat){
+        this->width = imageWidth;
+        this->height = imageHeight;
+
+
+        glGenRenderbuffers(1, &renderBufferId);
+        glBindRenderbuffer(GL_RENDERBUFFER, renderBufferId);
+        glRenderbufferStorage(GL_RENDERBUFFER, internalFormat, width, height);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        // tie it all together
+        {
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                      GL_RENDERBUFFER, renderBufferId);
+
+
+            checkFrameBufferStatus();
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); // avoid pollution
+        }
+
+        return colorTextureId;
+    }
+
+    void Cleanup() {
+        glDeleteTextures(1, &renderBufferId);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
+        glDeleteFramebuffers(1, &framebufferObjectId);
+    }
 };

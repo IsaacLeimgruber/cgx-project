@@ -23,7 +23,11 @@ Grid grid;
 Skybox skybox;
 Perlin perlin;
 Camera camera;
-FrameBuffer screenBuffer, noiseBuffer, normalBuffer, reflectionBuffer, shadowBuffer;
+ColorAndWritableDepthFBO screenQuadBuffer;
+ColorAndDepthFBO  reflectionBuffer;
+DepthFBO shadowBuffer;
+ColorFBO noiseBuffer, normalBuffer;
+FastRenderFBO screenBuffer;
 ScreenQuad screenquad;
 NormalMap normalMap;
 Water water;
@@ -80,13 +84,14 @@ void Init() {
     // sets background color
     glClearColor(0.0f, 0.8f, 1.0f, 1.0f /*solid*/);
     perlin.Init();
-    int screenBuffer_texture_id = screenBuffer.Init(screenWidth, screenHeight, GL_RGB32F, GL_RGB, GL_COLOR_ATTACHMENT0, true, true, false);
-    int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_R32F, GL_RED, GL_COLOR_ATTACHMENT0, false, true);
-    int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, GL_COLOR_ATTACHMENT0, false, true);
-    int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_COLOR_ATTACHMENT0, true, true, true);
-    int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_DEPTH_ATTACHMENT, false, true, true);
+    screenBuffer.Init(screenWidth, screenHeight, GL_RGB16F);
+    screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGB16F, GL_RGB, GL_DEPTH_COMPONENT16, GL_FLOAT, true, false);
+    int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_R32F, GL_RED, GL_FLOAT, true);
+    int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, GL_RGB16F, GL_RGB, GL_FLOAT, true);
+    int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
+    int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
 
-    screenquad.Init(screenWidth, screenHeight, screenBuffer_texture_id);
+    screenquad.Init(screenWidth, screenHeight, screenQuadBuffer.getColorTexture(), screenQuadBuffer.getDepthTexture());
     normalMap.Init(noiseBuffer_texture_id);
     grid.Init(noiseBuffer_texture_id, normalBuffer_texture_id, shadowBuffer_texture_id);
     grid.useLight(&light);
@@ -174,7 +179,7 @@ void Display() {
     reflectionBuffer.Unbind();
 
 
-    shadowBuffer.Bind(true);
+    shadowBuffer.Bind();
          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
          grid.Draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
     shadowBuffer.Unbind();
@@ -183,13 +188,12 @@ void Display() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         skybox.Draw(view_matrix, projection_matrix);
         grid.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
-
         water.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
-        // Set target to default but not read so we can swap textures
+
+        // Set target to default but not read so we can swap textures     
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glViewport(0, 0, window_width, window_height);
         glBlitFramebuffer(0, 0, screenWidth, screenHeight, 0, 0, window_width, window_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        screenquad.Draw();
     screenBuffer.Unbind();
     frameCount++;
 }
