@@ -86,7 +86,7 @@ void Init() {
     perlin.Init();
     screenBuffer.Init(screenWidth, screenHeight, GL_RGB16F);
     screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGB16F, GL_RGB, GL_DEPTH_COMPONENT16, GL_FLOAT, true, false);
-    int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_R32F, GL_RED, GL_FLOAT, true);
+    int noiseBuffer_texture_id = noiseBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, GL_FLOAT, true);
     int normalBuffer_texture_id = normalBuffer.Init(1024, 1024, GL_RGB16F, GL_RGB, GL_FLOAT, true);
     int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);

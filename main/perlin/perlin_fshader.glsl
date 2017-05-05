@@ -212,45 +212,51 @@ vec3 srdnoise(vec2 pos, float rot) {
 vec3 sdnoise(vec2 pos) {
   return srdnoise(pos, 0.0);
 }
-float fBm(vec2 P) {
-        int octaves = 8;
-        float persistence = 0.45;
-
-        float frequency = 0.7;
-        float amplitude = 1;
-        float initial = snoise(P * 0.1);
-        float maxValue = initial; // Used for normalizing result to 0.0 - 1.0
-        float total = initial;
-        for(int i = 0; i < octaves; i++) {
-                total += initial * snoise(P * frequency) * amplitude;
-                maxValue += initial * amplitude;
-                amplitude *= persistence;
-                frequency *= 1.9;
-        }
-        return total/maxValue + 0.2;
+vec3 sdnoise_freq(float freq, vec2 P) {
+    vec3 noise = sdnoise(P * freq);
+    noise.g *= freq;
+    noise.b *= freq;
+    return noise;
 }
+vec3 multiply(vec3 f1, vec3 f2) {
+    return vec3(
+                f1.r * f2.r,
+                f1.g * f2.r + f1.r * f2.g,
+                f1.b * f2.r + f1.r * f2.b
+                );
+}
+vec3 add_constant(float constant, vec3 f) {
+    return f + vec3(constant, 0, 0);
+}
+
 vec3 dfBm(vec2 P) {
-        int octaves = 8;
-        float persistence = 0.45;
-        vec3 total = vec3(0,0,0);
-        vec3 noise = vec3(0,0,0);
-        float frequency = 0.7;
-        float amplitude = 1;
-        float maxValue = 0; // Used for normalizing result to 0.0 - 1.0
-        for(int i = 0; i < octaves; i++) {
-                noise = sdnoise(P * frequency) * amplitude;
-                noise.y *= frequency;
-                noise.z *= frequency;
-                total += noise;
-                maxValue += amplitude;
-                amplitude *= persistence;
-                frequency *= 1.9;
-        }
-        return total/maxValue + vec3(0.3, 0, 0);
+
+    // ================ =================
+    // sum octaves
+    int octaves = 8;
+    float persistence = 0.45;
+    float freq = 0.7;
+    float amplitude = 1;
+    float maxAmplitude = 1; // Used for normalizing result to 0.0 - 1.0
+    vec3 f = vec3(1, 0, 0);
+    for(int i = 0; i < octaves; i++) {
+        f += sdnoise_freq(freq, P) * amplitude;
+        maxAmplitude += amplitude;
+        amplitude *= persistence;
+        freq *= 1.9;
+    }
+
+    // ================ =================
+    // scale by a master octave
+    vec3 f0 = sdnoise_freq(0.1, P);
+    f = multiply(f, f0);
+    maxAmplitude *= f0.r;
+
+    return add_constant(0.2, f/maxAmplitude);
 }
 //----------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------
 
 void main() {
-    color = vec4(vec3(fBm(uv + pos_offset)), 1.0f);
+    color = vec4(dfBm(uv + pos_offset), 1.0f);
 }
