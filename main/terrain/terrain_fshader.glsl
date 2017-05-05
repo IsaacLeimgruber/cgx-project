@@ -25,8 +25,9 @@ out vec4 color;
 const float SLOPE_THRESHOLD = 0.5f;
 const float MIX_SLOPE_THRESHOLD = 0.2f;
 
-const float WATER_HEIGHT = 0.1f,
-            SAND_HEIGHT = 0.11f,
+const float WATER_HEIGHT = 0.01f,
+            WATER_HEIGHT_DEEP = -0.3f,
+            SAND_HEIGHT = 0.02f,
             GRASS_HEIGHT = 0.3f,
             ROCK_HEIGHT = 0.40f,
             SNOW_HEIGHT = 1.0f;
@@ -103,7 +104,7 @@ void main() {
     float slope = dot(gridNormal, vert);//range [-1, 1], highest slope when 0
 
         if(vheight_F <= WATER_HEIGHT){
-            heightCol = mix(WATER_COLOR_DEEP, SAND_COLOR, (vheight_F) / (WATER_HEIGHT));
+            heightCol = mix(SAND_COLOR, WATER_COLOR_DEEP, (vheight_F) / (WATER_HEIGHT_DEEP));
 
         } else if(vheight_F > WATER_HEIGHT && vheight_F <= SAND_HEIGHT){
             heightCol = SAND_COLOR;

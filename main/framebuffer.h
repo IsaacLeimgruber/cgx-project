@@ -167,7 +167,7 @@ public:
         glViewport(0, 0, width, height);
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        //glReadBuffer(GL_COLOR_ATTACHMENT0);
     }
 
     void Cleanup() {
@@ -188,7 +188,7 @@ public:
         glViewport(0, 0, width, height);
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        //glReadBuffer(GL_COLOR_ATTACHMENT0);
     }
 
     int Init(int imageWidth, int imageHeight,
@@ -269,7 +269,7 @@ public:
         glViewport(0, 0, width, height);
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        //glReadBuffer(GL_COLOR_ATTACHMENT0);
     }
 
     int Init(int imageWidth, int imageHeight,
@@ -363,49 +363,6 @@ public:
     void Cleanup() {
         glDeleteTextures(1, &colorTextureId);
         glDeleteRenderbuffers(1, &depthTextureId);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
-        glDeleteFramebuffers(1, &framebufferObjectId);
-    }
-};
-
-class FastRenderFBO: public FrameBuffer{
-
-private:
-    GLuint renderBufferId;
-    GLuint colorTextureId;
-public:
-    void Bind() {
-        glViewport(0, 0, width, height);
-        glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        glReadBuffer(GL_COLOR_ATTACHMENT0);
-    }
-
-    int Init(int imageWidth, int imageHeight, GLenum internalFormat){
-        this->width = imageWidth;
-        this->height = imageHeight;
-
-
-        glGenRenderbuffers(1, &renderBufferId);
-        glBindRenderbuffer(GL_RENDERBUFFER, renderBufferId);
-        glRenderbufferStorage(GL_RENDERBUFFER, internalFormat, width, height);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        // tie it all together
-        {
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                      GL_RENDERBUFFER, renderBufferId);
-
-
-            checkFrameBufferStatus();
-
-            glBindFramebuffer(GL_FRAMEBUFFER, 0); // avoid pollution
-        }
-
-        return colorTextureId;
-    }
-
-    void Cleanup() {
-        glDeleteTextures(1, &renderBufferId);
         glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
         glDeleteFramebuffers(1, &framebufferObjectId);
     }
