@@ -8,7 +8,7 @@
 #include "terrain/terrain.h"
 #include "framebuffer.h"
 #include "screenquad/screenquad.h"
-#include "perlin/perlin_texture.h"
+#include "scene.h"
 #include "camera/camera.h"
 #include "camera/fractionalview.h"
 #include "water/water.h"
@@ -18,7 +18,7 @@
 
 using namespace glm;
 
-Grid grid;
+Scene scene;
 Skybox skybox;
 Camera camera;
 ColorAndDepthFBO screenQuadBuffer, reflectionBuffer;
@@ -27,7 +27,6 @@ ScreenQuad screenquad;
 Water water;
 Light light;
 Material material;
-PerlinTexture perlinTexture;
 
 bool keys[1024];
 bool firstMouse = false;
@@ -67,51 +66,36 @@ GLuint frameCount = 0;
 FractionalView fractionalView;
 
 void Init() {
-    // Initialize camera
-    camera = Camera{vec3(0.0, 2.5, 0.0)};
+    glClearColor(0.0f, 0.8f, 1.0f, 1.0f);
 
-    // Let there be light !
-    light = Light{vec3(0.0, 2.0, -4.0)};
-
+    camera   = Camera{vec3(0.0, 2.5, 0.0)};
+    light    = Light{vec3(0.0, 2.0, -4.0)};
     material = Material{};
 
-    // sets background color
-    glClearColor(0.0f, 0.8f, 1.0f, 1.0f /*solid*/);
+    // buffers must be initialized in that order
     int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGB16F, GL_RGB, GL_FLOAT, false, false);
-    int noiseBuffer_texture_id = perlinTexture.init();
+    scene.initPerlin();
     int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
-    int shadowBuffer_texture_id = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
+    int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
 
     screenquad.Init(screenWidth, screenHeight, screenQuadBuffer_texture_id, 0);
-    grid.Init(noiseBuffer_texture_id, shadowBuffer_texture_id);
-
-    grid.useLight(&light);
-    water.Init(noiseBuffer_texture_id, reflectionBuffer_texture_id, shadowBuffer_texture_id);
-    water.useLight(&light);
-
+    scene.init(shadowBuffer_texture_id, reflectionBuffer_texture_id, &light);
     skybox.Init();
 
-    //Initialise matrices
-    view_matrix = camera.GetViewMatrix();
+    view_matrix             = camera.GetViewMatrix();
     depth_projection_matrix = glm::perspective(glm::radians(35.0f), (GLfloat)screenWidth / screenHeight, 3.0f, 6.0f);
-    depth_view_matrix = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 1, 0));
-    depth_model_matrix = IDENTITY_MATRIX;
-    depth_mvp = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
-    depth_bias_matrix = biasMatrix * depth_mvp;
+    depth_view_matrix       = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 1, 0));
+    depth_model_matrix      = IDENTITY_MATRIX;
+    depth_mvp               = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
+    depth_bias_matrix       = biasMatrix * depth_mvp;
+    quad_model_matrix       = IDENTITY_MATRIX;
 
-    quad_model_matrix = IDENTITY_MATRIX;
-
-    perlinTexture.recompute();
-
-    //Initialise boolean keys array
-    for(int i=0; i < 1024; i++){
-        keys[i] = false;
+    for(auto& key : keys){
+        key = false;
     }
 }
 
 void Display() {
-    perlinTexture.recompute();
-
     GLfloat currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
@@ -153,21 +137,19 @@ void Display() {
     reflectionBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         skybox.Draw(mirrored_view_matrix, projection_matrix);
-        grid.Draw(mMVP, mMV, mNORMALM, IDENTITY_MATRIX, fractionalView, true, false);
+        scene.draw(mMVP, mMV, mNORMALM, IDENTITY_MATRIX, fractionalView, true, false);
     reflectionBuffer.Unbind();
 
 
     shadowBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        grid.Draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
+        scene.draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
     shadowBuffer.Unbind();
 
     screenQuadBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         skybox.Draw(view_matrix, projection_matrix);
-        grid.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
-        water.Draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
-
+        scene.draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
     screenQuadBuffer.Unbind();
 
     glViewport(0, 0, window_width, window_height);
@@ -234,8 +216,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
         switch(key){
         case GLFW_KEY_F:
-            water.toggleWireFrame();
-            grid.toggleWireFrame();
+            scene.toggleWireFrame();
             break;
         case GLFW_KEY_H:
             fractionalView.zoom += 0.1f;
@@ -244,8 +225,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             fractionalView.zoom -= 0.1f;
             break;
         case GLFW_KEY_N:
-            grid.toggleDebugMode();
-            water.toggleDebugMode();
+            scene.toggleDebugMode();
             break;
         }
     } else if(action == GLFW_RELEASE){
@@ -278,13 +258,13 @@ void doMovement()
     if(keys[GLFW_KEY_L])
         camera.ProcessKeyboard(ROTATE_RIGHT, deltaTime);
     if(keys[GLFW_KEY_RIGHT])
-        perlinTexture.move(vec2(-OFFSET_QTY, 0.0));
+        scene.moveNoise(vec2(-OFFSET_QTY, 0.0));
     if(keys[GLFW_KEY_LEFT])
-        perlinTexture.move(vec2(OFFSET_QTY, 0.0));
+        scene.moveNoise(vec2(OFFSET_QTY, 0.0));
     if(keys[GLFW_KEY_UP])
-        perlinTexture.move(vec2(0.0, -OFFSET_QTY));
+        scene.moveNoise(vec2(0.0, -OFFSET_QTY));
     if(keys[GLFW_KEY_DOWN])
-        perlinTexture.move(vec2(0.0, OFFSET_QTY));
+        scene.moveNoise(vec2(0.0, OFFSET_QTY));
 }
 
 int main(int argc, char *argv[]) {
@@ -374,9 +354,7 @@ int main(int argc, char *argv[]) {
         doMovement();
     }
 
-    grid.Cleanup();
-    perlinTexture.cleanup();
-    water.Cleanup();
+    scene.cleanup();
     reflectionBuffer.Cleanup();
     shadowBuffer.Cleanup();
 
