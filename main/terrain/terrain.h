@@ -19,7 +19,7 @@ class Grid: public GridMesh{
 
         }
 
-        void Init(GLuint heightMap, GLuint normalMap, GLuint shadowMap) {
+        void Init(GLuint heightMap, GLuint shadowMap) {
             // compile the shaders.
             program_id_ = icg_helper::LoadShaders("terrain_vshader.glsl",
                                                   "terrain_fshader.glsl",
@@ -48,7 +48,6 @@ class Grid: public GridMesh{
 
             // load texture
             loadHeightMap(heightMap);
-            loadNormalMap(normalMap);
             loadShadowMap(shadowMap);
 
             // load terrain-specific textures
@@ -136,7 +135,7 @@ class Grid: public GridMesh{
         }
 
         void activateTextureUnits(){
-            GridMesh::activateTextureUnits();
+            GridMesh::activateTextureUnits(false);
             glActiveTexture(GL_TEXTURE0 + 4);
             glBindTexture(GL_TEXTURE_2D, grassTextureId);
             glActiveTexture(GL_TEXTURE0 + 5);

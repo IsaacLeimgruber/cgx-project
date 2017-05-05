@@ -51,8 +51,6 @@ file(GLOB SHADERS
     screenquad/screenquad_fshader.glsl
     perlin/perlin_vshader.glsl
     perlin/perlin_fshader.glsl
-    normalmap/normalmap_vshader.glsl
-    normalmap/normalmap_fshader.glsl
     water/water_vshader.glsl
     water/water_fshader.glsl
     water/water_tcshader.glsl
