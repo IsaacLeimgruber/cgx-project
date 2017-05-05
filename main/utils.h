@@ -4,6 +4,8 @@
 
 class Utils{
 public:
+    static float PI = 3.14159265359f;
+    static float PI2 = 2.0f * PI ;
     static GLuint loadImage(const char* filename){
         GLuint texId;
 
