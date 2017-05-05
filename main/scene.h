@@ -31,10 +31,9 @@ public:
               const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
               const FractionalView &FV = FractionalView(),
               bool mirrorPass = false,
-              bool shadowPass = false)
+              bool shadowPass = false,
+              glm::vec2 tranlation = glm::vec2(0, 0))
     {
-        glm::vec2 tranlation{0, 0};
-
         grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, mirrorPass, shadowPass, tranlation);
         if (!mirrorPass && !shadowPass) {
             water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, tranlation);

@@ -8,23 +8,21 @@
 #include "terrain/terrain.h"
 #include "framebuffer.h"
 #include "screenquad/screenquad.h"
-#include "scene.h"
+#include "large_scene.h"
 #include "camera/camera.h"
 #include "camera/fractionalview.h"
-#include "water/water.h"
 #include "light/light.h"
 #include "material/material.h"
 #include "skybox/skybox.h"
 
 using namespace glm;
 
-Scene scene;
+LargeScene scene;
 Skybox skybox;
 Camera camera;
 ColorAndDepthFBO screenQuadBuffer, reflectionBuffer;
 DepthFBO shadowBuffer;
 ScreenQuad screenquad;
-Water water;
 Light light;
 Material material;
 
