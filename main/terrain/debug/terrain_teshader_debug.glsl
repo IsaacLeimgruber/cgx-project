@@ -6,8 +6,6 @@ uniform mat4 MVP;
 uniform mat4 MV;
 uniform mat4 NORMALM;
 uniform vec3 lightPos;
-uniform vec2 zoomOffset;
-uniform float zoom;
 
 uniform sampler2D heightMap;
 uniform sampler2D normalMap;
@@ -47,13 +45,13 @@ void main()
     vec3 vpoint_G = interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]);
 
     // Set height for generated (and original) vertices
-    vheight_G = 1.3 * pow(texture(heightMap, (uv_G+zoomOffset) * zoom).r, 3);
-    vpoint_G.y = vheight_G - 0.1f;
+    vheight_G = texture(heightMap, uv_G).r;
+    vpoint_G.y = vheight_G;
     vpoint_MV_G = MV * vec4(vpoint_G, 1.0);
     gl_Position = vec4(vpoint_G, 1.0);
 
     lightDir_G = normalize(lightPos - vpoint_G.xyz);
-    vec3 gridNormal = (texture(normalMap, (uv_G+zoomOffset) * zoom).xyz * 2.0) - 1.0f;
+    vec3 gridNormal = (texture(normalMap, uv_G).xyz * 2.0) - 1.0f;
     normal_G = gridNormal;
 
 

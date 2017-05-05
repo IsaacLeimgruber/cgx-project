@@ -10,9 +10,6 @@ uniform mat4 MVP;
 uniform mat4 MV;
 uniform mat4 NORMALM;
 
-uniform vec2 zoomOffset;
-uniform float zoom;
-
 in vec4 vpoint_MV_G[];
 in vec3 normal_G[];
 in vec2 uv_G[];

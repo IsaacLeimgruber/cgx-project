@@ -11,8 +11,6 @@ uniform sampler2D snowTex;
 uniform sampler2D sandTex;
 uniform sampler2D rockTex;
 uniform vec3 La, Ld, Ls;
-uniform vec2 zoomOffset;
-uniform float zoom;
 uniform bool mirrorPass;
 
 in vec4 shadowCoord_F;
@@ -89,18 +87,18 @@ void main() {
         }
     }
 
-    vec3 gridNormal = (texture(normalMap, (uv_F+zoomOffset) * zoom).xyz * 2.0f) - 1.0f;
+    vec3 gridNormal = (texture(normalMap, uv_F).xyz * 2.0f) - 1.0f;
     vec3 normal_MV = (NORMALM * vec4(gridNormal, 1.0f)).xyz;
 
     vec3 lightDir = normalize(lightDir_F);
 
     vec3 heightCol = vec3(0.0f);
-    vec3 GRASS_COLOR = 255.0 * texture(grassTex, (uv_F+zoomOffset) * zoom * 60.0f).rgb;
-    vec3 ROCK_COLOR = 255.0 * texture(rockTex, (uv_F+zoomOffset) * zoom * 5.0f).rgb;
+    vec3 GRASS_COLOR = 255.0 * texture(grassTex, (uv_F) * 60.0f).rgb;
+    vec3 ROCK_COLOR = 255.0 * texture(rockTex, (uv_F) * 5.0f).rgb;
     vec3 WATER_COLOR = ROCK_COLOR ;
     vec3 WATER_COLOR_DEEP = vec3(25.0f,66.0f,167.0f);
-    vec3 SAND_COLOR = 255.0 * texture(sandTex, (uv_F+zoomOffset) * zoom * 30.0f).rgb;
-    vec3 SNOW_COLOR = 255.0 * texture(snowTex, (uv_F+zoomOffset) * zoom * 60.0f).rgb;
+    vec3 SAND_COLOR = 255.0 * texture(sandTex, (uv_F) * 30.0f).rgb;
+    vec3 SNOW_COLOR = 255.0 * texture(snowTex, (uv_F) * 60.0f).rgb;
     vec3 vert = vec3(0.0f, 1.0f, 0.0f);
     float slope = dot(gridNormal, vert);//range [-1, 1], highest slope when 0
 
