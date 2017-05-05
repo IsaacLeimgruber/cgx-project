@@ -5,12 +5,16 @@
 #include "scene.h"
 
 class LargeScene {
-    static constexpr int NROW = 1;
-    static constexpr int NCOL = 1;
+    static constexpr int NROW = 5;
+    static constexpr int NCOL = 5;
     template <class T> using Row = std::array<T, NCOL>;
     template <class T> using Matrix = std::array<Row<T>, NROW>;
 
     Matrix<Scene> scenes;
+    Matrix<glm::vec2>  translations;
+
+    float gridSize = 2;
+    float perlinSize = 1024;
 public:
 
     template <class Lambda>
@@ -20,11 +24,27 @@ public:
                 fun(scenes[iRow][jCol]);
     }
 
-    void initPerlin() {
-        foreach_in_matrix([](Scene& scene){
-            scene.initPerlin();
-        });
+    template <class Lambda>
+    void foreach_in_matrices(Lambda&& fun) {
+        for(int iRow = 0; iRow < NROW; ++iRow)
+            for(int jCol = 0; jCol < NCOL; ++jCol)
+                fun(scenes[iRow][jCol], translations[iRow][jCol]);
+    }
 
+    void initTranslations() {
+        for (int iRow = 0; iRow < NROW; ++iRow) {
+            for (int jCol = 0; jCol < NCOL; ++jCol) {
+                translations[iRow][jCol] = glm::vec2(iRow - NROW / 2, jCol - NCOL / 2);
+            }
+        }
+    }
+
+    void initPerlin() {
+        initTranslations();
+        foreach_in_matrices([&](Scene& scene, const glm::vec2& translation){
+            scene.initPerlin();
+            scene.moveNoise(translation);
+        });
     }
 
     int init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
@@ -41,8 +61,8 @@ public:
               bool mirrorPass = false,
               bool shadowPass = false)
     {
-        foreach_in_matrix([&](Scene& scene){
-            scene.draw(MVP, MV, NORMALM, SHADOWMVP, FV, mirrorPass, shadowPass);
+        foreach_in_matrices([&](Scene& scene, const glm::vec2& translation){
+            scene.draw(MVP, MV, NORMALM, SHADOWMVP, FV, mirrorPass, shadowPass, gridSize * translation);
         });
     }
 
