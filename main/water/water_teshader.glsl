@@ -82,11 +82,11 @@ void main()
 
     for(int i = 0; i < 5; i++){
 
-        amps[i] *= max(1.0f, min(2.0f, exp(tHeight * 18.0f)) *  dot(dirs[i], tGradient));
+        //amps[i] *= max(1.0f, min(2.0f, exp(tHeight * 18.0f)) *  dot(dirs[i], tGradient));
         freqs[i] *=  min(1.05f, exp(tHeight * 0.8));
         //phis[i] *=  min(1.3f, exp(tHeight * 0.9));
 
-        float waveParam = (dot(dirs[i], uv_F) * freqs[i]) + (phis[i] * time);
+        float waveParam = (dot(dirs[i], vec2(vpoint_F.xz)) * freqs[i]) + (phis[i] * time);
 
         //Bring sin in [0,1] for later exponentiation
         float sinTmp = (sin(waveParam) + 1.0f)/2.0f;

@@ -46,7 +46,7 @@ public:
     }
 
     /** initializes the scenes object */
-    int init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
+    void init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
                scene(iRow, jCol).init(shadowBuffer_texture_id, reflectionBuffer_texture_id, light);
@@ -65,9 +65,16 @@ public:
     {
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-               scene(iRow, jCol).draw(MVP, MV, NORMALM, SHADOWMVP, FV,
+               scene(iRow, jCol).drawTerrain(MVP, MV, NORMALM, SHADOWMVP, FV,
                                       mirrorPass, shadowPass,
                                       gridSize * translationScale * translation(iRow, jCol));
+            }
+        }
+        if(!mirrorPass && !shadowPass)
+        for (int iRow = 0; iRow < NROW; ++iRow) {
+            for (int jCol = 0; jCol < NCOL; ++jCol) {
+               scene(iRow, jCol).drawWater(MVP, MV, NORMALM, SHADOWMVP, FV,
+                                      gridSize * translation(iRow, jCol));
             }
         }
     }
