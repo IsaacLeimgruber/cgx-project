@@ -27,6 +27,10 @@ public:
         position += update;
     }
 
+    void setPos(glm::vec2 p) {
+        position = p;
+    }
+
     void cleanup() {
         perlin.Cleanup();
         noiseBuffer.Cleanup();

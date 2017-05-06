@@ -12,7 +12,6 @@ class Scene {
     int noiseBuffer_texture_id;
 
 public:
-
     void initPerlin() {
         noiseBuffer_texture_id = perlinTexture.init();
     }
@@ -38,6 +37,11 @@ public:
         if (!mirrorPass && !shadowPass) {
             water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, tranlation);
         }
+    }
+
+    void setNoisePos(glm::vec2 pos) {
+        perlinTexture.setPos(pos);
+        perlinTexture.recompute();
     }
 
     void moveNoise(glm::vec2 update) {

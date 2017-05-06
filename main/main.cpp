@@ -27,6 +27,7 @@ Light light;
 Material material;
 
 bool keys[1024];
+bool useContinuousPerlinMoves = true;
 bool firstMouse = false;
 bool wireframeDebugEnabled = false;
 // Window size in screen coordinates
@@ -133,21 +134,21 @@ void Display() {
 
     // reflection computation
     reflectionBuffer.Bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        skybox.Draw(mirrored_view_matrix, projection_matrix);
-        scene.draw(mMVP, mMV, mNORMALM, IDENTITY_MATRIX, fractionalView, true, false);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    skybox.Draw(mirrored_view_matrix, projection_matrix);
+    scene.draw(mMVP, mMV, mNORMALM, IDENTITY_MATRIX, fractionalView, true, false);
     reflectionBuffer.Unbind();
 
 
     shadowBuffer.Bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //scene.draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    scene.draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
     shadowBuffer.Unbind();
 
     screenQuadBuffer.Bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        skybox.Draw(view_matrix, projection_matrix);
-        scene.draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    skybox.Draw(view_matrix, projection_matrix);
+    scene.draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
     screenQuadBuffer.Unbind();
 
     glViewport(0, 0, window_width, window_height);
@@ -183,7 +184,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
-    projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 5.0f);
+    projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 15.0f);
 }
 
 // Gets called when the windows/framebuffer is resized.
@@ -196,7 +197,7 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
 
     glViewport(0, 0, window_width, window_height);
 
-    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 5.0f);
+    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 15.0f);
     glfwGetWindowSize(window, &window_width_sc, &window_height_sc);
 }
 
@@ -224,6 +225,25 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             break;
         case GLFW_KEY_N:
             scene.toggleDebugMode();
+            break;
+        case GLFW_KEY_Q:
+            useContinuousPerlinMoves = !useContinuousPerlinMoves;
+            break;
+        case GLFW_KEY_RIGHT:
+            if (!useContinuousPerlinMoves)
+                scene.moveCols(LargeScene::DOWN);
+            break;
+        case GLFW_KEY_LEFT:
+            if (!useContinuousPerlinMoves)
+                scene.moveCols(LargeScene::UP);
+            break;
+        case GLFW_KEY_UP:
+            if (!useContinuousPerlinMoves)
+                scene.moveRows(LargeScene::DOWN);
+            break;
+        case GLFW_KEY_DOWN:
+            if (!useContinuousPerlinMoves)
+                scene.moveRows(LargeScene::UP);
             break;
         }
     } else if(action == GLFW_RELEASE){
@@ -255,14 +275,21 @@ void doMovement()
         camera.ProcessKeyboard(ROTATE_DOWN, deltaTime);
     if(keys[GLFW_KEY_L])
         camera.ProcessKeyboard(ROTATE_RIGHT, deltaTime);
-    if(keys[GLFW_KEY_RIGHT])
-        scene.moveNoise(vec2(-OFFSET_QTY, 0.0));
-    if(keys[GLFW_KEY_LEFT])
-        scene.moveNoise(vec2(OFFSET_QTY, 0.0));
-    if(keys[GLFW_KEY_UP])
-        scene.moveNoise(vec2(0.0, -OFFSET_QTY));
-    if(keys[GLFW_KEY_DOWN])
-        scene.moveNoise(vec2(0.0, OFFSET_QTY));
+
+    if (useContinuousPerlinMoves) {
+        if(keys[GLFW_KEY_RIGHT]) {
+            scene.moveNoise(vec2(OFFSET_QTY, 0.0));
+        }
+        if(keys[GLFW_KEY_LEFT]) {
+            scene.moveNoise(vec2(-OFFSET_QTY, 0.0));
+        }
+        if(keys[GLFW_KEY_UP]) {
+            scene.moveNoise(vec2(0.0, OFFSET_QTY));
+        }
+        if(keys[GLFW_KEY_DOWN]) {
+            scene.moveNoise(vec2(0.0, -OFFSET_QTY));
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
