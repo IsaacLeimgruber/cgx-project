@@ -9,10 +9,10 @@
 class LargeScene {
 
     /** the number of rows in the large scene's rectangular matrix */
-    static constexpr int NROW = 1;
+    static constexpr int NROW = 5;
 
     /** the number of columns in the large scene's rectangular matrix */
-    static constexpr int NCOL = 1;
+    static constexpr int NCOL = 5;
 
     /** the dimension of a small scene as seen per the scene's vertex shader 2 = size([-1;1]) */
     static constexpr float gridSize = 2;
