@@ -16,7 +16,7 @@ public:
         noiseBuffer_texture_id = perlinTexture.init();
     }
 
-    int init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
+    void init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
         grid.Init(noiseBuffer_texture_id, shadowBuffer_texture_id);
         grid.useLight(light);
         water.Init(noiseBuffer_texture_id, reflectionBuffer_texture_id, shadowBuffer_texture_id);
