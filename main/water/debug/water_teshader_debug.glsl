@@ -19,10 +19,11 @@ out vec2 reflectOffset_G;
 out vec3 waveNormal_G;
 
 const float DEGTORAD = 3.14159265359f / 180.0f;
+const float rippleNormalWeight = 0.2f;
 
-float freqs[5] = float[5](30.0f, 40.0f, 45.0f, 60.0f, 65.0f);
-float amps[5] =  float[5](0.0055f, 0.0055f, 0.0045f, 0.003f, 0.002f);
-float phis[5] = float[5](1.8f, 2.0f, 2.1f, 2.4f, 2.8f);
+float freqs[5] = float[5](15.0f, 20.0f, 23.0f, 30.0f, 40.0f);
+float amps[5] =  float[5](0.01f, 0.0055f, 0.0045f, 0.003f, 0.002f);
+float phis[5] = float[5](1.0f, 1.3f, 1.4f, 1.8f, 2.1f);
 vec2 dirs[5] = vec2[5](vec2(0.0f,1.0f),vec2(0.5f, 1.0f),vec2(0.3f, 1.0f),vec2(0.4f, 1.0f),vec2(-0.2f, 1.0f));
 int exps[5] = int[5](1, 2, 2, 2, 3);
 float sinWave[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -69,8 +70,8 @@ void main()
     for(int i = 0; i < 5; i++){
 
         amps[i] *=
-                1.0 - 0.7 *(
-                exp(-pow(10.0 * clamp(tHeight, -0.1, 0.0), 2.0)));
+                1.3 - 1.0 *(
+                exp(-pow(5.0 * clamp(tHeight, -0.5, 0.0), 2.0)));
 
         float waveParam = (dot(dirs[i], vec2(vpoint_G.xz)) * freqs[i]) + (phis[i] * time);
 
@@ -89,14 +90,18 @@ void main()
     vec3 waveNormal = vec3(0.0f);
     for(int i = 0; i < 5; i++){
         vpoint_G.y += sinWave[i];
-        waveNormal += vec3(-ddx[i], 1.0f, ddy[i]);
+        waveNormal += vec3(-ddx[i], 1.0f, -ddy[i]);
     }
 
     waveNormal = normalize(waveNormal);
 
-    vec3 rippleNormal =  texture(normalMap, (uv_G + vec2(0.0, 0.005 * time))* 15.0).rgb * 2.0 - 1.0f;
+    vec3 rippleNormal =
+            texture(normalMap, (uv_F + vec2(0.0, 0.005 * time)) * 11.0).rgb * 2.0 - 1.0f
+            +
+            texture(normalMap, (uv_F + vec2(0.0, -0.005 * time)) * 7.0).rgb * 2.0 - 1.0f;
+
     rippleNormal = vec3(rippleNormal.x, rippleNormal.z, -rippleNormal.y);
-    waveNormal = normalize(waveNormal + 0.15f * rippleNormal);
+    waveNormal = normalize(waveNormal + rippleNormalWeight * rippleNormal);
 
     //Flat normal is the projection of the wave normal onto the mirror surface
     vec3 flatNormal = waveNormal - dot(waveNormal, vec3(0.0, 1.0, 0.0)) * vec3(0.0, 1.0, 0.0);
@@ -105,7 +110,7 @@ void main()
     vec3 eyeNormal = (NORMALM * vec4(flatNormal, 1.0)).xyz;
 
     //Compute distortion
-    reflectOffset_G = normalize(eyeNormal.xy) * length (flatNormal) * 0.3;
+    reflectOffset_G = normalize(eyeNormal.xy) * length (flatNormal) * rippleNormalWeight;
 
     // Set height for generated (and original) vertices
     gl_Position = vec4(vpoint_G, 1.0);

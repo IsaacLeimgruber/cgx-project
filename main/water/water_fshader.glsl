@@ -29,6 +29,7 @@ const vec3 WATER_COLOR = vec3(75.0f,126.0f,157.0f) / 255.0f;
 const vec3 Y = vec3(0.0f, 1.0f, 0.0f);
 const float cosWaterReflectionAngle = 0.2f;
 const float waterReflectionDistance = 1.5f;
+const float rippleNormalWeight = 0.2f;
 
 const int numSamplingPositions = 9;
 uniform vec2 kernel[9] = vec2[9]
@@ -83,9 +84,13 @@ void main() {
     float _v = 1.0f - gl_FragCoord.y / window_size.y;
     float visibility = 0.0f;
 
-    vec3 rippleNormal = texture(normalMap, (uv_F + vec2(0.0f, 0.005f * time))* 15.0f).rgb * 2.0f - 1.0f;
+    vec3 rippleNormal =
+            texture(normalMap, (uv_F + vec2(0.0, 0.005 * time)) * 11.0).rgb * 2.0 - 1.0f
+            +
+            texture(normalMap, (uv_F + vec2(0.0, -0.005 * time)) * 7.0).rgb * 2.0 - 1.0f;
+
     rippleNormal = vec3(rippleNormal.x, rippleNormal.z, -rippleNormal.y);
-    vec3 completeNormal = normalize(normal + 0.15f * rippleNormal);
+    vec3 completeNormal = normalize(normal + rippleNormalWeight * rippleNormal);
 
     vec3 normal_MV = normalize((NORMALM * vec4(completeNormal, 1.0f)).xyz);
     float cosNL = dot(normal_MV, lightDir);
@@ -96,7 +101,7 @@ void main() {
     float angle = randomAngle(gl_FragCoord.xyz, 15.0f);
     float s = sin(angle);
     float c = cos(angle);
-    float PCFRadius = 1/300.0f;
+    float PCFRadius = 1/1200.0f;
     for(int i=0; i < numSamplingPositions; i++)
     {
       // rotate offset
@@ -112,7 +117,7 @@ void main() {
     //Compute how the flat normal look in camera space
     vec3 eyeNormal = (NORMALM * vec4(flatNormal, 1.0f)).xyz;
     //Compute distortion
-    vec2 reflectOffset = normalize(eyeNormal.xy) * length (flatNormal) * 0.15f;
+    vec2 reflectOffset = normalize(eyeNormal.xy) * length (flatNormal) * rippleNormalWeight;
 
     vec3 reflection = texture(mirrorMap, vec2(_u, _v) + reflectOffset).rgb;
     vec3 lightingResult = (reflection * La);

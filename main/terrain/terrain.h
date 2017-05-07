@@ -13,7 +13,7 @@ class Grid: public GridMesh{
     GLuint mirrorPassId;
     GLuint mirrorPassDebugId;
     GLuint grassTextureId, rockTextureId, sandTextureId, snowTextureId;
-    GLuint translationId;
+    GLuint translationId, translationDebugId;
 
     public:
         Grid(){
@@ -72,6 +72,7 @@ class Grid: public GridMesh{
 
             glUseProgram(debug_program_id_);
             mirrorPassDebugId = glGetUniformLocation(debug_program_id_, "mirrorPass");
+            translationDebugId = glGetUniformLocation(debug_program_id_, "translation");
             glUseProgram(program_id_);
 
             // to avoid the current object being polluted
@@ -128,7 +129,7 @@ class Grid: public GridMesh{
 
                 // if mirror pass is enabled then we cull underwater fragments
                 glUniform1i(mirrorPassDebugId, mirrorPass);
-
+                glUniform2fv(translationId, 1, glm::value_ptr(translation));
                 drawFrame();
             }
 
