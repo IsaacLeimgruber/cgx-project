@@ -160,7 +160,7 @@ private:
         Matrix<glm::vec2> t;
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-                t[iRow][jCol] = translationScale * glm::vec2(jCol - NCOL / 2, iRow - NROW / 2);
+                t[iRow][jCol] = 1.0f * glm::vec2(jCol - NCOL / 2, iRow - NROW / 2);
             }
         }
         return t;

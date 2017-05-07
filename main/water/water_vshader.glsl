@@ -17,7 +17,7 @@ void main() {
     uv_TC = (gridPos + vec2(1.0f, 1.0f)) * 0.5f;
 
     vec3 terrainHDxDy = texture(heightMap, uv_TC).xyz;
-    terrainGradient_TC = vec2(terrainHDxDy.y, -terrainHDxDy.z);
+    terrainGradient_TC = normalize(vec2(terrainHDxDy.y, -terrainHDxDy.z));
     terrainHeight_TC = terrainHDxDy.x;
 
     vpoint_TC = vec3(gridPos.x + translation.x, waterHeight, -gridPos.y - translation.y);
