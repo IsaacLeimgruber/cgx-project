@@ -45,7 +45,7 @@ class Grid: public GridMesh{
             glUseProgram(program_id_);
 
             // vertex coordinates and indices
-            genGrid(16);
+            genGrid(8);
 
             // load texture
             loadHeightMap(heightMap);

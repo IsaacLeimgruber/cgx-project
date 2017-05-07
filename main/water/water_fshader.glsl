@@ -122,7 +122,7 @@ void main() {
          lightingResult += visibility *
                 ((reflection * cosNL * Ld)
                 +
-                (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 512.0) * Ls));
+                (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 256.0) * Ls));
     }
 
     float reflectionAlpha = mix(0.97f, 0.3f, clamp(

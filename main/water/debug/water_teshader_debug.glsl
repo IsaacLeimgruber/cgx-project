@@ -20,11 +20,11 @@ out vec3 waveNormal_G;
 
 const float DEGTORAD = 3.14159265359f / 180.0f;
 
-float freqs[5] = float[5](30.0f, 60.0f, 65.0f, 80.0f, 85.0f);
+float freqs[5] = float[5](30.0f, 40.0f, 45.0f, 60.0f, 65.0f);
 float amps[5] =  float[5](0.0055f, 0.0055f, 0.0045f, 0.003f, 0.002f);
 float phis[5] = float[5](1.8f, 2.0f, 2.1f, 2.4f, 2.8f);
 vec2 dirs[5] = vec2[5](vec2(0.0f,1.0f),vec2(0.5f, 1.0f),vec2(0.3f, 1.0f),vec2(0.4f, 1.0f),vec2(-0.2f, 1.0f));
-float exps[5] = float[5](1.0f, 2.0f, 2.0f, 2.0f, 3.0f);
+int exps[5] = int[5](1, 2, 2, 2, 3);
 float sinWave[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 float ddx[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 float ddy[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -55,41 +55,44 @@ vec3 interpolate3D(in vec3 v0, in vec3 v1, in vec3 v2, in vec3 v3)
 
 void main()
 {
+
     for(int i = 0; i < 5; i++){
-       dirs[i] = normalize(dirs[i]);
+        dirs[i] = normalize(dirs[i]);
     }
 
     // Interpolate the attributes of the output vertex using the barycentric coordinates
     uv_G = interpolate2D(uv_TE[0], uv_TE[1], uv_TE[2], uv_TE[3]);
-    float tHeight = 0.1 + interpolate2D(terrainHeight_TE[0], terrainHeight_TE[1], terrainHeight_TE[2], terrainHeight_TE[3]);
+    float tHeight = interpolate2D(terrainHeight_TE[0], terrainHeight_TE[1], terrainHeight_TE[2], terrainHeight_TE[3]);
     vec2 tGradient = interpolate2D(terrainGradient_TE[0], terrainGradient_TE[1], terrainGradient_TE[2], terrainGradient_TE[3]);
     vec3 vpoint_G = interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]);
 
-
     for(int i = 0; i < 5; i++){
-        amps[i] *= max(1.0f, min(4.0f, exp(tHeight * 18.0f)) *  dot(dirs[i], tGradient));
-        freqs[i] *=  min(1.05f, exp(tHeight * 0.8));
-        //phis[i] *=  min(1.3f, exp(tHeight * 0.9));
 
-        float waveParam = (dot(dirs[i], uv_G) * freqs[i]) + (phis[i] * time);
+        amps[i] *=
+                1.0 - 0.7 *(
+                exp(-pow(10.0 * clamp(tHeight, -0.1, 0.0), 2.0)));
+
+        float waveParam = (dot(dirs[i], vec2(vpoint_G.xz)) * freqs[i]) + (phis[i] * time);
 
         //Bring sin in [0,1] for later exponentiation
-        float sinTmp = (sin(waveParam) + 1.0)/2.0;
+        float sinTmp = (sin(waveParam) + 1.0f)/2.0f;
 
         //First sin^k, then bring back to [-1, 1] and multiply by amplitude
-        sinWave[i] = amps[i] *  pow(sinTmp, exps[i]);
+        sinWave[i] = amps[i] * pow(sinTmp, exps[i]);
 
         //Compute derivate of the wave
-        float commonPartialDerivative = exps[i]  * freqs[i] * amps[i] * pow(sinTmp, exps[i]-1.0) * cos(waveParam);
+        float commonPartialDerivative = exps[i]  * freqs[i] * amps[i] * pow(sinTmp, exps[i] - 1.0f) * cos(waveParam);
         ddx[i] = dirs[i].x * commonPartialDerivative;
         ddy[i] = dirs[i].y * commonPartialDerivative;
     }
 
-    vec3 waveNormal = vec3(0.0);
+    vec3 waveNormal = vec3(0.0f);
     for(int i = 0; i < 5; i++){
         vpoint_G.y += sinWave[i];
-        waveNormal += vec3(-ddx[i], 1.0, ddy[i]);
+        waveNormal += vec3(-ddx[i], 1.0f, ddy[i]);
     }
+
+    waveNormal = normalize(waveNormal);
 
     vec3 rippleNormal =  texture(normalMap, (uv_G + vec2(0.0, 0.005 * time))* 15.0).rgb * 2.0 - 1.0f;
     rippleNormal = vec3(rippleNormal.x, rippleNormal.z, -rippleNormal.y);
