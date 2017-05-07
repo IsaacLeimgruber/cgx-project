@@ -15,7 +15,10 @@ class LargeScene {
     const float gridSize = 2;
 
     /** the translation is not full because we want a small overlaping, hence a scaling < 1 */
-    const float translationScale = .99f;
+    const float translationScale = 0.992f;
+
+    /** counteract the effect of the translationscale for the water mesh to avoid z-fighting **/
+    const float translationCorrection = 1.008f;
 
     template <class T> using Row = std::array<T, NCOL>;
     template <class T> using Matrix = std::array<Row<T>, NROW>;
@@ -71,7 +74,7 @@ public:
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
                scene(iRow, jCol).drawWater(MVP, MV, NORMALM, SHADOWMVP, FV,
-                                      gridSize * translation(iRow, jCol));
+                                      gridSize * translationCorrection * translation(iRow, jCol));
             }
         }
     }
@@ -160,7 +163,7 @@ private:
         Matrix<glm::vec2> t;
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-                t[iRow][jCol] = 1.0f * glm::vec2(jCol - NCOL / 2, iRow - NROW / 2);
+                t[iRow][jCol] = translationScale * glm::vec2(jCol - NCOL / 2, iRow - NROW / 2);
             }
         }
         return t;
