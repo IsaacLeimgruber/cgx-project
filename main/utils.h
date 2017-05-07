@@ -5,6 +5,12 @@
 class Utils{
 public:
 
+    static float smoothExpTransition(float v){
+        float x = glm::clamp(v, 0.0f, 1.0f);
+        return 1.0f - exp( -pow(2.0f * x , 2));
+
+    }
+
     static GLuint loadImage(const char* filename){
         GLuint texId;
 

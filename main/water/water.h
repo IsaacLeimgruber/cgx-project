@@ -74,7 +74,7 @@ class Water: public GridMesh{
             glUniform1f(time_id, glfwGetTime());
 
             if(light != nullptr)
-                light->updatePosUniform(current_program_id_);
+                light->updateProgram(current_program_id_);
 
             activateTextureUnits();
             setupMVP(MVP, MV, NORMALM);

@@ -97,12 +97,12 @@ void Init() {
     grid.useLight(&light);
     water.Init(noiseBuffer_texture_id, reflectionBuffer_texture_id, shadowBuffer_texture_id);
     water.useLight(&light);
-
     skyDome.Init();
+    skyDome.useLight(&light);
 
     //Initialise matrices
     view_matrix = camera.GetViewMatrix();
-    depth_projection_matrix = glm::perspective(glm::radians(35.0f), (GLfloat)screenWidth / screenHeight, 3.0f, 6.0f);
+    depth_projection_matrix = glm::ortho(-2.85f, 2.85f, -2.85f, 2.85f, 6.00f, 12.85f);
     depth_view_matrix = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 1, 0));
     depth_model_matrix = IDENTITY_MATRIX;
     depth_mvp = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
@@ -144,11 +144,6 @@ void Display() {
         frameCount = 0;
     }
 
-    //Update light pos
-    mat4 rotMatrix = rotate(IDENTITY_MATRIX, currentFrame * 0.1f, vec3(0.0, 1.0, 0.0));
-    vec4 tmp = rotMatrix * vec4(4.0, 2.0, 0.0, 1.0);
-    vec3 pos = vec3(tmp.x, tmp.y, tmp.z);
-    light.setPos(pos);
 
     //Compute matrices
 
@@ -165,7 +160,7 @@ void Display() {
     mNORMALM = inverse(transpose(mMV));
 
     //shadow matrices
-    depth_view_matrix = lookAt(light.getPos(), vec3(0.0,0.4,0.0), vec3(0, 1, 0));
+    depth_view_matrix = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 1, 0));
     depth_model_matrix = IDENTITY_MATRIX;
     depth_mvp = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix = biasMatrix * depth_mvp;
@@ -225,7 +220,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
   camera.ProcessMouseScroll(yoffset);
-  projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 5.0f);
+  projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 100.0f);
 }
 
 // Gets called when the windows/framebuffer is resized.
@@ -238,7 +233,7 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
 
     glViewport(0, 0, window_width, window_height);
 
-    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 5.0f);
+    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 100.0f);
     glfwGetWindowSize(window, &window_width_sc, &window_height_sc);
 }
 

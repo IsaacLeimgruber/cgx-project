@@ -1,9 +1,16 @@
 #pragma once
 #include "icg_helper.h"
+#include <glm/gtc/type_ptr.hpp>
+#include "../gridmesh.h"
 #include "../light/light.h"
+#include "../light/lightable.h"
+#include "../material/material.h"
+#include "../camera/fractionalview.h"
 #include "../utils.h"
 
-class SkyDome{
+using namespace glm;
+
+class SkyDome: public ILightable{
 
 
 private:
@@ -11,14 +18,40 @@ private:
     GLuint program_id_;             // GLSL shader program ID
     GLuint vertex_buffer_object_position_;  // memory buffer for positions
     GLuint vertex_buffer_object_index_;     // memory buffer for indices
-    GLuint cubemapTexture;
+    GLuint MVPId;
+    GLuint sunPosId, bottomSkyColorId, topSkyColorId;
     Light* light;
-    const float radius = 1.0f;
-    const int rings = 12;
-    const int sectors = 12;
+
+    const float radius = 10.0f;
+    const int rings = 24;
+    const int sectors = 24;
+
+    const vec3 sunOrbitXAxis = vec3(1.0, 0.0, 0.0);
+    const vec3 sunOrbitYAxis = vec3(0.0, 1.0, 0.0);
+    const vec3 sunOrbitCenter = vec3(0.0, 0.0, 0.0);
+
+    const vec3 sunsetColor = vec3(1.0f, 0.568f, 0.078f);
+    const vec3 nightSkyColor = vec3(0.129f, 0.2f, 0.267f);
+    const vec3 SUNSETCOL_topSky = vec3(0.298f, 0.494f, 0.741);
+    const vec3 SUNSETCOL_bottomSky = vec3(0.894f, 0.533, 0.537);
+    const vec3 mistColor = vec3(0.8, 0.8, 0.8);
+    const vec3 blueSkyColor = vec3(0.059f, 0.678f, 1.0);
+
+    const vec3 LIGHTCOL_NIGHT = nightSkyColor;
+    const vec3 LIGHTCOL_SUNSET = SUNSETCOL_bottomSky;
+    const vec3 LIGHTCOL_DAY = vec3(0.0f, 0.0f, 0.0f);
+
+    const float sunsetEnd = 1.0f;
+    const float sunsetBegin = -0.5f;
+    const float nightBegin = -2.0f;
+
+    vec3 bottomSkyColor;
+    vec3 topSkyColor;
+
     float PI = 3.14159265359f;
     float PIovr2 = PI * 0.5f;
     float PI2 = 2.0f * PI ;
+
     int numIndices;
     std::vector<GLfloat> vertices;
     std::vector<GLfloat> normals;
@@ -105,7 +138,11 @@ public:
         glVertexAttribPointer(loc_position, 3, GL_FLOAT, DONT_NORMALIZE,
                               ZERO_STRIDE, ZERO_BUFFER_OFFSET);
 
-
+        // other ids
+        sunPosId = glGetUniformLocation(program_id_, "sunPos");
+        topSkyColorId = glGetUniformLocation(program_id_, "topSkyColor");
+        bottomSkyColorId= glGetUniformLocation(program_id_, "bottomSkyColor");
+        MVPId = glGetUniformLocation(program_id_, "MVP");
 
         // to avoid the current object being polluted
         glBindVertexArray(0);
@@ -126,16 +163,25 @@ public:
         glDeleteProgram(program_id_);
     }
 
-    void Draw(const glm::mat4 &VIEW,
-              const glm::mat4 &PROJECTION) {
+    void Draw(const mat4 &VIEW,
+              const mat4 &PROJECTION) {
         glUseProgram(program_id_);
 
-        glm::mat4 skyboxMVP = PROJECTION * VIEW;//glm::mat4(glm::mat3(VIEW));
+        mat4 skyboxMVP = PROJECTION * VIEW;//mat4(mat3(VIEW));
 
-        glUniformMatrix4fv(glGetUniformLocation(program_id_, "MVP"), 1, GL_FALSE, glm::value_ptr(skyboxMVP));
+        float time = glfwGetTime();
+        float theta = 0.05 * time - 0.5;
 
+        vec3 sunPos = sunOrbitCenter + radius * cos(theta) * sunOrbitXAxis + radius * sin(theta) * sunOrbitYAxis;
+        computeSkyColors(sunPos);
 
-        // skybox cube
+        light->setPos(sunPos);
+        glUniformMatrix4fv(MVPId, 1, GL_FALSE, value_ptr(skyboxMVP));
+        glUniform3fv(sunPosId, 1, value_ptr(sunPos));
+        glUniform3fv(topSkyColorId, 1, value_ptr(topSkyColor));
+        glUniform3fv(bottomSkyColorId, 1, value_ptr(bottomSkyColor));
+
+        // dome
         glBindVertexArray(vertex_array_id_);
         // glDepthMask(GL_FALSE);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
@@ -146,5 +192,28 @@ public:
         glUseProgram(0);
     }
 
+    float getRadius(){
+        return radius;
+    }
 
+    void computeSkyColors(const vec3& sunPos){
+
+        if(sunPos.y < sunsetBegin){
+            float sunSetCoeff = clamp((sunPos.y - nightBegin) / (sunsetBegin - nightBegin), 0.0f, 1.0f);
+            bottomSkyColor = mix(nightSkyColor, SUNSETCOL_bottomSky, sunSetCoeff);
+            topSkyColor = mix(nightSkyColor, SUNSETCOL_topSky, sunSetCoeff);
+            light->setAmbientIntensity(mix(LIGHTCOL_NIGHT, LIGHTCOL_SUNSET, sunSetCoeff));
+        }
+        else if(sunPos.y > sunsetBegin && sunPos.y < sunsetEnd){
+
+            float sunSetCoeff = (sunPos.y - sunsetBegin) / (sunsetEnd - sunsetBegin);
+            sunSetCoeff = Utils::smoothExpTransition(sunSetCoeff);
+            bottomSkyColor = mix(SUNSETCOL_bottomSky, mistColor, sunSetCoeff);
+            topSkyColor = mix(SUNSETCOL_topSky, blueSkyColor, sunSetCoeff);
+            light->setAmbientIntensity(mix(LIGHTCOL_SUNSET, light->getDefaultDiffuseIntensity(), sunSetCoeff));
+        } else {
+            bottomSkyColor = mistColor;
+            topSkyColor = blueSkyColor;
+        }
+    }
 };

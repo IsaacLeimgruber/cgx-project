@@ -2,6 +2,7 @@
 #include "icg_helper.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "light/light.h"
+#include "light/lightable.h"
 #include "material/material.h"
 #include "camera/fractionalview.h"
 
@@ -9,7 +10,7 @@ struct ProgramIds{
     GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id, zoom_id, zoomOffset_id;
 };
 
-class GridMesh{
+class GridMesh: public ILightable{
 
     protected:
         GLuint vertex_array_id_;                // vertex array object
