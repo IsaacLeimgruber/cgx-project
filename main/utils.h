@@ -11,6 +11,16 @@ public:
 
     }
 
+    static float expDeceleratingTransition(float v){
+        float x = glm::clamp(v, 0.0f, 1.0f);
+        return 1.0f - exp( -4.0f * x);
+    }
+
+    static float expAcceleratingTransition(float v){
+        float x = glm::clamp(v, 0.0f, 1.0f);
+        return exp( 4.0f * (x - 1.0));
+    }
+
     static GLuint loadImage(const char* filename){
         GLuint texId;
 

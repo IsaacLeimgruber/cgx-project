@@ -19,7 +19,7 @@ private:
     GLuint vertex_buffer_object_position_;  // memory buffer for positions
     GLuint vertex_buffer_object_index_;     // memory buffer for indices
     GLuint MVPId;
-    GLuint sunPosId, bottomSkyColorId, topSkyColorId;
+    GLuint sunPosId, bottomSkyColorId, topSkyColorId, domeGradBottomId, domeGradTopId;
     Light* light;
 
     const float radius = 10.0f;
@@ -30,21 +30,38 @@ private:
     const vec3 sunOrbitYAxis = vec3(0.0, 1.0, 0.0);
     const vec3 sunOrbitCenter = vec3(0.0, 0.0, 0.0);
 
+    //Sky color values
     const vec3 sunsetColor = vec3(1.0f, 0.568f, 0.078f);
     const vec3 nightSkyColor = vec3(0.129f, 0.2f, 0.267f);
     const vec3 SUNSETCOL_topSky = vec3(0.298f, 0.494f, 0.741);
     const vec3 SUNSETCOL_bottomSky = vec3(0.894f, 0.533, 0.537);
     const vec3 mistColor = vec3(0.8, 0.8, 0.8);
     const vec3 blueSkyColor = vec3(0.059f, 0.678f, 1.0);
+    const vec3 OUTERSPACECOL_bottomSky = vec3(0.059f, 0.678f, 1.0);
+    const vec3 OUTERSPACECOL_topSky = vec3(0.059f, 0.078f, 0.3);
 
+    //Light color values
     const vec3 LIGHTCOL_NIGHT = nightSkyColor;
     const vec3 LIGHTCOL_SUNSET = SUNSETCOL_bottomSky;
     const vec3 LIGHTCOL_DAY = vec3(0.0f, 0.0f, 0.0f);
 
+    // General dome gradient begin/end positions values
+    const float NIGHTGRADIENT_START = 0.0f;
+    const float NIGHTGRADIENT_END = 4.0f;
+    const float SUNSETGRADIENT_START = 0.0f;
+    const float SUNSETGRADIENT_END = 4.0f;
+    const float DAYGRADIENT_START = -0.4f;
+    const float DAYGRADIENT_END = 6.0f;
+
+    // Color change positions values
     const float sunsetEnd = 1.0f;
     const float sunsetBegin = -0.5f;
     const float nightBegin = -2.0f;
+    const float outerSpaceBegin = 4.0f;
+    const float outerSpaceEnd = 8.0f;
 
+    float domeGradBottom;
+    float domeGradTop;
     vec3 bottomSkyColor;
     vec3 topSkyColor;
 
@@ -142,6 +159,8 @@ public:
         sunPosId = glGetUniformLocation(program_id_, "sunPos");
         topSkyColorId = glGetUniformLocation(program_id_, "topSkyColor");
         bottomSkyColorId= glGetUniformLocation(program_id_, "bottomSkyColor");
+        domeGradBottomId= glGetUniformLocation(program_id_, "domeGradBottom");
+        domeGradTopId= glGetUniformLocation(program_id_, "domeGradTop");
         MVPId = glGetUniformLocation(program_id_, "MVP");
 
         // to avoid the current object being polluted
@@ -164,22 +183,25 @@ public:
     }
 
     void Draw(const mat4 &VIEW,
-              const mat4 &PROJECTION) {
+              const mat4 &PROJECTION,
+              const vec3 &viewPos) {
         glUseProgram(program_id_);
 
-        mat4 skyboxMVP = PROJECTION * VIEW;//mat4(mat3(VIEW));
+        mat4 skyboxMVP = PROJECTION * mat4(mat3(VIEW));
 
         float time = glfwGetTime();
         float theta = 0.05 * time - 0.5;
 
         vec3 sunPos = sunOrbitCenter + radius * cos(theta) * sunOrbitXAxis + radius * sin(theta) * sunOrbitYAxis;
-        computeSkyColors(sunPos);
+        computeSkyColors(sunPos, viewPos);
 
         light->setPos(sunPos);
         glUniformMatrix4fv(MVPId, 1, GL_FALSE, value_ptr(skyboxMVP));
         glUniform3fv(sunPosId, 1, value_ptr(sunPos));
         glUniform3fv(topSkyColorId, 1, value_ptr(topSkyColor));
         glUniform3fv(bottomSkyColorId, 1, value_ptr(bottomSkyColor));
+        glUniform1f(domeGradTopId, domeGradTop);
+        glUniform1f(domeGradBottomId, domeGradBottom);
 
         // dome
         glBindVertexArray(vertex_array_id_);
@@ -196,13 +218,19 @@ public:
         return radius;
     }
 
-    void computeSkyColors(const vec3& sunPos){
+    /** Easier to compute sky's color in CPU since it should have an affect on the light **/
+    void computeSkyColors(const vec3& sunPos, const vec3& viewPos){
 
+        /** Compute the sky's color gradient **/
+        // Night
         if(sunPos.y < sunsetBegin){
             float sunSetCoeff = clamp((sunPos.y - nightBegin) / (sunsetBegin - nightBegin), 0.0f, 1.0f);
             bottomSkyColor = mix(nightSkyColor, SUNSETCOL_bottomSky, sunSetCoeff);
             topSkyColor = mix(nightSkyColor, SUNSETCOL_topSky, sunSetCoeff);
             light->setAmbientIntensity(mix(LIGHTCOL_NIGHT, LIGHTCOL_SUNSET, sunSetCoeff));
+
+            domeGradBottom = mix(NIGHTGRADIENT_START, SUNSETGRADIENT_START, sunSetCoeff);
+            domeGradTop = mix(NIGHTGRADIENT_END, SUNSETGRADIENT_END, sunSetCoeff);
         }
         else if(sunPos.y > sunsetBegin && sunPos.y < sunsetEnd){
 
@@ -211,9 +239,22 @@ public:
             bottomSkyColor = mix(SUNSETCOL_bottomSky, mistColor, sunSetCoeff);
             topSkyColor = mix(SUNSETCOL_topSky, blueSkyColor, sunSetCoeff);
             light->setAmbientIntensity(mix(LIGHTCOL_SUNSET, light->getDefaultDiffuseIntensity(), sunSetCoeff));
+
+            domeGradBottom = mix(SUNSETGRADIENT_START, DAYGRADIENT_START, sunSetCoeff);
+            domeGradTop = mix(SUNSETGRADIENT_END, DAYGRADIENT_END, sunSetCoeff);
         } else {
             bottomSkyColor = mistColor;
             topSkyColor = blueSkyColor;
         }
+
+        //Nuance the sky's color gradient based on altitude
+        if(viewPos.y > outerSpaceBegin){
+            float scatteringFade = (viewPos.y - outerSpaceBegin)/(outerSpaceEnd - outerSpaceBegin);
+            scatteringFade = Utils::expDeceleratingTransition(scatteringFade);
+
+            bottomSkyColor = mix(bottomSkyColor, OUTERSPACECOL_bottomSky, scatteringFade);
+            topSkyColor = mix(topSkyColor, OUTERSPACECOL_topSky, scatteringFade);
+        }
+
     }
 };
