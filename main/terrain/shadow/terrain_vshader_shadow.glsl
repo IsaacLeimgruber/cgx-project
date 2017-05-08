@@ -1,6 +1,7 @@
 #version 410
 
 uniform sampler2D heightMap;
+uniform vec2 translation;
 
 in vec2 gridPos;
 
@@ -15,6 +16,6 @@ void main() {
     float vheight = texture(heightMap, uv_TC).r;
 
     //Already sets displacement so we can cull patches that fall outside the view frustrum
-    vpoint_TC = vec3(gridPos.x, vheight, -gridPos.y);
+    vpoint_TC = vec3(gridPos.x + translation.x, vheight, -gridPos.y - translation.y);
 
 }

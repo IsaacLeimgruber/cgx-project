@@ -8,17 +8,17 @@
 /** A LargeScene is an infinite procedural terrain. Internally, it is a circular grid of Scene objects */
 class LargeScene {
 
-    /** the number of rows in the large scene's rectangular matrix */
-    static constexpr int NROW = 1;
-
-    /** the number of columns in the large scene's rectangular matrix */
-    static constexpr int NCOL = 1;
+    /** the dimensions of the large scene's rectangular matrix */
+    enum { NROW = 5, NCOL = 5};
 
     /** the dimension of a small scene as seen per the scene's vertex shader 2 = size([-1;1]) */
-    static constexpr float gridSize = 2;
+    const float gridSize = 2;
 
     /** the translation is not full because we want a small overlaping, hence a scaling < 1 */
-    static constexpr float translationScale = .99f;
+    const float translationScale = 0.992f;
+
+    /** counteract the effect of the translationscale for the water mesh to avoid z-fighting **/
+    const float translationCorrection = 1.008f;
 
     template <class T> using Row = std::array<T, NCOL>;
     template <class T> using Matrix = std::array<Row<T>, NROW>;
@@ -65,9 +65,16 @@ public:
     {
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-               scene(iRow, jCol).draw(MVP, MV, NORMALM, SHADOWMVP, FV,
+               scene(iRow, jCol).drawTerrain(MVP, MV, NORMALM, SHADOWMVP, FV,
                                       mirrorPass, shadowPass,
-                                      gridSize * translationScale * translation(iRow, jCol));
+                                      gridSize * translation(iRow, jCol));
+            }
+        }
+        if(!mirrorPass && !shadowPass)
+        for (int iRow = 0; iRow < NROW; ++iRow) {
+            for (int jCol = 0; jCol < NCOL; ++jCol) {
+               scene(iRow, jCol).drawWater(MVP, MV, NORMALM, SHADOWMVP, FV,
+                                      gridSize * translationCorrection * translation(iRow, jCol));
             }
         }
     }
@@ -152,11 +159,11 @@ private:
     }
 
     /** creates a Matrix of translation vector forming a rectangular matrix */
-    static Matrix<glm::vec2> initTranslations() {
+    Matrix<glm::vec2> initTranslations() {
         Matrix<glm::vec2> t;
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-                t[iRow][jCol] = glm::vec2(jCol - NCOL / 2, iRow - NROW / 2);
+                t[iRow][jCol] = translationScale * glm::vec2(jCol - NCOL / 2, iRow - NROW / 2);
             }
         }
         return t;

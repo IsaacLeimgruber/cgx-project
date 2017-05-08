@@ -24,19 +24,26 @@ public:
         perlinTexture.recompute();
     }
 
-    void draw(const glm::mat4 &MVP = IDENTITY_MATRIX,
+    void drawTerrain(const glm::mat4 &MVP = IDENTITY_MATRIX,
               const glm::mat4 &MV = IDENTITY_MATRIX,
               const glm::mat4 &NORMALM = IDENTITY_MATRIX,
               const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
               const FractionalView &FV = FractionalView(),
               bool mirrorPass = false,
               bool shadowPass = false,
-              glm::vec2 tranlation = glm::vec2(0, 0))
+              glm::vec2 translation = glm::vec2(0, 0))
     {
-        grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, mirrorPass, shadowPass, tranlation);
-        if (!mirrorPass && !shadowPass) {
-            water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, tranlation);
-        }
+        grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, mirrorPass, shadowPass, translation);
+    }
+
+    void drawWater(const glm::mat4 &MVP = IDENTITY_MATRIX,
+              const glm::mat4 &MV = IDENTITY_MATRIX,
+              const glm::mat4 &NORMALM = IDENTITY_MATRIX,
+              const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
+              const FractionalView &FV = FractionalView(),
+              glm::vec2 translation = glm::vec2(0, 0))
+    {
+        water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, translation);
     }
 
     void setNoisePos(glm::vec2 pos) {

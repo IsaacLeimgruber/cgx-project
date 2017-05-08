@@ -1,5 +1,6 @@
 #version 410 core
 uniform sampler2D heightMap;
+uniform vec2 translation;
 
 in vec2 gridPos;
 
@@ -9,11 +10,11 @@ out vec3 vpoint_TC;
 void main() {
 
     //Outputs UV coordinate for fragment shader. Grid coordinates are in [-1, 1] x [-1, 1]
-    uv_TC = (gridPos + vec2(1.0, 1.0)) * 0.5;
+    uv_TC = (gridPos + vec2(1.0f, 1.0f)) * 0.5f;
 
     float vheight = texture(heightMap, uv_TC).r;
 
     //Already sets displacement so we can cull patches that fall outside the view frustrum
-    vpoint_TC = vec3(gridPos.x, vheight, -gridPos.y);
+    vpoint_TC = vec3(gridPos.x + translation.x, vheight, -gridPos.y - translation.y);
 
 }

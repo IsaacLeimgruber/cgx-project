@@ -14,6 +14,7 @@ class Water: public GridMesh{
     GLuint time_id;
     GLuint timeDebug_id;
     GLuint translationId;
+    GLuint translationDebugId;
 
     public:
         Water(){
@@ -58,6 +59,7 @@ class Water: public GridMesh{
 
             glUseProgram(debug_program_id_);
             timeDebug_id = glGetUniformLocation(debug_program_id_, "time");
+            translationDebugId = glGetUniformLocation(debug_program_id_, "translation");
 
             // to avoid the current object being polluted
             glBindVertexArray(0);
@@ -94,6 +96,7 @@ class Water: public GridMesh{
                 current_program_id_ = debug_program_id_;
                 currentProgramIds = debugProgramIds;
                 glUniform1f(timeDebug_id, glfwGetTime());
+                glUniform2fv(translationDebugId, 1, glm::value_ptr(translation));
                 setupMVP(MVP, MV, NORMALM);
                 setupOffset(FV);
 

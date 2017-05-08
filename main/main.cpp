@@ -73,7 +73,7 @@ void Init() {
     material = Material{};
 
     // buffers must be initialized in that order
-    int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGB16F, GL_RGB, GL_FLOAT, false, false);
+    int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, false, false);
     scene.initPerlin();
     int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
@@ -84,8 +84,8 @@ void Init() {
     skyDome.useLight(&light);
 
     view_matrix             = camera.GetViewMatrix();
-    depth_projection_matrix = glm::perspective(glm::radians(35.0f), (GLfloat)screenWidth / screenHeight, 3.0f, 6.0f);
-    depth_view_matrix       = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 1, 0));
+    depth_projection_matrix = glm::ortho(-7.1f, 7.1f, -4.0f, 4.0f, 0.0f, 16.0f);
+    depth_view_matrix       = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 0, 0));
     depth_model_matrix      = IDENTITY_MATRIX;
     depth_mvp               = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix       = biasMatrix * depth_mvp;
@@ -108,7 +108,6 @@ void Display() {
         frameCount = 0;
     }
 
-
     //Compute matrices
 
     view_matrix = camera.GetViewMatrix();
@@ -129,19 +128,18 @@ void Display() {
     depth_mvp = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix = biasMatrix * depth_mvp;
 
+    shadowBuffer.Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    scene.draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
+    shadowBuffer.Unbind();
 
     // reflection computation
     reflectionBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(mirrored_view_matrix, projection_matrix, camera.getPos());
     scene.draw(mMVP, mMV, mNORMALM, IDENTITY_MATRIX, fractionalView, true, false);
+
     reflectionBuffer.Unbind();
-
-
-    shadowBuffer.Bind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    scene.draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
-    shadowBuffer.Unbind();
 
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -150,14 +150,14 @@ void main() {
     float angle = randomAngle(vpoint_F.xyz, 15.0f);
     float s = sin(angle);
     float c = cos(angle);
-    float PCFRadius = 1.0f/300.0f;
+    float PCFRadius = 1.0f/1200.0f;
     for(int i=0; i < numSamplingPositions; i++)
     {
       // rotate offset
       vec2 rotatedOffset = vec2(kernel[i].x * c + kernel[i].y * -s, kernel[i].x * s + kernel[i].y * c);
       vec3 samplingPos = shadowCoord_F.xyz;
       samplingPos += vec3(rotatedOffset * PCFRadius, -bias);
-      visibility += texture(shadowMap, samplingPos / shadowCoord_F.w);
+      visibility += texture(shadowMap, samplingPos);
     }
     visibility /= numSamplingPositions;
 

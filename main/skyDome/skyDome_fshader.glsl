@@ -32,7 +32,7 @@ void main()
 {
     float domeGrad = clamp((domePos_F.y - domeGradBottom) / (domeGradTop - domeGradBottom), 0.0f, 1.0f);
 
-    vec3 tmpColor = mix(bottomSkyColor, topSkyColor, clamp(expIncrease(domeGrad), 0.0f, 1.0f));
+    vec3 tmpColor = mix(bottomSkyColor, topSkyColor, clamp(expSmooth(domeGrad), 0.0f, 1.0f));
 
     float l = length(domePos_F - sunPos);
 
