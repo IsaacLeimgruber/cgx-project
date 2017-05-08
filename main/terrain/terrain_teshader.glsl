@@ -7,11 +7,8 @@ uniform mat4 MV;
 uniform mat4 NORMALM;
 uniform mat4 SHADOWMVP;
 uniform vec3 lightPos;
-uniform vec2 zoomOffset;
-uniform float zoom;
 
 uniform sampler2D heightMap;
-uniform sampler2D normalMap;
 
 in vec3 vpoint_TE[];
 in vec2 uv_TE[];
@@ -48,8 +45,8 @@ void main()
     vpoint_F = vec4(interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]), 1.0f);
 
     // Set height for generated (and original) vertices
-    vheight_F = 1.3f * pow(texture(heightMap, (uv_F+zoomOffset) * zoom).r, 3);
-    vpoint_F.y = vheight_F - 0.1f;
+    vheight_F = texture(heightMap, uv_F).r;
+    vpoint_F.y = vheight_F;
 
     vpoint_MV_F = MV * vpoint_F;
     //Lighting

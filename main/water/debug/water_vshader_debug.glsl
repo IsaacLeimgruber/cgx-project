@@ -21,12 +21,13 @@ void main() {
     vec2 texDims = textureSize(heightMap, 0);
     float hSpacing = 1.0 / texDims.x;
     float vSpacing = 1.0 / texDims.y;
-    float height = pow(texture(heightMap, (uv_TC+zoomOffset) * zoom).r, 3);
-    float heightE = pow(texture(heightMap, (uv_TC+zoomOffset+vec2(5.0f * hSpacing, 0.0)) * zoom).r, 3);
-    float heightN = pow(texture(heightMap, (uv_TC+zoomOffset+vec2(0.0, 5.0f * vSpacing)) * zoom).r, 3);
+
+    float height = texture(heightMap, uv_TC).r;
+    float heightE = texture(heightMap, uv_TC+vec2(5.0f * hSpacing, 0.0)).r;
+    float heightN = texture(heightMap, uv_TC+vec2(0.0, 5.0f * vSpacing)).r;
 
     terrainGradient_TC = normalize(vec2(heightE - height, -heightN + height));
-    terrainHeight_TC = height - 0.1;
+    terrainHeight_TC = height;
 
     vpoint_TC = vec3(gridPos.x, waterHeight, -gridPos.y);
 

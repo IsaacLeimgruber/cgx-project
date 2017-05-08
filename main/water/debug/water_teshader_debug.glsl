@@ -55,10 +55,6 @@ vec3 interpolate3D(in vec3 v0, in vec3 v1, in vec3 v2, in vec3 v3)
 
 void main()
 {
-    vec2 texDims = textureSize(heightMap, 0);
-    float hSpacing = 1.0 / texDims.x;
-    float vSpacing = 1.0 / texDims.y;
-
     for(int i = 0; i < 5; i++){
        dirs[i] = normalize(dirs[i]);
     }

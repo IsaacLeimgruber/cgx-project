@@ -4,14 +4,9 @@ layout(triangles) in;
 // Three lines will be generated: 6 vertices
 layout(line_strip, max_vertices=12) out;
 
-uniform sampler2D normalMap;
-
 uniform mat4 MVP;
 uniform mat4 MV;
 uniform mat4 NORMALM;
-
-uniform vec2 zoomOffset;
-uniform float zoom;
 
 in vec4 vpoint_MV_G[];
 in vec3 normal_G[];

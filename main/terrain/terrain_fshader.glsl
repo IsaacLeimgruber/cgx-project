@@ -5,14 +5,11 @@ uniform mat4 MV;
 uniform mat4 NORMALM;
 uniform sampler2DShadow shadowMap;
 uniform sampler2D heightMap;
-uniform sampler2D normalMap;
 uniform sampler2D grassTex;
 uniform sampler2D snowTex;
 uniform sampler2D sandTex;
 uniform sampler2D rockTex;
 uniform vec3 La, Ld, Ls;
-uniform vec2 zoomOffset;
-uniform float zoom;
 uniform bool mirrorPass;
 
 in vec4 shadowCoord_F;
@@ -28,8 +25,9 @@ out vec4 color;
 const float SLOPE_THRESHOLD = 0.5f;
 const float MIX_SLOPE_THRESHOLD = 0.2f;
 
-const float WATER_HEIGHT = 0.1f,
-            SAND_HEIGHT = 0.11f,
+const float WATER_HEIGHT = 0.01f,
+            WATER_HEIGHT_DEEP = -0.3f,
+            SAND_HEIGHT = 0.02f,
             GRASS_HEIGHT = 0.3f,
             ROCK_HEIGHT = 0.40f,
             SNOW_HEIGHT = 1.0f;
@@ -89,23 +87,24 @@ void main() {
         }
     }
 
-    vec3 gridNormal = (texture(normalMap, (uv_F+zoomOffset) * zoom).xyz * 2.0f) - 1.0f;
+    vec2 normalDxDy = texture(heightMap, uv_F).yz;
+    vec3 gridNormal = normalize(vec3(-normalDxDy.x, 1, +normalDxDy.y));
     vec3 normal_MV = (NORMALM * vec4(gridNormal, 1.0f)).xyz;
 
     vec3 lightDir = normalize(lightDir_F);
 
     vec3 heightCol = vec3(0.0f);
-    vec3 GRASS_COLOR = 255.0 * texture(grassTex, (uv_F+zoomOffset) * zoom * 60.0f).rgb;
-    vec3 ROCK_COLOR = 255.0 * texture(rockTex, (uv_F+zoomOffset) * zoom * 5.0f).rgb;
+    vec3 GRASS_COLOR = 255.0 * texture(grassTex, (uv_F) * 60.0f).rgb;
+    vec3 ROCK_COLOR = 255.0 * texture(rockTex, (uv_F) * 5.0f).rgb;
     vec3 WATER_COLOR = ROCK_COLOR ;
     vec3 WATER_COLOR_DEEP = vec3(25.0f,66.0f,167.0f);
-    vec3 SAND_COLOR = 255.0 * texture(sandTex, (uv_F+zoomOffset) * zoom * 30.0f).rgb;
-    vec3 SNOW_COLOR = 255.0 * texture(snowTex, (uv_F+zoomOffset) * zoom * 60.0f).rgb;
+    vec3 SAND_COLOR = 255.0 * texture(sandTex, (uv_F) * 30.0f).rgb;
+    vec3 SNOW_COLOR = 255.0 * texture(snowTex, (uv_F) * 60.0f).rgb;
     vec3 vert = vec3(0.0f, 1.0f, 0.0f);
     float slope = dot(gridNormal, vert);//range [-1, 1], highest slope when 0
 
         if(vheight_F <= WATER_HEIGHT){
-            heightCol = mix(WATER_COLOR_DEEP, SAND_COLOR, (vheight_F) / (WATER_HEIGHT));
+            heightCol = mix(SAND_COLOR, WATER_COLOR_DEEP, (vheight_F) / (WATER_HEIGHT_DEEP));
 
         } else if(vheight_F > WATER_HEIGHT && vheight_F <= SAND_HEIGHT){
             heightCol = SAND_COLOR;
