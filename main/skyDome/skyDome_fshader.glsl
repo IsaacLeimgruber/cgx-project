@@ -3,17 +3,16 @@
 uniform vec3 sunPos;
 uniform vec3 topSkyColor;
 uniform vec3 bottomSkyColor;
+uniform vec3 sunColor;
 uniform float domeGradBottom;
 uniform float domeGradTop;
 
 in vec3 domePos_F;
 out vec4 color;
 
-const float sunInnerRadius = 0.4f;
-const float sunOuterRadius = 0.5f;
+const float sunInnerRadius = 0.38f;
+const float sunOuterRadius = 0.45f;
 const float sunConeAngle = 0.9f;
-const vec3 sunInnerColor = vec3(1.0, 1.0, 1.0);
-const vec3 sunBorderColor = vec3(1.0, 1.0, 0.51);
 
 float expIncrease(in float v){
 
@@ -24,7 +23,6 @@ float expIncrease(in float v){
 float expSmooth(in float v){
 
 return 1.0 - exp( -pow(2.0 * v , 2.0));
-
 
 }
 
@@ -37,10 +35,10 @@ void main()
     float l = length(domePos_F - sunPos);
 
     if(l < sunInnerRadius){
-        tmpColor = sunInnerColor;
+        tmpColor = sunColor;
     } else if(l < sunOuterRadius){
         tmpColor = mix(
-                    sunInnerColor,
+                    sunColor,
                     tmpColor,
                     expSmooth(
                                 clamp(
