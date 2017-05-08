@@ -47,6 +47,8 @@ file(GLOB SHADERS
     terrain/debug/terrain_gshader_debug.glsl
     skybox/skybox_fshader.glsl
     skybox/skybox_vshader.glsl
+    skydome/skydome_fshader.glsl
+    skydome/skydome_vshader.glsl
     screenquad/screenquad_vshader.glsl
     screenquad/screenquad_fshader.glsl
     perlin/perlin_vshader.glsl

@@ -80,7 +80,7 @@ class Water: public GridMesh{
             glUniform2fv(translationId, 1, glm::value_ptr(translation));
 
             if(light != nullptr)
-                light->updatePosUniform(current_program_id_);
+                light->updateProgram(current_program_id_);
 
             activateTextureUnits();
             setupMVP(MVP, MV, NORMALM);

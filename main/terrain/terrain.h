@@ -103,7 +103,7 @@ class Grid: public GridMesh{
 
             //update light
             if(light != nullptr)
-                light->updatePosUniform(current_program_id_);
+                light->updateProgram(current_program_id_);
 
             // if mirror pass is enabled then we cull underwater fragments
             glUniform1i(mirrorPassId, mirrorPass);
@@ -120,7 +120,7 @@ class Grid: public GridMesh{
                 currentProgramIds = debugProgramIds;
 
                 if(light != nullptr){
-                    light->updatePosUniform(current_program_id_);
+                    light->updateProgram(current_program_id_);
                 }
 
                 setupMVP(MVP, MV, NORMALM);

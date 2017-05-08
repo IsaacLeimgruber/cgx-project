@@ -46,7 +46,7 @@ public:
     }
 
     /** initializes the scenes object */
-    int init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
+    void init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
                scene(iRow, jCol).init(shadowBuffer_texture_id, reflectionBuffer_texture_id, light);

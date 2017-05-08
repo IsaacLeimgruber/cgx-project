@@ -13,12 +13,13 @@
 #include "camera/fractionalview.h"
 #include "light/light.h"
 #include "material/material.h"
-#include "skybox/skybox.h"
+#include "skydome/skyDome.h"
 
 using namespace glm;
 
 LargeScene scene;
-Skybox skybox;
+SkyDome skyDome;
+Perlin perlin;
 Camera camera;
 ColorAndDepthFBO screenQuadBuffer, reflectionBuffer;
 DepthFBO shadowBuffer;
@@ -79,7 +80,8 @@ void Init() {
 
     screenquad.Init(screenWidth, screenHeight, screenQuadBuffer_texture_id, 0);
     scene.init(shadowBuffer_texture_id, reflectionBuffer_texture_id, &light);
-    skybox.Init();
+    skyDome.Init();
+    skyDome.useLight(&light);
 
     view_matrix             = camera.GetViewMatrix();
     depth_projection_matrix = glm::perspective(glm::radians(35.0f), (GLfloat)screenWidth / screenHeight, 3.0f, 6.0f);
@@ -88,6 +90,7 @@ void Init() {
     depth_mvp               = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix       = biasMatrix * depth_mvp;
     quad_model_matrix       = IDENTITY_MATRIX;
+
 
     for(auto& key : keys){
         key = false;
@@ -105,11 +108,6 @@ void Display() {
         frameCount = 0;
     }
 
-    //Update light pos
-    mat4 rotMatrix = rotate(IDENTITY_MATRIX, currentFrame * 0.1f, vec3(0.0, 1.0, 0.0));
-    vec4 tmp = rotMatrix * vec4(4.0, 2.0, 0.0, 1.0);
-    vec3 pos = vec3(tmp.x, tmp.y, tmp.z);
-    light.setPos(pos);
 
     //Compute matrices
 
@@ -126,7 +124,7 @@ void Display() {
     mNORMALM = inverse(transpose(mMV));
 
     //shadow matrices
-    depth_view_matrix = lookAt(light.getPos(), vec3(0.0,0.4,0.0), vec3(0, 1, 0));
+    depth_view_matrix = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 1, 0));
     depth_model_matrix = IDENTITY_MATRIX;
     depth_mvp = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix = biasMatrix * depth_mvp;
@@ -135,7 +133,7 @@ void Display() {
     // reflection computation
     reflectionBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    skybox.Draw(mirrored_view_matrix, projection_matrix);
+    skyDome.Draw(mirrored_view_matrix, projection_matrix, camera.getPos());
     scene.draw(mMVP, mMV, mNORMALM, IDENTITY_MATRIX, fractionalView, true, false);
     reflectionBuffer.Unbind();
 
@@ -147,7 +145,7 @@ void Display() {
 
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    skybox.Draw(view_matrix, projection_matrix);
+    skyDome.Draw(view_matrix, projection_matrix, camera.getPos());
     scene.draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
     screenQuadBuffer.Unbind();
 
@@ -198,6 +196,7 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, window_width, window_height);
 
     projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 15.0f);
+
     glfwGetWindowSize(window, &window_width_sc, &window_height_sc);
 }
 
