@@ -1,5 +1,6 @@
 #pragma once
 #include "icg_helper.h"
+#include "../utils.h"
 
 class ScreenQuad {
 
@@ -120,7 +121,7 @@ class CloudPlane {
         GLuint vertex_buffer_object_;   // memory buffer
         GLuint texture_id_;             // texture ID
         GLuint depthTexture_id_;
-        GLuint MVP_id;
+        GLuint MVP_id, time_id;
 
     public:
         void Init(GLuint texture , GLuint depthTexture) {
@@ -140,10 +141,10 @@ class CloudPlane {
 
             // vertex coordinates
             {
-                const GLfloat vertex_point[] = { /*V1*/ -10.0f, 7.0f, -10.0f,
-                                                 /*V2*/ +10.0f, 7.0f, -10.0f,
-                                                 /*V3*/ -10.0f, 7.0f, +10.0f,
-                                                 /*V4*/ +10.0f, 7.0f, +10.0f};
+                const GLfloat vertex_point[] = { /*V1*/ -20.0f, 6.0f, -20.0f,
+                                                 /*V2*/ +20.0f, 6.0f, -20.0f,
+                                                 /*V3*/ -20.0f, 6.0f, +20.0f,
+                                                 /*V4*/ +20.0f, 6.0f, +20.0f};
                 // buffer
                 glGenBuffers(1, &vertex_buffer_object_);
                 glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_object_);
@@ -180,7 +181,7 @@ class CloudPlane {
             }
 
             // load/Assign texture
-            this->texture_id_ = texture;
+            this->texture_id_ = Utils::loadImage("cloud1024.tga");
             glBindTexture(GL_TEXTURE_2D, texture_id_);
             GLuint tex_id = glGetUniformLocation(program_id_, "colorTex");
             glUniform1i(tex_id, 0 /*GL_TEXTURE0*/);
@@ -192,6 +193,7 @@ class CloudPlane {
             glBindTexture(GL_TEXTURE_2D, 0);
 
             MVP_id = glGetUniformLocation(program_id_, "MVP");
+            time_id = glGetUniformLocation(program_id_, "time");
 
             // to avoid the current object being polluted
             glBindVertexArray(0);
@@ -212,6 +214,7 @@ class CloudPlane {
             glBindVertexArray(vertex_array_id_);
 
             glUniformMatrix4fv(MVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
+            glUniform1f(time_id, glfwGetTime());
 
             // bind texture
             glActiveTexture(GL_TEXTURE0);

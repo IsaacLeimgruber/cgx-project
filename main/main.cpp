@@ -152,7 +152,8 @@ void Display() {
     reflectionBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(mirrored_view_matrix, projection_matrix, camera.getPos());
-    scene.draw(mMVP, mMV, mNORMALM, IDENTITY_MATRIX, fractionalView, true, false);
+    cloudPlane.Draw(mMVP);
+    scene.draw(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true, false);
     reflectionBuffer.Unbind();
 
     screenQuadBuffer.Bind();

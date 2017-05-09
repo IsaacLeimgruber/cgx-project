@@ -21,6 +21,7 @@ file(GLOB TEXTURES
     terrain/textures/rock512_4.tga
     terrain/textures/sand256.tga
     terrain/textures/snow512.tga
+    skyDome/cloud1024.tga
     skybox/bigSky/left.png
     skybox/bigSky/right.png
     skybox/bigSky/top.png

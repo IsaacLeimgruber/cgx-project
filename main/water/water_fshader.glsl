@@ -125,12 +125,12 @@ void main() {
     if(cosNL > 0.0){
         vec3 reflectionDir = normalize(2.0f * normal_MV * cosNL - lightDir);
          lightingResult += visibility *
-                ((reflection * cosNL * Ld)
+                ((vec3(0.8, 0.8, 0.8) * reflection * cosNL * Ld)
                 +
                 (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 256.0) * Ls));
     }
 
-    float reflectionAlpha = mix(0.97f, 0.3f, clamp(
+    float reflectionAlpha = mix(0.95f, 0.3f, clamp(
                                 (dot(viewDir, normal_MV) - cosWaterReflectionAngle) / (1.0f - cosWaterReflectionAngle)
                                 *
                                 (waterReflectionDistance + vpoint_MV_F.z),
