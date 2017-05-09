@@ -83,8 +83,11 @@ void Init() {
     skyDome.Init();
     skyDome.useLight(&light);
 
+    float skyDomeRadius = skyDome.getRadius();
+    float sceneHalfMaxSize = scene.maximumExtent() / 2.0;
+
     view_matrix             = camera.GetViewMatrix();
-    depth_projection_matrix = glm::ortho(-7.1f, 7.1f, -4.0f, 4.0f, 0.0f, 16.0f);
+    depth_projection_matrix = glm::ortho(-sceneHalfMaxSize, sceneHalfMaxSize, -sceneHalfMaxSize, sceneHalfMaxSize, skyDomeRadius - sceneHalfMaxSize, skyDomeRadius + sceneHalfMaxSize);
     depth_view_matrix       = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 0, 0));
     depth_model_matrix      = IDENTITY_MATRIX;
     depth_mvp               = depth_projection_matrix * depth_view_matrix * depth_model_matrix;

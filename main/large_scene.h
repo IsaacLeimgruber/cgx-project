@@ -15,10 +15,10 @@ class LargeScene {
     const float gridSize = 2;
 
     /** the translation is not full because we want a small overlaping, hence a scaling < 1 */
-    const float translationScale = 0.992f;
+    const float translationScale = 0.991f;
 
     /** counteract the effect of the translationscale for the water mesh to avoid z-fighting **/
-    const float translationCorrection = 1.008f;
+    const float translationCorrection = 1.009f;
 
     template <class T> using Row = std::array<T, NCOL>;
     template <class T> using Matrix = std::array<Row<T>, NROW>;
@@ -127,6 +127,10 @@ public:
                scene(iRow, jCol).toggleDebugMode();
             }
         }
+    }
+
+    float maximumExtent(){
+        return 1.42 * max(NROW, NCOL) * 2;
     }
 
     void cleanup() {

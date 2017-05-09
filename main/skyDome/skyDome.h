@@ -66,11 +66,11 @@ private:
     const float outerSpaceEnd = 8.0f;
 
     // Values passed to GPU
-    float domeGradBottom;
-    float domeGradTop;
-    vec3 bottomSkyColor;
-    vec3 topSkyColor;
-    vec3 sunColor;
+    float domeGradBottom = DAYGRADIENT_START;
+    float domeGradTop = DAYGRADIENT_END;
+    vec3 bottomSkyColor = mistColor;
+    vec3 topSkyColor = blueSkyColor;
+    vec3 sunColor = SUN_COLOR;
 
     float PI = 3.14159265359f;
     float PIovr2 = PI * 0.5f;
@@ -181,6 +181,10 @@ public:
         light->registerProgram(program_id_);
     }
 
+    float getRadius(){
+        return radius;
+    }
+
     void Cleanup() {
         glBindVertexArray(0);
         glUseProgram(0);
@@ -198,12 +202,14 @@ public:
         mat4 skyboxMVP = PROJECTION * mat4(mat3(VIEW));
 
         float time = glfwGetTime();
-        float theta = 0.01 * time - 0.5;
+        float theta = 0.05 * time - 0.5;
 
         vec3 sunPos = sunOrbitCenter + radius * cos(theta) * sunOrbitXAxis + radius * sin(theta) * sunOrbitYAxis;
         computeSkyColors(sunPos, viewPos);
 
-        light->setPos(sunPos + vec3(viewPos.x, -viewPos.y, viewPos.z));
+        light->setPos(sunPos);
+        light->setLightPosCameraTranslated(sunPos + vec3(viewPos.x, -viewPos.y, viewPos.z));
+
         glUniformMatrix4fv(MVPId, 1, GL_FALSE, value_ptr(skyboxMVP));
         glUniform3fv(sunPosId, 1, value_ptr(sunPos));
         glUniform3fv(topSkyColorId, 1, value_ptr(topSkyColor));
@@ -214,17 +220,13 @@ public:
 
         // dome
         glBindVertexArray(vertex_array_id_);
-        // glDepthMask(GL_FALSE);
+        glDepthMask(GL_FALSE);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
 
-        //glDepthMask(GL_TRUE);
+        glDepthMask(GL_TRUE);
 
         glBindVertexArray(0);
         glUseProgram(0);
-    }
-
-    float getRadius(){
-        return radius;
     }
 
     /** Easier to compute sky's color in CPU since it should have an affect on the light **/

@@ -10,8 +10,8 @@ uniform float domeGradTop;
 in vec3 domePos_F;
 out vec4 color;
 
-const float sunInnerRadius = 0.38f;
-const float sunOuterRadius = 0.45f;
+const float sunInnerRadius = 0.25f;
+const float sunOuterRadius = 0.32f;
 const float sunConeAngle = 0.9f;
 
 float expIncrease(in float v){
@@ -40,7 +40,7 @@ void main()
         tmpColor = mix(
                     sunColor,
                     tmpColor,
-                    expSmooth(
+                    expSmooth( 2.0 *
                                 clamp(
                                     (l - sunInnerRadius) / (sunOuterRadius - sunInnerRadius)
                                 ,0.0, 1.0)
