@@ -51,6 +51,8 @@ file(GLOB SHADERS
     skydome/skydome_vshader.glsl
     screenquad/screenquad_vshader.glsl
     screenquad/screenquad_fshader.glsl
+    screenquad/cloudPlane_fshader.glsl
+    screenquad/cloudPlane_vshader.glsl
     perlin/perlin_vshader.glsl
     perlin/perlin_fshader.glsl
     water/water_vshader.glsl
