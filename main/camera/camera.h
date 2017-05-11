@@ -154,7 +154,9 @@ public:
         std::cout << "yaw:" << this->Yaw << endl;
         std::cout << "pitch:" << this->Pitch << endl;
     }
-
+    void setPos(glm::vec3 pos){
+    this->Position = pos;
+    }
 
 
 private:

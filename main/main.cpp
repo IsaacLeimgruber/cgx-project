@@ -14,6 +14,7 @@
 #include "light/light.h"
 #include "material/material.h"
 #include "skybox/skybox.h"
+#include "bezier/BezierCurve.h"
 
 using namespace glm;
 
@@ -25,6 +26,12 @@ DepthFBO shadowBuffer;
 ScreenQuad screenquad;
 Light light;
 Material material;
+BezierCurve bezier({
+                    vec3(0, 0, 0),
+                    vec3(0, 1, 0),
+                    vec3(1, 0, 0),
+                    vec3(1, 1, 0)
+                   });
 
 bool keys[1024];
 bool useContinuousPerlinMoves = true;
@@ -43,7 +50,9 @@ int screenHeight = 1080;
 float lastX = 0.0f;
 float lastY = 0.0f;
 
+const float DISPLACEMENT_TIME = 20.f;
 const float OFFSET_QTY = 0.04f;
+float start_time = 0.f;
 
 mat4 projection_matrix, view_matrix, mirrored_view_matrix, quad_model_matrix;
 mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_matrix, depth_mvp;
@@ -66,7 +75,7 @@ FractionalView fractionalView;
 
 void Init() {
     glClearColor(0.0f, 0.8f, 1.0f, 1.0f);
-
+    start_time = glfwGetTime();
     camera   = Camera{vec3(0.0, 2.5, 0.0)};
     light    = Light{vec3(0.0, 2.0, -4.0)};
     material = Material{};
@@ -111,6 +120,9 @@ void Display() {
     vec3 pos = vec3(tmp.x, tmp.y, tmp.z);
     light.setPos(pos);
 
+    float bezierTime = (glfwGetTime() - start_time)/DISPLACEMENT_TIME;
+    vec3 cameraPos = bezier.getPoint(bezierTime);
+    camera.setPos(cameraPos);
     //Compute matrices
 
     view_matrix = camera.GetViewMatrix();
@@ -293,6 +305,7 @@ void doMovement()
 }
 
 int main(int argc, char *argv[]) {
+
     for(auto& key : keys) {
         key = false;
     }
@@ -387,4 +400,25 @@ int main(int argc, char *argv[]) {
     glfwDestroyWindow(window);
     glfwTerminate();
     return EXIT_SUCCESS;
+
+
+    /*cout <<"\nstartx"<<endl;
+    for(int i = 0; i <= 30 ; i ++){
+       cout<< bezier.getPoint(i*1.f/30).x<<endl;
+        //cout<<"point " << i << " : " <<bezier.getPoint(i*0.05) << endl;
+    }
+    cout <<"\nstarty"<<endl;
+    for(int i = 0; i <= 30 ; i ++){
+        cout<<bezier.getPoint(i*1.f/30).y<<endl;
+        //cout<<"point " << i << " : " <<bezier.getPoint(i*0.05) << endl;
+    }
+
+    cout<< "\ntimes "<<endl;
+    int j = 0;
+    for(const auto& i :bezier.getTimes() ) {
+        cout << j << " " << i << endl;
+
+        ++j;
+    }*/
+
 }
