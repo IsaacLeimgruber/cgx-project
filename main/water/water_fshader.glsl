@@ -27,8 +27,8 @@ out vec4 color;
 
 const vec3 WATER_COLOR = vec3(75.0f,126.0f,157.0f) / 255.0f;
 const vec3 Y = vec3(0.0f, 1.0f, 0.0f);
-const float cosWaterReflectionAngle = 0.2f;
-const float waterReflectionDistance = 1.5f;
+const float cosWaterReflectionAngle = 0.4f;
+const float waterReflectionDistance = 3.0f;
 const float rippleNormalWeight = 0.2f;
 
 const int numSamplingPositions = 9;

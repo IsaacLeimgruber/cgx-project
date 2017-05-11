@@ -22,12 +22,10 @@ LargeScene scene;
 SkyDome skyDome;
 Perlin perlin;
 Camera camera;
-ColorFBO cloudBuffer;
 PerlinTexture perlinTexture;
 ColorAndDepthFBO screenQuadBuffer, reflectionBuffer;
 DepthFBO shadowBuffer;
 ScreenQuad screenquad;
-CloudPlane cloudPlane;
 Light light;
 Material material;
 
@@ -79,21 +77,15 @@ void Init() {
     // buffers must be initialized in that order
     int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, false, false);
     scene.initPerlin();
-    int cloudBuffer_texture_id = cloudBuffer.Init(1024, 1024, GL_RGB32F, GL_RGB, GL_FLOAT, true);
     int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
 
     perlin.Init();
 
     screenquad.Init(screenQuadBuffer_texture_id, 0);
-    cloudPlane.Init(cloudBuffer_texture_id, 0);
     scene.init(shadowBuffer_texture_id, reflectionBuffer_texture_id, &light);
     skyDome.Init();
     skyDome.useLight(&light);
-
-    cloudBuffer.Bind();
-        perlin.Draw(vec2(0.0, 0.0));
-    cloudBuffer.Unbind();
 
     float skyDomeRadius = skyDome.getRadius();
     float sceneHalfMaxSize = scene.maximumExtent() / 2.0;
@@ -151,15 +143,13 @@ void Display() {
     // reflection computation
     reflectionBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    skyDome.Draw(mirrored_view_matrix, projection_matrix, camera.getPos());
-    cloudPlane.Draw(mMVP);
+    skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
     scene.draw(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true, false);
     reflectionBuffer.Unbind();
 
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    skyDome.Draw(view_matrix, projection_matrix, camera.getPos());
-    cloudPlane.Draw(MVP);
+    skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
     screenQuadBuffer.Unbind();
 

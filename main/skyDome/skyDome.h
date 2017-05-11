@@ -1,6 +1,7 @@
 #pragma once
 #include "icg_helper.h"
 #include <glm/gtc/type_ptr.hpp>
+#include "skyPlane.h"
 #include "../gridmesh.h"
 #include "../light/light.h"
 #include "../light/lightable.h"
@@ -21,6 +22,10 @@ private:
     GLuint MVPId;
     GLuint sunPosId, bottomSkyColorId, topSkyColorId, domeGradBottomId, domeGradTopId, sunColorId;
     Light* light;
+    SkyPlane cloudPlane;
+    SkyPlane farCloudPlane;
+
+    mat4 cloudPlaneModelMatrix, farCloudPlaneModelMatrix;
 
     const float radius = 10.0f;
     const int rings = 24;
@@ -94,6 +99,22 @@ public:
         }
 
         glUseProgram(program_id_);
+
+        cloudPlane.Init(0, vec2(3.0, 2.0));
+        farCloudPlane.Init(0, vec2(4.0, 3.0));
+        cloudPlaneModelMatrix =
+                translate(IDENTITY_MATRIX, vec3(0.0f, 6.0f, 0.0f))
+                *
+                rotate(IDENTITY_MATRIX, 0.0f, vec3(0.0f, 1.0f, 0.0f))
+                *
+                scale(IDENTITY_MATRIX, vec3(50.0f, 50.0f, 50.0f));
+
+        farCloudPlaneModelMatrix =
+                translate(IDENTITY_MATRIX, vec3(0.0f, 8.0f, 0.0f))
+                *
+                rotate(IDENTITY_MATRIX, 0.2f, vec3(0.0f, 1.0f, 0.0f))
+                *
+                scale(IDENTITY_MATRIX, vec3(50.0f, 50.0f, 50.0f));
 
         glGenVertexArrays(1, &vertex_array_id_);
         glBindVertexArray(vertex_array_id_);
@@ -194,12 +215,16 @@ public:
         glDeleteProgram(program_id_);
     }
 
-    void Draw(const mat4 &VIEW,
+    void Draw(const mat4 &MODEL,
+              const mat4 &VIEW,
               const mat4 &PROJECTION,
               const vec3 &viewPos) {
         glUseProgram(program_id_);
 
         mat4 skyboxMVP = PROJECTION * mat4(mat3(VIEW));
+        mat4 sceneMVP = PROJECTION * VIEW * MODEL;
+        mat4 cloudPlaneMVP = sceneMVP * cloudPlaneModelMatrix;
+        mat4 farCloudPlaneMVP = sceneMVP * farCloudPlaneModelMatrix;
 
         float time = glfwGetTime();
         float theta = 0.05 * time - 0.5;
@@ -222,8 +247,10 @@ public:
         glBindVertexArray(vertex_array_id_);
         glDepthMask(GL_FALSE);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
-
         glDepthMask(GL_TRUE);
+
+        farCloudPlane.Draw(farCloudPlaneMVP);
+        cloudPlane.Draw(cloudPlaneMVP);
 
         glBindVertexArray(0);
         glUseProgram(0);
