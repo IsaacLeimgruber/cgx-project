@@ -137,6 +137,6 @@ void main() {
                                 0.0f, 1.0f));
 
     //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -vpoint_MV_F.xyz, vec3(0.0,0.0,0.0));
-    color = vec4(lightingResult, reflectionAlpha);
+    color = vec4(lightingResult, clamp(reflectionAlpha, 0.0f, 1.0f));
     //color = vec4(shadowCoord_F);
 }

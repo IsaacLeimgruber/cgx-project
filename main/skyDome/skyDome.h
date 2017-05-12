@@ -100,21 +100,21 @@ public:
 
         glUseProgram(program_id_);
 
-        cloudPlane.Init(0, vec2(3.0, 2.0));
-        farCloudPlane.Init(0, vec2(4.0, 3.0));
+        cloudPlane.Init(0, vec2(4.0, 3.0));
+        farCloudPlane.Init(0, vec2(1.0, 1.0));
         cloudPlaneModelMatrix =
-                translate(IDENTITY_MATRIX, vec3(0.0f, 6.0f, 0.0f))
+                translate(IDENTITY_MATRIX, vec3(0.0f, -5.0f, 0.0f))
                 *
                 rotate(IDENTITY_MATRIX, 0.0f, vec3(0.0f, 1.0f, 0.0f))
                 *
-                scale(IDENTITY_MATRIX, vec3(50.0f, 50.0f, 50.0f));
+                scale(IDENTITY_MATRIX, vec3(75.0f, 75.0f, 75.0f));
 
         farCloudPlaneModelMatrix =
-                translate(IDENTITY_MATRIX, vec3(0.0f, 8.0f, 0.0f))
+                translate(IDENTITY_MATRIX, vec3(0.0f, 0.0f, 0.0f))
                 *
                 rotate(IDENTITY_MATRIX, 0.2f, vec3(0.0f, 1.0f, 0.0f))
                 *
-                scale(IDENTITY_MATRIX, vec3(50.0f, 50.0f, 50.0f));
+                scale(IDENTITY_MATRIX, vec3(75.0f, 75.0f, 75.0f));
 
         glGenVertexArrays(1, &vertex_array_id_);
         glBindVertexArray(vertex_array_id_);
@@ -200,6 +200,8 @@ public:
     void useLight(Light* l){
         this->light = l;
         light->registerProgram(program_id_);
+        cloudPlane.useLight(l);
+        farCloudPlane.useLight(l);
     }
 
     float getRadius(){
@@ -227,7 +229,7 @@ public:
         mat4 farCloudPlaneMVP = sceneMVP * farCloudPlaneModelMatrix;
 
         float time = glfwGetTime();
-        float theta = 0.05 * time - 0.5;
+        float theta = 0.05 * time - 1.0;
 
         vec3 sunPos = sunOrbitCenter + radius * cos(theta) * sunOrbitXAxis + radius * sin(theta) * sunOrbitYAxis;
         computeSkyColors(sunPos, viewPos);
@@ -249,8 +251,8 @@ public:
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
         glDepthMask(GL_TRUE);
 
-        farCloudPlane.Draw(farCloudPlaneMVP);
-        cloudPlane.Draw(cloudPlaneMVP);
+        farCloudPlane.Draw(farCloudPlaneMVP, sunPos);
+        cloudPlane.Draw(cloudPlaneMVP, sunPos);
 
         glBindVertexArray(0);
         glUseProgram(0);

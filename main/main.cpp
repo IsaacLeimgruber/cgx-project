@@ -75,7 +75,7 @@ void Init() {
     material = Material{};
 
     // buffers must be initialized in that order
-    int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, false, false);
+    int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGBA32F, GL_RGBA, GL_FLOAT, false, false);
     scene.initPerlin();
     int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
@@ -186,7 +186,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
-    projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 100.0f);
+    projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 150.0f);
 }
 
 // Gets called when the windows/framebuffer is resized.
@@ -199,7 +199,7 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
 
     glViewport(0, 0, window_width, window_height);
 
-    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 100.0f);
+    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 150.0f);
 
     glfwGetWindowSize(window, &window_width_sc, &window_height_sc);
 }
