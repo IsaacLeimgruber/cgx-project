@@ -68,7 +68,7 @@ GLuint frameCount = 0;
 FractionalView fractionalView;
 
 void Init() {
-    glClearColor(0.0f, 0.8f, 1.0f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     camera   = Camera{vec3(0.0, 2.5, 0.0)};
     light    = Light{vec3(0.0, 2.0, -4.0)};
