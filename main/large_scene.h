@@ -9,7 +9,7 @@
 class LargeScene {
 
     /** the dimensions of the large scene's rectangular matrix */
-    enum {NROW = 5, NCOL = 5};
+    enum {NROW = 6, NCOL = 6};
 
     /** the dimension of a small scene as seen per the scene's vertex shader 2 = size([-1;1]) */
     const float gridSize = 2;
@@ -30,10 +30,10 @@ public:
     enum Direction { UP = +1, DOWN = -1 };
 
     /** initializes the perlin textures */
-    void initPerlin() {
+    void initPerlin(int textureWidth = 1024, int textureHeight = 1024) {
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-                scene(iRow, jCol).initPerlin();
+                scene(iRow, jCol).initPerlin(textureWidth, textureHeight);
                 scene(iRow, jCol).setNoisePos(noisePosFor(iRow, jCol));
             }
         }

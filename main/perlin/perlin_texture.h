@@ -43,7 +43,6 @@ public:
 
 private:
     glm::vec2 textureCorrection(glm::vec2 pos_offset) {
-        //return pos_offset;
         return {
             pos_offset.x * (1 - 1.0 / textureWidth),
             pos_offset.y * (1 - 1.0 / textureHeight)

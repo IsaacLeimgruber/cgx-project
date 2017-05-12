@@ -9,6 +9,7 @@
 #include "framebuffer.h"
 #include "screenquad/screenquad.h"
 #include "large_scene.h"
+#include "scene_controler.h"
 #include "camera/camera.h"
 #include "camera/fractionalview.h"
 #include "light/light.h"
@@ -19,18 +20,18 @@
 using namespace glm;
 
 LargeScene scene;
+SceneControler sceneControler(scene);
 SkyDome skyDome;
-Perlin perlin;
 Camera camera;
-PerlinTexture perlinTexture;
 ColorAndDepthFBO screenQuadBuffer, reflectionBuffer;
 DepthFBO shadowBuffer;
 ScreenQuad screenquad;
 Light light;
 Material material;
 
+float perlinTextureSize = 512;
+
 bool keys[1024];
-bool useContinuousPerlinMoves = true;
 bool firstMouse = false;
 bool wireframeDebugEnabled = false;
 // Window size in screen coordinates
@@ -76,11 +77,9 @@ void Init() {
 
     // buffers must be initialized in that order
     int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGBA32F, GL_RGBA, GL_FLOAT, false, false);
-    scene.initPerlin();
+    scene.initPerlin(perlinTextureSize, perlinTextureSize);
     int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
-
-    perlin.Init();
 
     screenquad.Init(screenQuadBuffer_texture_id, 0);
     scene.init(shadowBuffer_texture_id, reflectionBuffer_texture_id, &light);
@@ -116,7 +115,6 @@ void Display() {
     }
 
     //Compute matrices
-
     view_matrix = camera.GetViewMatrix();
     mirrored_view_matrix = camera.GetMirroredViewMatrix(0.0f);
 
@@ -229,25 +227,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         case GLFW_KEY_N:
             scene.toggleDebugMode();
             break;
-        case GLFW_KEY_Q:
-            useContinuousPerlinMoves = !useContinuousPerlinMoves;
-            break;
-        case GLFW_KEY_RIGHT:
-            if (!useContinuousPerlinMoves)
-                scene.moveCols(LargeScene::DOWN);
-            break;
-        case GLFW_KEY_LEFT:
-            if (!useContinuousPerlinMoves)
-                scene.moveCols(LargeScene::UP);
-            break;
-        case GLFW_KEY_UP:
-            if (!useContinuousPerlinMoves)
-                scene.moveRows(LargeScene::DOWN);
-            break;
-        case GLFW_KEY_DOWN:
-            if (!useContinuousPerlinMoves)
-                scene.moveRows(LargeScene::UP);
-            break;
         }
     } else if(action == GLFW_RELEASE){
         keys[key] = false;
@@ -279,20 +258,14 @@ void doMovement()
     if(keys[GLFW_KEY_L])
         camera.ProcessKeyboard(ROTATE_RIGHT, deltaTime);
 
-    if (useContinuousPerlinMoves) {
-        if(keys[GLFW_KEY_RIGHT]) {
-            scene.moveNoise(vec2(OFFSET_QTY, 0.0));
-        }
-        if(keys[GLFW_KEY_LEFT]) {
-            scene.moveNoise(vec2(-OFFSET_QTY, 0.0));
-        }
-        if(keys[GLFW_KEY_UP]) {
-            scene.moveNoise(vec2(0.0, OFFSET_QTY));
-        }
-        if(keys[GLFW_KEY_DOWN]) {
-            scene.moveNoise(vec2(0.0, -OFFSET_QTY));
-        }
-    }
+    vec2 actualPos = sceneControler.position();
+    vec3 newPos = camera.getPos();
+    float displacementX = newPos.x - actualPos.x;
+    float displacementY = newPos.z - actualPos.y;
+    sceneControler.move({displacementX, displacementY});
+    vec2 updatedPos = sceneControler.position();
+    vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
+    camera.setPos(cameraPos);
 }
 
 int main(int argc, char *argv[]) {
