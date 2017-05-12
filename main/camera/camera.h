@@ -155,7 +155,11 @@ public:
         std::cout << "pitch:" << this->Pitch << endl;
     }
     void setPos(glm::vec3 pos){
-    this->Position = pos;
+        this->Position = pos;
+    }
+
+    void setFront(glm::vec3 target){
+        this->Front = target - this->Position;
     }
 
 

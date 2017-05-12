@@ -27,10 +27,16 @@ ScreenQuad screenquad;
 Light light;
 Material material;
 BezierCurve bezier({
-                    vec3(0, 0, 0),
-                    vec3(0, 1, 0),
-                    vec3(1, 0, 0),
-                    vec3(1, 1, 0)
+                    vec3(-0.3, 2.5, -0.3),
+                    vec3(0, 0, -0.4),
+                    vec3(1, 0.5, 0),
+                    vec3(0.6, 1.5, 1)
+                   });
+BezierCurve bezierTarget({
+                    vec3(-0.3, 2.5, -0.3),
+                    vec3(0, 0, -0.4),
+                    vec3(1, 0.5, 0),
+                    vec3(0.6, 1.5, 1)
                    });
 
 bool keys[1024];
@@ -50,7 +56,7 @@ int screenHeight = 1080;
 float lastX = 0.0f;
 float lastY = 0.0f;
 
-const float DISPLACEMENT_TIME = 20.f;
+const float DISPLACEMENT_TIME = 15.f;
 const float OFFSET_QTY = 0.04f;
 float start_time = 0.f;
 
@@ -119,10 +125,15 @@ void Display() {
     vec4 tmp = rotMatrix * vec4(4.0, 2.0, 0.0, 1.0);
     vec3 pos = vec3(tmp.x, tmp.y, tmp.z);
     light.setPos(pos);
-
+    float dtime = 0.1;
     float bezierTime = (glfwGetTime() - start_time)/DISPLACEMENT_TIME;
+    if(bezierTime <= 1.f - dtime){
     vec3 cameraPos = bezier.getPoint(bezierTime);
     camera.setPos(cameraPos);
+    vec3 cameraTarget = bezier.getPoint(bezierTime + dtime);
+    camera.setFront(cameraTarget);
+    }
+
     //Compute matrices
 
     view_matrix = camera.GetViewMatrix();

@@ -1,7 +1,3 @@
-/*
- * Code taken and adapted from https://learnopengl.com/#!Getting-started/Camera
- */
-
 #pragma once
 
 // Std. Includes
@@ -50,12 +46,12 @@ public:
         return res;
     }
 
-    array<float, 20> getTimes(){
+    array<float, 40> getTimes(){
         return s_times;
     }
 
 private:
-    constexpr static int SAMPLE_NUMBER = 20;
+    constexpr static int SAMPLE_NUMBER = 40;
     const float TIME_STEP = 1.f / SAMPLE_NUMBER;
     const float SPEED = 0.005f;
 
