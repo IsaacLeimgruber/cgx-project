@@ -1,5 +1,5 @@
 #version 410 core
-
+uniform sampler2D diffuseMap;
 uniform sampler2D heightMap;
 uniform sampler2D mirrorMap;
 uniform sampler2D normalMap;
@@ -13,6 +13,7 @@ uniform float alpha;
 uniform float time;
 uniform vec2 offset;
 
+in float tHeight_F;
 in vec2 uv_F;
 in vec3 normal_F;
 in vec3 normal_MV_F;
@@ -30,7 +31,7 @@ const vec3 Y = vec3(0.0f, 1.0f, 0.0f);
 const float cosWaterReflectionAngleStart = 0.20f;
 const float cosWaterReflectionAngleEnd = 0.90f;
 const float waterReflectionDistanceStart = 2.0f;
-const float waterReflectionDistanceEnd = 4.0f;
+const float waterReflectionDistanceEnd = 12.0f;
 const float rippleNormalWeight = 0.2f;
 
 const int numSamplingPositions = 9;
@@ -75,6 +76,25 @@ vec3 applyFog( in vec3  rgb,       // original color of the pixel
                            vec3(1.0,0.9,0.7), // yellowish
                            pow(sunAmount,16.0) );
     return rgb * rgbAmount + fogColor * fogAmount;
+}
+
+//Assume dest is opaque
+vec4 blendColors(in vec4 src, in vec3 dst){
+    vec4 v;
+
+    v.a = 1.0f;
+    v.rgb = (src.rgb * src.a + dst.rgb * (1.0 - src.a));
+
+    return v;
+}
+
+vec4 blendColors(in vec4 src, in vec4 dst){
+    vec4 v;
+
+    v.a = src.a + dst.a * (1.0f - src.a);
+    v.rgb = (src.rgb * src.a + dst.rgb * dst.a * (1.0 - src.a)) / v.a;
+
+    return v;
 }
 
 void main() {
@@ -122,6 +142,8 @@ void main() {
     vec2 reflectOffset = normalize(eyeNormal.xy) * length (flatNormal) * rippleNormalWeight;
 
     vec3 reflection = texture(mirrorMap, vec2(_u, _v) + reflectOffset).rgb;
+
+
     vec3 lightingResult = (reflection * La);
 
     if(cosNL > 0.0){
@@ -139,6 +161,11 @@ void main() {
                                 );
 
     //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -vpoint_MV_F.xyz, vec3(0.0,0.0,0.0));
-    color = vec4(lightingResult, clamp(reflectionAlpha, 0.0f, 1.0f));
-    //color = vec4(shadowCoord_F);
+
+    vec4 seaColor = vec4(reflection, clamp(reflectionAlpha, 0.0f, 1.0f));
+
+    vec4 tmpColor = blendColors(texture(diffuseMap, uv_F * 2.0f).rgba, seaColor);
+
+    color = mix(seaColor, tmpColor, smoothstep(-0.2, 0.015, tHeight_F));
+
 }

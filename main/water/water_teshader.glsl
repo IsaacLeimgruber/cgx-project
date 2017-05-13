@@ -21,6 +21,7 @@ in vec2 uv_TE[];
 in vec2 terrainGradient_TE[];
 in float terrainHeight_TE[];
 
+out float tHeight_F;
 out vec2 uv_F;
 out vec2 reflectOffset_F;
 out vec3 vpoint_F;
@@ -77,7 +78,7 @@ void main()
 
     // Interpolate the attributes of the output vertex using the barycentric coordinates
     uv_F = interpolate2D(uv_TE[0], uv_TE[1], uv_TE[2], uv_TE[3]);
-    float tHeight = interpolate2D(terrainHeight_TE[0], terrainHeight_TE[1], terrainHeight_TE[2], terrainHeight_TE[3]);
+    tHeight_F = interpolate2D(terrainHeight_TE[0], terrainHeight_TE[1], terrainHeight_TE[2], terrainHeight_TE[3]);
     vec2 tGradient = interpolate2D(terrainGradient_TE[0], terrainGradient_TE[1], terrainGradient_TE[2], terrainGradient_TE[3]);
     vpoint_F = interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]);
 
@@ -85,7 +86,7 @@ void main()
 
         amps[i] *=
                 1.3 - 1.0 *(
-                exp(-pow(5.0 * clamp(tHeight, -0.5, 0.0), 2.0)));
+                exp(-pow(5.0 * clamp(tHeight_F, -0.5, 0.0), 2.0)));
 
         float waveParam = (dot(dirs[i], vec2(vpoint_F.xz)) * freqs[i]) + (phis[i] * time);
 

@@ -58,7 +58,7 @@ void main() {
 
     float alphaVal = min(fadeCoeff, smoothstep(0.8, 1.0, depthVal));
 
-    vec3 tmpColor = mix(vec3(1.0f), La + Ld, smoothstep(0.0f, 1.0, depthVal));
+    vec3 tmpColor = mix(vec3(1.0f), Ld, smoothstep(0.0f, 1.0, depthVal));
 
     color = vec4(tmpColor, clamp(alphaVal, 0.0f, 1.0f));
 }

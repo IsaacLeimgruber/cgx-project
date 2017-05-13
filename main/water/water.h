@@ -13,8 +13,7 @@ class Water: public GridMesh{
 
     GLuint time_id;
     GLuint timeDebug_id;
-    GLuint translationId;
-    GLuint translationDebugId;
+    GLuint diffuseMap_id;
 
     public:
         Water(){
@@ -41,14 +40,14 @@ class Water: public GridMesh{
             // vertex coordinates and indices
             genGrid(16);
 
-
-            loadNormalMap(Utils::loadImage("waterNormalMap2.tga"));
-
-
             // load texture
+            loadNormalMap(Utils::loadImage("waterNormalMap2.tga"));
             loadHeightMap(heightMap);
             loadMirrorMap(mirrorMap);
             loadShadowMap(shadowMap);
+
+            diffuseMap_id = Utils::loadImage("waterColorTexture.tga");
+            glUniform1i(glGetUniformLocation(program_id_, "diffuseMap"), 4);
 
             //Tesselation configuration
             glPatchParameteri(GL_PATCH_VERTICES, 4);
@@ -104,6 +103,12 @@ class Water: public GridMesh{
 
             //deactivateTextureUnits();
             glUseProgram(0);
+        }
+
+        void activateTextureUnits(){
+            GridMesh::activateTextureUnits(true);
+            glActiveTexture(GL_TEXTURE0 + 4);
+            glBindTexture(GL_TEXTURE_2D, diffuseMap_id);
         }
 
 };

@@ -9,7 +9,7 @@ struct LightProgramIds{
 class Light{
 private:
     glm::vec3 defaultLa = glm::vec3(0.35, 0.35, 0.35);
-    glm::vec3 defaultLd = glm::vec3(1.1, 1.1, 1.1);
+    glm::vec3 defaultLd = glm::vec3(1.0, 1.0, 1.0);
     glm::vec3 defaultLs = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 La = defaultLa;
     glm::vec3 Ld = defaultLd;

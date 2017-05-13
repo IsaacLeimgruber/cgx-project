@@ -82,7 +82,7 @@ vec3 applyFog( in vec3  rgb,       // original color of the pixel
 void main() {
 
     if(mirrorPass){
-        if(vpoint_F.y < -0.05f){
+        if(vpoint_F.y < 0.0f){
             discard;
         }
     }
