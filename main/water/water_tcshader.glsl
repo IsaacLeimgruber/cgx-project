@@ -25,7 +25,7 @@ out vec2 terrainGradient_TE[];
 const float CLOSEST_TESS_DISTANCE = 0.2f;
 const float FURTHEST_TESS_DISTANCE = 2.5f;
 const float MIN_TESSELATION = 2.0f;
-const float MAX_TESSELATION = 16.0f;
+const float MAX_TESSELATION = 8.0f;
 
 float GetTessLevel(in float Distance0, in float Distance1)
 {

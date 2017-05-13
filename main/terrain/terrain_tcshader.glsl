@@ -16,8 +16,8 @@ out vec2 uv_TE[];
 
 const float CLOSEST_TESS_DISTANCE = 0.2f;
 const float FURTHEST_TESS_DISTANCE = 2.5f;
-const float MIN_TESSELATION = 1.0f;
-const float MAX_TESSELATION = 1.0f;
+const float MIN_TESSELATION = 4.0f;
+const float MAX_TESSELATION = 16.0f;
 
 float GetTessLevel(in float Distance0, in float Distance1)
 {
@@ -38,8 +38,8 @@ bool offscreen(in vec3 v){
 
     //Rough estimate
     return  any(bvec2(vProj.z < -1.1f, vProj.z > 1.1f)) ||
-            any(lessThan(vProj.xy, vec2(-2.0f))) ||
-            any(greaterThan(vProj.xy, vec2(2.0f)));
+            any(lessThan(vProj.xy, vec2(-1.6f))) ||
+            any(greaterThan(vProj.xy, vec2(1.6f)));
 }
 
 void main()

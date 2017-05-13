@@ -82,7 +82,7 @@ vec3 applyFog( in vec3  rgb,       // original color of the pixel
 void main() {
 
     if(mirrorPass){
-        if(vpoint_F.y < 0.0f){
+        if(vpoint_F.y < -0.05f){
             discard;
         }
     }
@@ -172,5 +172,5 @@ void main() {
     }
 
     //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -viewDir_F, lightDir);
-    color = vec4(lightingResult, 1.0f);
+    color = vec4(clamp(lightingResult, vec3(0.0f), vec3(1.0f)), 1.0f);
 }

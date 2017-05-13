@@ -27,8 +27,10 @@ out vec4 color;
 
 const vec3 WATER_COLOR = vec3(75.0f,126.0f,157.0f) / 255.0f;
 const vec3 Y = vec3(0.0f, 1.0f, 0.0f);
-const float cosWaterReflectionAngle = 0.4f;
-const float waterReflectionDistance = 3.0f;
+const float cosWaterReflectionAngleStart = 0.20f;
+const float cosWaterReflectionAngleEnd = 0.90f;
+const float waterReflectionDistanceStart = 2.0f;
+const float waterReflectionDistanceEnd = 4.0f;
 const float rippleNormalWeight = 0.2f;
 
 const int numSamplingPositions = 9;
@@ -85,9 +87,9 @@ void main() {
     float visibility = 0.0f;
 
     vec3 rippleNormal =
-            texture(normalMap, (uv_F + vec2(0.0, 0.005 * time)) * 11.0).rgb * 2.0 - 1.0f
+            texture(normalMap, (uv_F + vec2(0.0, 0.005 * time)) * 7.0).rgb * 2.0 - 1.0f
             +
-            texture(normalMap, (uv_F + vec2(0.0, -0.005 * time)) * 7.0).rgb * 2.0 - 1.0f;
+            texture(normalMap, (uv_F + vec2(0.0, -0.005 * time)) * 5.0).rgb * 2.0 - 1.0f;
 
     rippleNormal = vec3(rippleNormal.x, rippleNormal.z, -rippleNormal.y);
     vec3 completeNormal = normalize(normal + rippleNormalWeight * rippleNormal);
@@ -130,11 +132,11 @@ void main() {
                 (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 256.0) * Ls));
     }
 
-    float reflectionAlpha = mix(0.95f, 0.3f, clamp(
-                                (dot(viewDir, normal_MV) - cosWaterReflectionAngle) / (1.0f - cosWaterReflectionAngle)
-                                *
-                                (waterReflectionDistance + vpoint_MV_F.z),
-                                0.0f, 1.0f));
+    float reflectionAlpha = mix(0.95f, 0.3f, min(
+                                smoothstep(cosWaterReflectionAngleStart, cosWaterReflectionAngleEnd, dot(viewDir, normal_MV))
+                                ,
+                                1.0 - smoothstep(waterReflectionDistanceStart, waterReflectionDistanceEnd, -vpoint_MV_F.z))
+                                );
 
     //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -vpoint_MV_F.xyz, vec3(0.0,0.0,0.0));
     color = vec4(lightingResult, clamp(reflectionAlpha, 0.0f, 1.0f));
