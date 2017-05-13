@@ -7,7 +7,7 @@
 #include "camera/fractionalview.h"
 
 struct ProgramIds{
-    GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id, zoom_id, zoomOffset_id;
+    GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id, zoom_id, zoomOffset_id, translation_id;
 };
 
 class GridMesh: public ILightable{
@@ -101,6 +101,7 @@ class GridMesh: public ILightable{
             normalProgramIds.SHADOWMVP_id = glGetUniformLocation(program_id_, "SHADOWMVP");
             normalProgramIds.zoom_id = glGetUniformLocation(program_id_, "zoom");
             normalProgramIds.zoomOffset_id = glGetUniformLocation(program_id_, "zoomOffset");
+            normalProgramIds.translation_id = glGetUniformLocation(program_id_, "translation");
 
             glUseProgram(shadow_program_id_);
             shadowProgramIds.MVP_id = glGetUniformLocation(shadow_program_id_, "MVP");
@@ -109,6 +110,7 @@ class GridMesh: public ILightable{
             shadowProgramIds.SHADOWMVP_id = glGetUniformLocation(shadow_program_id_, "SHADOWMVP");
             shadowProgramIds.zoom_id = glGetUniformLocation(shadow_program_id_, "zoom");
             shadowProgramIds.zoomOffset_id = glGetUniformLocation(shadow_program_id_, "zoomOffset");
+            shadowProgramIds.translation_id = glGetUniformLocation(shadow_program_id_, "translation");
 
             glUseProgram(debug_program_id_);
             debugProgramIds.MVP_id = glGetUniformLocation(debug_program_id_, "MVP");
@@ -117,6 +119,8 @@ class GridMesh: public ILightable{
             debugProgramIds.SHADOWMVP_id = glGetUniformLocation(debug_program_id_, "SHADOWMVP");
             debugProgramIds.zoom_id = glGetUniformLocation(debug_program_id_, "zoom");
             debugProgramIds.zoomOffset_id = glGetUniformLocation(debug_program_id_, "zoomOffset");
+            debugProgramIds.translation_id = glGetUniformLocation(debug_program_id_, "translation");
+
 
             glUseProgram(program_id_);
         }

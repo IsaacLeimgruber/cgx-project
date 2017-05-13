@@ -32,7 +32,7 @@ private:
     const int sectors = 24;
 
     const vec3 sunOrbitXAxis = vec3(1.0, 0.0, 0.0);
-    const vec3 sunOrbitYAxis = vec3(0.0, 1.0, 0.0);
+    const vec3 sunOrbitYAxis = vec3(0.0, 0.958, 0.287);
     const vec3 sunOrbitCenter = vec3(0.0, 0.0, 0.0);
 
     //Sky color values
@@ -64,8 +64,8 @@ private:
     const float DAYGRADIENT_END = 5.0f;
 
     // Color change positions values
-    const float sunsetEnd = 1.0f;
-    const float sunsetBegin = -0.5f;
+    const float sunsetEnd = 2.5f;
+    const float sunsetBegin = 0.0f;
     const float nightBegin = -2.0f;
     const float outerSpaceBegin = 4.0f;
     const float outerSpaceEnd = 8.0f;
@@ -281,6 +281,7 @@ public:
             bottomSkyColor = mix(SUNSETCOL_bottomSky, mistColor, sunSetCoeff);
             topSkyColor = mix(SUNSETCOL_topSky, blueSkyColor, sunSetCoeff);
             light->setDiffuseIntensity(mix(LIGHTCOL_SUNSET, light->getDefaultDiffuseIntensity(), sunSetCoeff));
+            light->setSpecularIntensity(mix(LIGHTCOL_SUNSET, light->getDefaultDiffuseIntensity(), sunSetCoeff));
 
             sunColor = mix(SUN_COLOR_SUNSET, SUN_COLOR, sunSetCoeff);
             domeGradBottom = mix(SUNSETGRADIENT_START, DAYGRADIENT_START, sunSetCoeff);
@@ -290,7 +291,8 @@ public:
         else {
             bottomSkyColor = mistColor;
             topSkyColor = blueSkyColor;
-            light->setDiffuseIntensity(light->getDefaultDiffuseIntensity());
+            light->resetDiffuseIntensity();
+            light->resetSpecularIntensity();
         }
 
         //Nuance the sky's color gradient based on altitude

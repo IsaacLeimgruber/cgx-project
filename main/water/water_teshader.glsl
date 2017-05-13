@@ -72,6 +72,7 @@ void main()
 
     for(int i = 0; i < 5; i++){
         dirs[i] = normalize(dirs[i]);
+        amps[i] *= 1.5f;
     }
 
     // Interpolate the attributes of the output vertex using the barycentric coordinates

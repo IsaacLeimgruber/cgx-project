@@ -68,11 +68,9 @@ class Grid: public GridMesh{
 
             setupLocations();
             mirrorPassId = glGetUniformLocation(program_id_, "mirrorPass");
-            translationId = glGetUniformLocation(program_id_, "translation");
 
             glUseProgram(debug_program_id_);
             mirrorPassDebugId = glGetUniformLocation(debug_program_id_, "mirrorPass");
-            translationDebugId = glGetUniformLocation(debug_program_id_, "translation");
             glUseProgram(program_id_);
 
             // to avoid the current object being polluted
@@ -99,7 +97,7 @@ class Grid: public GridMesh{
             glUseProgram(current_program_id_);
 
             glUniformMatrix4fv(currentProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
-            glUniform2fv(translationId, 1, glm::value_ptr(translation));
+            glUniform2fv(currentProgramIds.translation_id, 1, glm::value_ptr(translation));
             activateTextureUnits();
 
             //update light
@@ -129,7 +127,7 @@ class Grid: public GridMesh{
 
                 // if mirror pass is enabled then we cull underwater fragments
                 glUniform1i(mirrorPassDebugId, mirrorPass);
-                glUniform2fv(translationId, 1, glm::value_ptr(translation));
+                glUniform2fv(currentProgramIds.translation_id, 1, glm::value_ptr(translation));
                 drawFrame();
             }
 

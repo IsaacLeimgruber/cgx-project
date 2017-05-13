@@ -41,6 +41,7 @@ class Water: public GridMesh{
             // vertex coordinates and indices
             genGrid(16);
 
+
             loadNormalMap(Utils::loadImage("waterNormalMap2.tga"));
 
 
@@ -54,12 +55,9 @@ class Water: public GridMesh{
 
             setupLocations();
             time_id = glGetUniformLocation(program_id_, "time");
-            translationId = glGetUniformLocation(program_id_, "translation");
-
 
             glUseProgram(debug_program_id_);
             timeDebug_id = glGetUniformLocation(debug_program_id_, "time");
-            translationDebugId = glGetUniformLocation(debug_program_id_, "translation");
 
             // to avoid the current object being polluted
             glBindVertexArray(0);
@@ -79,7 +77,7 @@ class Water: public GridMesh{
 
             glUniformMatrix4fv(normalProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
             glUniform1f(time_id, glfwGetTime());
-            glUniform2fv(translationId, 1, glm::value_ptr(translation));
+            glUniform2fv(currentProgramIds.translation_id, 1, glm::value_ptr(translation));
 
             if(light != nullptr)
                 light->updateProgram(current_program_id_);
@@ -96,7 +94,7 @@ class Water: public GridMesh{
                 current_program_id_ = debug_program_id_;
                 currentProgramIds = debugProgramIds;
                 glUniform1f(timeDebug_id, glfwGetTime());
-                glUniform2fv(translationDebugId, 1, glm::value_ptr(translation));
+                glUniform2fv(currentProgramIds.translation_id, 1, glm::value_ptr(translation));
                 setupMVP(MVP, MV, NORMALM);
                 setupOffset(FV);
 

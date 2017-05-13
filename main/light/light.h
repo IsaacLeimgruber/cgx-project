@@ -51,6 +51,18 @@ public:
         Ls = c;
     }
 
+    void resetAmbientIntensity(){
+        La = defaultLa;
+    }
+
+    void resetDiffuseIntensity(){
+        Ld = defaultLd;
+    }
+
+    void resetSpecularIntensity(){
+        Ls = defaultLs;
+    }
+
     glm::vec3 getDefaultAmbientIntensity(){
         return defaultLa;
     }
