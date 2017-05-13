@@ -9,6 +9,7 @@
 #include "framebuffer.h"
 #include "screenquad/screenquad.h"
 #include "large_scene.h"
+#include "scene_controler.h"
 #include "camera/camera.h"
 #include "camera/fractionalview.h"
 #include "light/light.h"
@@ -20,8 +21,8 @@
 using namespace glm;
 
 LargeScene scene;
+SceneControler sceneControler(scene);
 SkyDome skyDome;
-Perlin perlin;
 Camera camera;
 PerlinTexture perlinTexture;
 ColorAndDepthFBO screenQuadBuffer, reflectionBuffer, reflectionBufferPostProcessing;
@@ -31,10 +32,12 @@ BlurQuad blurQuad;
 Light light;
 Material material;
 int postProcessingTextureId;
+float perlinTextureSize = 512;
+
 bool keys[1024];
-bool useContinuousPerlinMoves = true;
 bool firstMouse = false;
 bool wireframeDebugEnabled = false;
+bool enableBlurPostProcess = true;
 // Window size in screen coordinates
 int window_width_sc;
 int window_height_sc;
@@ -78,12 +81,12 @@ void Init() {
 
     // buffers must be initialized in that order
     int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGBA32F, GL_RGBA, GL_FLOAT, false, false);
-    scene.initPerlin();
+
+    scene.initPerlin(perlinTextureSize, perlinTextureSize);
     reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     reflectionBufferPostProcessing.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
-    int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
 
-    perlin.Init();
+    int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
 
     screenquad.Init(screenQuadBuffer_texture_id, 0);
     blurQuad.Init(screenWidth, screenHeight, reflectionBuffer.getColorTexture());
@@ -111,27 +114,29 @@ void Init() {
 void computeReflections(){
 
     reflectionBuffer.Bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
-        scene.draw(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true, false);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
+    scene.draw(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true, false);
     reflectionBuffer.Unbind();
 
     //Code below performs blur on reflection
-    blurQuad.setRenderingPassNumber(0);
-    blurQuad.updateTextureId(reflectionBuffer.getColorTexture());
+    if(enableBlurPostProcess){
+        blurQuad.setRenderingPassNumber(0);
+        blurQuad.updateTextureId(reflectionBuffer.getColorTexture());
 
-    reflectionBufferPostProcessing.Bind();
+        reflectionBufferPostProcessing.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         blurQuad.Draw();
-    reflectionBufferPostProcessing.Unbind();
+        reflectionBufferPostProcessing.Unbind();
 
-    blurQuad.setRenderingPassNumber(1);
-    blurQuad.updateTextureId(reflectionBufferPostProcessing.getColorTexture());
+        blurQuad.setRenderingPassNumber(1);
+        blurQuad.updateTextureId(reflectionBufferPostProcessing.getColorTexture());
 
-    reflectionBuffer.Bind();
+        reflectionBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         blurQuad.Draw();
-    reflectionBuffer.Unbind();
+        reflectionBuffer.Unbind();
+    }
 }
 
 void Display() {
@@ -146,7 +151,6 @@ void Display() {
     }
 
     //Compute matrices
-
     view_matrix = camera.GetViewMatrix();
     mirrored_view_matrix = camera.GetMirroredViewMatrix(0.0f);
 
@@ -166,16 +170,16 @@ void Display() {
     depth_bias_matrix = biasMatrix * depth_mvp;
 
     shadowBuffer.Bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        scene.draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    scene.draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
     shadowBuffer.Unbind();
 
     computeReflections();
 
     screenQuadBuffer.Bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
-        scene.draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
+    scene.draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
     screenQuadBuffer.Unbind();
 
 
@@ -245,6 +249,9 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         keys[key] = true;
 
         switch(key){
+        case GLFW_KEY_B:
+            enableBlurPostProcess = !enableBlurPostProcess;
+            break;
         case GLFW_KEY_F:
             scene.toggleWireFrame();
             break;
@@ -256,25 +263,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             break;
         case GLFW_KEY_N:
             scene.toggleDebugMode();
-            break;
-        case GLFW_KEY_Q:
-            useContinuousPerlinMoves = !useContinuousPerlinMoves;
-            break;
-        case GLFW_KEY_RIGHT:
-            if (!useContinuousPerlinMoves)
-                scene.moveCols(LargeScene::DOWN);
-            break;
-        case GLFW_KEY_LEFT:
-            if (!useContinuousPerlinMoves)
-                scene.moveCols(LargeScene::UP);
-            break;
-        case GLFW_KEY_UP:
-            if (!useContinuousPerlinMoves)
-                scene.moveRows(LargeScene::DOWN);
-            break;
-        case GLFW_KEY_DOWN:
-            if (!useContinuousPerlinMoves)
-                scene.moveRows(LargeScene::UP);
             break;
         }
     } else if(action == GLFW_RELEASE){
@@ -307,20 +295,14 @@ void doMovement()
     if(keys[GLFW_KEY_L])
         camera.ProcessKeyboard(ROTATE_RIGHT, deltaTime);
 
-    if (useContinuousPerlinMoves) {
-        if(keys[GLFW_KEY_RIGHT]) {
-            scene.moveNoise(vec2(OFFSET_QTY, 0.0));
-        }
-        if(keys[GLFW_KEY_LEFT]) {
-            scene.moveNoise(vec2(-OFFSET_QTY, 0.0));
-        }
-        if(keys[GLFW_KEY_UP]) {
-            scene.moveNoise(vec2(0.0, OFFSET_QTY));
-        }
-        if(keys[GLFW_KEY_DOWN]) {
-            scene.moveNoise(vec2(0.0, -OFFSET_QTY));
-        }
-    }
+    vec2 actualPos = sceneControler.position();
+    vec3 newPos = camera.getPos();
+    float displacementX = newPos.x - actualPos.x;
+    float displacementY = newPos.z - actualPos.y;
+    sceneControler.move({displacementX, displacementY});
+    vec2 updatedPos = sceneControler.position();
+    vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
+    camera.setPos(cameraPos);
 }
 
 int main(int argc, char *argv[]) {

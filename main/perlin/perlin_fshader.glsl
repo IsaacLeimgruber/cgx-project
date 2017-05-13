@@ -263,8 +263,7 @@ vec3 dfBm(vec2 P) {
 
 void main() {
 
-    float pixSpace = 1.0f / 1024.0f;
-    vec3 noise = dfBm(uv + (pos_offset * (1.0 - pixSpace)));
+    vec3 noise = dfBm(uv + pos_offset);
 
     //scale to ensure everything is btwn 0 and 1
     //noise.y =

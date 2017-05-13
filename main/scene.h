@@ -12,8 +12,8 @@ class Scene {
     int noiseBuffer_texture_id;
 
 public:
-    void initPerlin() {
-        noiseBuffer_texture_id = perlinTexture.init();
+    void initPerlin(int textureWidth = 1024, int textureHeight = 1024) {
+        noiseBuffer_texture_id = perlinTexture.init(textureWidth, textureHeight);
     }
 
     void init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {

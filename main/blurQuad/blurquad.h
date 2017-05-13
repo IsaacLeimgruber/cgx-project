@@ -17,6 +17,7 @@ class BlurQuad {
 
         float screenquad_width_;
         float screenquad_height_;
+        float texScale = 0.5f; //Scale the texture for the blur lookup
         float sigma = 1.0f;
         bool sigmaIsDirty = true;
         float G[BLUR_SIZE];
@@ -100,9 +101,9 @@ class BlurQuad {
             texHeight_id = glGetUniformLocation(program_id_, "tex_height");
 
             glUniform1f(texWidth_id,
-                        this->screenquad_width_);
+                        this->screenquad_width_ * texScale);
             glUniform1f(texHeight_id,
-                        this->screenquad_height_);
+                        this->screenquad_height_ * texScale);
 
             // to avoid the current object being polluted
             glBindVertexArray(0);
