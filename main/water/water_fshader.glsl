@@ -33,6 +33,7 @@ const float cosWaterReflectionAngleEnd = 0.90f;
 const float waterReflectionDistanceStart = 2.0f;
 const float waterReflectionDistanceEnd = 12.0f;
 const float rippleNormalWeight = 0.2f;
+const float scumScale = 2.0f;
 
 const int numSamplingPositions = 9;
 uniform vec2 kernel[9] = vec2[9]
@@ -104,12 +105,13 @@ void main() {
     vec3 normal = normalize(normal_F);
     float _u = gl_FragCoord.x / window_size.x;
     float _v = 1.0f - gl_FragCoord.y / window_size.y;
+    float valTimeShift = 0.005 * time;
     float visibility = 0.0f;
 
     vec3 rippleNormal =
-            texture(normalMap, (uv_F + vec2(0.0, 0.005 * time)) * 7.0).rgb * 2.0 - 1.0f
+            texture(normalMap, (uv_F + vec2(0.0, valTimeShift)) * 7.0).rgb * 2.0 - 1.0f
             +
-            texture(normalMap, (uv_F + vec2(0.0, -0.005 * time)) * 5.0).rgb * 2.0 - 1.0f;
+            texture(normalMap, (uv_F + vec2(0.0, -valTimeShift)) * 5.0).rgb * 2.0 - 1.0f;
 
     rippleNormal = vec3(rippleNormal.x, rippleNormal.z, -rippleNormal.y);
     vec3 completeNormal = normalize(normal + rippleNormalWeight * rippleNormal);
@@ -144,14 +146,21 @@ void main() {
     vec3 reflection = texture(mirrorMap, vec2(_u, _v) + reflectOffset).rgb;
 
 
-    vec3 lightingResult = (reflection * La);
+    vec4 scumColor = texture(diffuseMap, (uv_F + vec2(0.0f, valTimeShift)) * scumScale).rgba;
+    vec3 lightingResult = reflection * La;
+    vec3 lightingResultScum =  scumColor.rgb;
 
     if(cosNL > 0.0){
+
+        vec3 cosNLDiffused = cosNL * Ld;
+
         vec3 reflectionDir = normalize(2.0f * normal_MV * cosNL - lightDir);
-         lightingResult += visibility *
-                ((vec3(0.8, 0.8, 0.8) * reflection * cosNL * Ld)
-                +
-                (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 256.0) * Ls));
+        lightingResult += visibility *
+               ((vec3(0.8, 0.8, 0.8) * reflection * cosNLDiffused)
+               +
+               (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 256.0) * Ls));
+        lightingResultScum += visibility *
+               (lightingResultScum * cosNLDiffused);
     }
 
     float reflectionAlpha = mix(0.95f, 0.3f, min(
@@ -162,10 +171,9 @@ void main() {
 
     //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -vpoint_MV_F.xyz, vec3(0.0,0.0,0.0));
 
-    vec4 seaColor = vec4(reflection, clamp(reflectionAlpha, 0.0f, 1.0f));
+    vec4 seaColor = vec4(lightingResult, reflectionAlpha);
+    vec4 tmpColor = blendColors(vec4(lightingResultScum, scumColor.a), seaColor);
 
-    vec4 tmpColor = blendColors(texture(diffuseMap, uv_F * 2.0f).rgba, seaColor);
-
-    color = mix(seaColor, tmpColor, smoothstep(-0.2, 0.015, tHeight_F));
+    color = mix(seaColor, tmpColor, smoothstep(-0.15, 0.015, tHeight_F) * smoothstep(0.001, 0.006, vpoint_F.y));
 
 }

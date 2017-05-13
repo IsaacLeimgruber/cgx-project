@@ -60,8 +60,10 @@ float randomAngle(in vec3 seed, in float freq)
    return random(seed, freq) * 6.283285f;
 }
 
-const float fogStart = 2.5f;
+const float fogStart = 3.5f;
 const float fogEnd = 5.0f;
+const float rgbStart = 3.5f;
+const float rgbEnd = 5.0f;
 
 vec3 applyFog( in vec3  rgb,       // original color of the pixel
                in float distance,  // camera to point distance
@@ -69,11 +71,11 @@ vec3 applyFog( in vec3  rgb,       // original color of the pixel
                in vec3 sunDir)
 {
     float d = clamp( (distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-    float fogAmount = clamp(1.0 - exp(-d * 3.0), 0.0, 1.0);
-    float rgbAmount = clamp(exp(-d * 2.0), 0.0, 1.0);
+    float fogAmount = smoothstep(fogStart, fogEnd, distance);
+    float rgbAmount = 1.0 - smoothstep(rgbStart, rgbEnd, distance);
     float sunAmount = max( dot( rayDir, sunDir ), 0.0 );
-    vec3  fogColor  = mix( vec3(0.8,0.8,0.8), // greyish
-                           vec3(1.0,0.9,0.7), // yellowish
+    vec3  fogColor  = mix( vec3(0.9, 0.9, 0.98), // greyish
+                           Ld, // yellowish
                            pow(sunAmount,16.0) );
     return rgb * rgbAmount + fogColor * fogAmount;
 }
@@ -82,7 +84,7 @@ vec3 applyFog( in vec3  rgb,       // original color of the pixel
 void main() {
 
     if(mirrorPass){
-        if(vpoint_F.y < 0.0f){
+        if(vpoint_F.y < -0.005f){
             discard;
         }
     }

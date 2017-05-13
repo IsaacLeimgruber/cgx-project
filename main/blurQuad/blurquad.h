@@ -1,10 +1,6 @@
 #pragma once
 #include "icg_helper.h"
 
-const int FIRST_PASS_NUMBER = 0;
-const int SECOND_PASS_NUMBER = 1;
-const int BLUR_SIZE = 7;
-
 class BlurQuad {
 
     private:
@@ -17,10 +13,7 @@ class BlurQuad {
 
         float screenquad_width_;
         float screenquad_height_;
-        float texScale = 0.5f; //Scale the texture for the blur lookup
-        float sigma = 1.0f;
-        bool sigmaIsDirty = true;
-        float G[BLUR_SIZE];
+        float texScale = 0.3f; //Scale the texture for the blur lookup
 
     public:
 
