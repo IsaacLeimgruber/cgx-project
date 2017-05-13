@@ -68,6 +68,7 @@ public:
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
                scene(iRow, jCol).drawWater(MVP, MV, NORMALM, SHADOWMVP, FV,
+                                      noisePosFor(iRow, jCol),
                                       gridSize * translation(iRow, jCol));
             }
         }

@@ -41,9 +41,10 @@ public:
               const glm::mat4 &NORMALM = IDENTITY_MATRIX,
               const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
               const FractionalView &FV = FractionalView(),
+              const glm::vec2 &offset = glm::vec2(0.0f, 0.0f),
               glm::vec2 translation = glm::vec2(0, 0))
     {
-        water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, translation);
+        water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV, offset, translation);
     }
 
     void setNoisePos(glm::vec2 pos) {

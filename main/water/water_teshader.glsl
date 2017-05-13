@@ -7,8 +7,8 @@ uniform mat4 MV;
 uniform mat4 NORMALM;
 uniform mat4 SHADOWMVP;
 
-uniform vec2 zoomOffset;
-uniform float zoom;
+uniform vec2 translation;
+uniform vec2 offset;
 uniform vec3 lightPos;
 uniform sampler2D normalMap;
 uniform sampler2D heightMap;
@@ -82,13 +82,15 @@ void main()
     vec2 tGradient = interpolate2D(terrainGradient_TE[0], terrainGradient_TE[1], terrainGradient_TE[2], terrainGradient_TE[3]);
     vpoint_F = interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]);
 
+    vec2 uvWithOffset = uv_F + offset;
+
     for(int i = 0; i < 5; i++){
 
         amps[i] *=
                 1.3 - 1.0 *(
                 exp(-pow(5.0 * clamp(tHeight_F, -0.5, 0.0), 2.0)));
 
-        float waveParam = (dot(dirs[i], vec2(vpoint_F.xz)) * freqs[i]) + (phis[i] * time);
+        float waveParam = (dot(dirs[i], uvWithOffset) * freqs[i]) + (phis[i] * time);
 
         //Bring sin in [0,1] for later exponentiation
         float sinTmp = (sin(waveParam) + 1.0f)/2.0f;
