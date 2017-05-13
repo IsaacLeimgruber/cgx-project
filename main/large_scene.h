@@ -12,13 +12,13 @@ class LargeScene {
     enum { NROW = 5, NCOL = 5};
 
     /** the dimension of a small scene as seen per the scene's vertex shader 2 = size([-1;1]) */
-    const float gridSize = 2;
+    const float gridSize = 2.0f;
 
     /** the translation is not full because we want a small overlaping, hence a scaling < 1 */
-    const float translationScale = 0.991f;
+    const float translationScale = 1.0f;
 
     /** counteract the effect of the translationscale for the water mesh to avoid z-fighting **/
-    const float translationCorrection = 1.009f;
+    const float translationCorrection = 1.0f;
 
     template <class T> using Row = std::array<T, NCOL>;
     template <class T> using Matrix = std::array<Row<T>, NROW>;

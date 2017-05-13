@@ -188,7 +188,7 @@ public:
         glViewport(0, 0, width, height);
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        //glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
     }
 
     int Init(int imageWidth, int imageHeight,
@@ -249,6 +249,9 @@ public:
         return colorTextureId;
     }
 
+    GLuint getColorTexture(){
+        return colorTextureId;
+    }
 
     void Cleanup() {
         glDeleteTextures(1, &colorTextureId);
@@ -269,7 +272,7 @@ public:
         glViewport(0, 0, width, height);
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        //glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
     }
 
     int Init(int imageWidth, int imageHeight,

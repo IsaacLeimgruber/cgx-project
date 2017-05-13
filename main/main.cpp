@@ -15,6 +15,7 @@
 #include "material/material.h"
 #include "skydome/skyDome.h"
 #include "perlin/perlin_texture.h"
+#include "blurQuad/blurquad.h"
 
 using namespace glm;
 
@@ -23,12 +24,13 @@ SkyDome skyDome;
 Perlin perlin;
 Camera camera;
 PerlinTexture perlinTexture;
-ColorAndDepthFBO screenQuadBuffer, reflectionBuffer;
+ColorAndDepthFBO screenQuadBuffer, reflectionBuffer, reflectionBufferPostProcessing;
 DepthFBO shadowBuffer;
 ScreenQuad screenquad;
+BlurQuad blurQuad;
 Light light;
 Material material;
-
+int postProcessingTextureId;
 bool keys[1024];
 bool useContinuousPerlinMoves = true;
 bool firstMouse = false;
@@ -77,13 +79,15 @@ void Init() {
     // buffers must be initialized in that order
     int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGBA32F, GL_RGBA, GL_FLOAT, false, false);
     scene.initPerlin();
-    int reflectionBuffer_texture_id = reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
+    reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
+    reflectionBufferPostProcessing.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
 
     perlin.Init();
 
     screenquad.Init(screenQuadBuffer_texture_id, 0);
-    scene.init(shadowBuffer_texture_id, reflectionBuffer_texture_id, &light);
+    blurQuad.Init(screenWidth, screenHeight, reflectionBuffer.getColorTexture());
+    scene.init(shadowBuffer_texture_id, reflectionBuffer.getColorTexture(), &light);
     skyDome.Init();
     skyDome.useLight(&light);
 
@@ -96,12 +100,38 @@ void Init() {
     depth_model_matrix      = IDENTITY_MATRIX;
     depth_mvp               = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix       = biasMatrix * depth_mvp;
-    quad_model_matrix       = IDENTITY_MATRIX;
+    quad_model_matrix       = IDENTITY_MATRIX; //scale(IDENTITY_MATRIX, vec3(1.01f, 1.0, 1.01f));
 
 
     for(auto& key : keys){
         key = false;
     }
+}
+
+void computeReflections(){
+
+    reflectionBuffer.Bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
+        scene.draw(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true, false);
+    reflectionBuffer.Unbind();
+
+    //Code below performs blur on reflection
+    blurQuad.setRenderingPassNumber(0);
+    blurQuad.updateTextureId(reflectionBuffer.getColorTexture());
+
+    reflectionBufferPostProcessing.Bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        blurQuad.Draw();
+    reflectionBufferPostProcessing.Unbind();
+
+    blurQuad.setRenderingPassNumber(1);
+    blurQuad.updateTextureId(reflectionBufferPostProcessing.getColorTexture());
+
+    reflectionBuffer.Bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        blurQuad.Draw();
+    reflectionBuffer.Unbind();
 }
 
 void Display() {
@@ -136,28 +166,26 @@ void Display() {
     depth_bias_matrix = biasMatrix * depth_mvp;
 
     shadowBuffer.Bind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    scene.draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        scene.draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
     shadowBuffer.Unbind();
 
-    // reflection computation
-    reflectionBuffer.Bind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
-    scene.draw(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true, false);
-    reflectionBuffer.Unbind();
+    computeReflections();
 
     screenQuadBuffer.Bind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
-    scene.draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
+        scene.draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
     screenQuadBuffer.Unbind();
+
 
     glViewport(0, 0, window_width, window_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     screenquad.Draw();
     frameCount++;
 }
+
 
 // transforms glfw screen coordinates into normalized OpenGL coordinates.
 vec2 TransformScreenCoords(GLFWwindow* window, int x, int y) {
