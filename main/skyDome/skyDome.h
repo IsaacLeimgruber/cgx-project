@@ -225,8 +225,8 @@ public:
 
         mat4 skyboxMVP = PROJECTION * mat4(mat3(VIEW));
         mat4 sceneMVP = PROJECTION * VIEW * MODEL;
-        mat4 cloudPlaneMVP = sceneMVP * cloudPlaneModelMatrix;
-        mat4 farCloudPlaneMVP = sceneMVP * farCloudPlaneModelMatrix;
+        mat4 cloudPlaneMVP = skyboxMVP * cloudPlaneModelMatrix;
+        mat4 farCloudPlaneMVP = skyboxMVP * farCloudPlaneModelMatrix;
 
         float time = glfwGetTime();
         float theta = 0.05 * time - 1.0;
