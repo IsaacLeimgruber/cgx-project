@@ -11,7 +11,7 @@
 class LargeScene {
 
     /** the dimensions of this LargeScene's rectangular matrix */
-    enum {NROW = 6, NCOL = 6};
+    enum {NROW = 8, NCOL = 8};
 
     /** the dimension of the Grid as seen per its vertex shader 2 = size([-1;1]) */
     const float gridSize = 2.0f;
@@ -160,13 +160,13 @@ private:
     /** redraws the perlin noise inside appropriate height map buffer */
     void recomputeHeightMap(int iRow, int jCol) {
         heightMap(iRow, jCol).Bind();
-        perlin.Draw(noisePosFor(iRow, jCol));
+        perlin.Draw(textureCorrection(noisePosFor(iRow, jCol)));
         heightMap(iRow, jCol).Unbind();
     }
 
     /** the noise position of the grid (i,j) */
     glm::vec2 noisePosFor(int iRow, int jCol) {
-        return textureCorrection(noisePosition + translation(iRow, jCol));
+        return noisePosition + translation(iRow, jCol);
     }
 
     /** reduces the offset of one pixel for perfect heightMap texture juxtaposition */
