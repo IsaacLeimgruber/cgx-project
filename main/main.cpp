@@ -80,7 +80,7 @@ void Init() {
     // buffers must be initialized in that order
     int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGBA32F, GL_RGBA, GL_FLOAT, false, false);
 
-    scene.initPerlin(perlinTextureSize, perlinTextureSize);
+    scene.initHeightMap(perlinTextureSize, perlinTextureSize);
     reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     reflectionBufferPostProcessing.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
 

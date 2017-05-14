@@ -7,37 +7,44 @@
 #include "terrain/terrain.h"
 #include "perlin/perlin.h"
 
-/** A LargeScene is an infinite procedural terrain. Internally, it is a circular grid of Scene objects */
+/** A LargeScene is an infinite procedural terrain. Internally, it is a circular matrix of Grid objects */
 class LargeScene {
 
-    /** the dimensions of the large scene's rectangular matrix */
+    /** the dimensions of this LargeScene's rectangular matrix */
     enum {NROW = 6, NCOL = 6};
 
-    /** the dimension of a small scene as seen per the scene's vertex shader 2 = size([-1;1]) */
+    /** the dimension of the Grid as seen per its vertex shader 2 = size([-1;1]) */
     const float gridSize = 2.0f;
 
     template <class T> using Row = std::array<T, NCOL>;
     template <class T> using Matrix = std::array<Row<T>, NROW>;
 
-    /** the matrix i-coordinate of the scene displayed in the bottom left corner */
+    /** the matrix i-coordinate of the Grid displayed in the bottom left corner */
     int rowStart = 0;
 
-    /** the matrix j-coordinate of the scene displayed in the bottom left corner */
+    /** the matrix j-coordinate of the Grid displayed in the bottom left corner */
     int colStart = 0;
 
-    /** the noise position of the scene displayed in the bottom left corner */
+    /** the noise position of the Grid displayed in the bottom left corner */
     glm::vec2 noisePosition {0, 0};
 
+    /** the grid tile we reuse at each (i,j) position */
     Grid grid;
+
+    /** the grid's water tile we reuse at each (i,j) position */
     Water water;
+
+    /** the noise algorithm */
     Perlin perlin;
+
+    /** resolution of the height maps */
     int heightMapWidth, heightMapHeight;
 
 public:
     enum Direction { UP = +1, DOWN = -1 };
 
-    /** initializes the perlin textures */
-    void initPerlin(int textureWidth = 1024, int textureHeight = 1024) {
+    /** initializes the heightMaps */
+    void initHeightMap(int textureWidth = 1024, int textureHeight = 1024) {
         heightMapWidth = textureWidth;
         heightMapHeight = textureHeight;
         perlin.Init();
@@ -49,7 +56,7 @@ public:
         }
     }
 
-    /** initializes the scenes object */
+    /** initializes the tile objects (grid, water, etc.) */
     void init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
         grid.Init(0, shadowBuffer_texture_id);
         water.Init(0, reflectionBuffer_texture_id, shadowBuffer_texture_id);
@@ -57,7 +64,7 @@ public:
         water.useLight(light);
     }
 
-    /** draws every scenes side by side in an ordered manner */
+    /** draws every grid side by side in an ordered manner */
     void draw(const glm::mat4 &MVP = IDENTITY_MATRIX,
               const glm::mat4 &MV = IDENTITY_MATRIX,
               const glm::mat4 &NORMALM = IDENTITY_MATRIX,
@@ -86,7 +93,7 @@ public:
         }
     }
 
-    /** moves the scenes one column in the given direction, recomputes only obsolete scenes */
+    /** moves the heightMaps one column in the given direction, recomputes only obsolete heightMaps */
     void moveCols(Direction d) {
         int oldColStart = colStart;
         colStart = (colStart - d + NCOL) % NCOL;
@@ -98,7 +105,7 @@ public:
         }
     }
 
-    /** moves the scenes one row in the given direction, recomputes only obsolete scenes */
+    /** moves the heightMaps one row in the given direction, recomputes only obsolete heightMaps */
     void moveRows(Direction d) {
         int oldRowStart = rowStart;
         rowStart = (rowStart - d + NROW) % NROW;
@@ -108,6 +115,12 @@ public:
         for(int jCol = 0; jCol < NCOL; ++jCol) {
             recomputeHeightMap(row, jCol);
         }
+    }
+
+    /** A circle with diameter maximumExtent can contain this whole LargeScene */
+    float maximumExtent(){
+        constexpr float sqrt2 = 1.42;
+        return sqrt2 * max(NROW, NCOL) * gridSize;
     }
 
     void toggleWireFrame() {
@@ -120,10 +133,6 @@ public:
         grid.toggleDebugMode();
     }
 
-    float maximumExtent(){
-        return 1.42 * max(NROW, NCOL) * 2;
-    }
-
     void cleanup() {
         water.Cleanup();
         grid.Cleanup();
@@ -134,35 +143,33 @@ public:
         }
     }
 
-
 private:
-
-    /** the translation to dispay the scene (i,j) in the correct place on screen */
+    /** the translation to dispay the grid (i,j) at the correct place on screen */
     const glm::vec2& translation(int iRow, int jCol) {
         static const Matrix<glm::vec2> translations = initTranslations();
         //return translations[iRow][jCol];
         return translations[(NROW - rowStart + iRow) % NROW][(NCOL - colStart + jCol) % NCOL];
     }
 
-    /** the heightMap (i,j) */
+    /** the height map buffer (i,j) */
     ColorFBO& heightMap(int iRow, int jCol) {
         static Matrix<ColorFBO> maps;
         return maps[iRow][jCol];
     }
 
-    /** redraw the perlin noise inside appropriate buffer */
+    /** redraws the perlin noise inside appropriate height map buffer */
     void recomputeHeightMap(int iRow, int jCol) {
         heightMap(iRow, jCol).Bind();
         perlin.Draw(noisePosFor(iRow, jCol));
         heightMap(iRow, jCol).Unbind();
     }
 
-    /** the noise position of the scene (i,j) */
+    /** the noise position of the grid (i,j) */
     glm::vec2 noisePosFor(int iRow, int jCol) {
         return textureCorrection(noisePosition + translation(iRow, jCol));
     }
 
-    /** reduces the offset of one pixel for perfect heightMap juxtaposition */
+    /** reduces the offset of one pixel for perfect heightMap texture juxtaposition */
     glm::vec2 textureCorrection(glm::vec2 pos_offset) {
         return {
             pos_offset.x * (1 - 1.0 / heightMapWidth),
@@ -182,4 +189,4 @@ private:
     }
 };
 
-#endif // SCENE_H
+#endif // LSCENE_H
