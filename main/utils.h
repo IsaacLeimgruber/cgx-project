@@ -30,7 +30,7 @@ public:
         unsigned char* image = stbi_load(filename, &width, &height, &nb_component, 0);
 
         if(image == nullptr) {
-            throw(string("Failed to load texture"));
+            throw std::runtime_error{"Utils::loadImage stbi_load failed"};
         }
 
         glGenTextures(1, &texId);

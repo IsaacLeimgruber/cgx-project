@@ -31,7 +31,7 @@ private:
                                              &height, &nb_component, 0);
 
             if(image == nullptr) {
-                throw(string("Failed to load texture"));
+                throw std::runtime_error{"Skybox::loadCubemap stbi_load failed"};
             }
             glTexImage2D(
                 GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
