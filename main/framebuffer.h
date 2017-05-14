@@ -163,6 +163,10 @@ public:
         return colorTextureId;
     }
 
+    GLuint id() {
+        return colorTextureId;
+    }
+
     void Bind(){
         glViewport(0, 0, width, height);
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);

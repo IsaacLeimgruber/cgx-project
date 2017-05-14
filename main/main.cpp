@@ -13,8 +13,7 @@
 #include "camera/fractionalview.h"
 #include "light/light.h"
 #include "material/material.h"
-#include "skydome/skyDome.h"
-#include "perlin/perlin_texture.h"
+#include "skyDome/skyDome.h"
 #include "blurQuad/blurquad.h"
 #include "large_scene.h"
 
@@ -24,7 +23,6 @@ LargeScene scene;
 SceneControler sceneControler(scene);
 SkyDome skyDome;
 Camera camera;
-PerlinTexture perlinTexture;
 ColorAndDepthFBO screenQuadBuffer, reflectionBuffer, reflectionBufferPostProcessing;
 DepthFBO shadowBuffer;
 ScreenQuad screenquad;

@@ -5,7 +5,7 @@
 #include <iostream>
 #include "water/water.h"
 #include "terrain/terrain.h"
-#include "perlin/perlin_texture.h"
+#include "perlin/perlin.h"
 
 /** A LargeScene is an infinite procedural terrain. Internally, it is a circular grid of Scene objects */
 class LargeScene {
@@ -30,17 +30,21 @@ class LargeScene {
 
     Grid grid;
     Water water;
+    Perlin perlin;
+    int heightMapWidth, heightMapHeight;
 
 public:
     enum Direction { UP = +1, DOWN = -1 };
 
     /** initializes the perlin textures */
     void initPerlin(int textureWidth = 1024, int textureHeight = 1024) {
+        heightMapWidth = textureWidth;
+        heightMapHeight = textureHeight;
+        perlin.Init();
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-                heightMap(iRow, jCol).init(textureWidth, textureHeight);
-                heightMap(iRow, jCol).setPos(noisePosFor(iRow, jCol));
-                heightMap(iRow, jCol).recompute();
+                heightMap(iRow, jCol).Init(textureWidth, textureHeight, GL_RGB32F, GL_RGB, GL_FLOAT, true);
+                recomputeHeightMap(iRow, jCol);
             }
         }
     }
@@ -90,8 +94,7 @@ public:
 
         int col = (d == DOWN) ? oldColStart : colStart;
         for(int iRow = 0; iRow < NROW; ++iRow) {
-            heightMap(iRow, col).setPos(noisePosFor(iRow, col));
-            heightMap(iRow, col).recompute();
+            recomputeHeightMap(iRow, col);
         }
     }
 
@@ -103,19 +106,7 @@ public:
 
         int row = (d == DOWN) ? oldRowStart : rowStart;
         for(int jCol = 0; jCol < NCOL; ++jCol) {
-            heightMap(row, jCol).setPos(noisePosFor(row, jCol));
-            heightMap(row, jCol).recompute();
-        }
-    }
-
-    /** moves the underlying noise (heightmap) by the given offset, recomputes every scene */
-    void moveNoise(const glm::vec2& update) {
-        noisePosition += update;
-        for (int iRow = 0; iRow < NROW; ++iRow) {
-            for (int jCol = 0; jCol < NCOL; ++jCol) {
-                heightMap(iRow, jCol).move(update);
-                heightMap(iRow, jCol).recompute();
-            }
+            recomputeHeightMap(row, jCol);
         }
     }
 
@@ -138,7 +129,7 @@ public:
         grid.Cleanup();
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-               heightMap(iRow, jCol).cleanup();
+               heightMap(iRow, jCol).Cleanup();
             }
         }
     }
@@ -154,14 +145,29 @@ private:
     }
 
     /** the heightMap (i,j) */
-    PerlinTexture& heightMap(int iRow, int jCol) {
-        static Matrix<PerlinTexture> maps;
+    ColorFBO& heightMap(int iRow, int jCol) {
+        static Matrix<ColorFBO> maps;
         return maps[iRow][jCol];
+    }
+
+    /** redraw the perlin noise inside appropriate buffer */
+    void recomputeHeightMap(int iRow, int jCol) {
+        heightMap(iRow, jCol).Bind();
+        perlin.Draw(noisePosFor(iRow, jCol));
+        heightMap(iRow, jCol).Unbind();
     }
 
     /** the noise position of the scene (i,j) */
     glm::vec2 noisePosFor(int iRow, int jCol) {
-        return noisePosition + translation(iRow, jCol);
+        return textureCorrection(noisePosition + translation(iRow, jCol));
+    }
+
+    /** reduces the offset of one pixel for perfect heightMap juxtaposition */
+    glm::vec2 textureCorrection(glm::vec2 pos_offset) {
+        return {
+            pos_offset.x * (1 - 1.0 / heightMapWidth),
+            pos_offset.y * (1 - 1.0 / heightMapHeight)
+        };
     }
 
     /** creates a Matrix of translation vector forming a rectangular matrix */
