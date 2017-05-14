@@ -177,7 +177,8 @@ void Display() {
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
-    scene.draw(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
+    scene.cullThenDraw(camera.getPos(), camera.getFront(),
+                       MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
     screenQuadBuffer.Unbind();
 
 

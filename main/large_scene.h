@@ -11,7 +11,7 @@
 class LargeScene {
 
     /** the dimensions of this LargeScene's rectangular matrix */
-    enum {NROW = 8, NCOL = 8};
+    enum {NROW = 10, NCOL = 10};
 
     /** the dimension of the Grid as seen per its vertex shader 2 = size([-1;1]) */
     const float gridSize = 2.0f;
@@ -77,20 +77,79 @@ public:
             for (int jCol = 0; jCol < NCOL; ++jCol) {
                 grid.useHeightMap(heightMap(iRow, jCol).id());
                 grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
-                                      mirrorPass, shadowPass,
-                                      gridSize * translation(iRow, jCol));
+                          mirrorPass, shadowPass,
+                          gridSize * translation(iRow, jCol));
             }
         }
 
         if(!mirrorPass && !shadowPass)
+            for (int iRow = 0; iRow < NROW; ++iRow) {
+                for (int jCol = 0; jCol < NCOL; ++jCol) {
+                    water.useHeightMap(heightMap(iRow, jCol).id());
+                    water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
+                               noisePosFor(iRow, jCol),
+                               gridSize * translation(iRow, jCol));
+                }
+            }
+    }
+
+    /** draws every grid side by side in an ordered manner */
+    void cullThenDraw(
+            const glm::vec3 &pointInPlane,
+            const glm::vec3 &planeNormal,
+            const glm::mat4 &MVP = IDENTITY_MATRIX,
+            const glm::mat4 &MV = IDENTITY_MATRIX,
+            const glm::mat4 &NORMALM = IDENTITY_MATRIX,
+            const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
+            const FractionalView &FV = FractionalView(),
+            bool mirrorPass = false,
+            bool shadowPass = false)
+    {
+        //
+        // Cull invisible tiles
+        //
+        static vector<pair<int, int>> indices;
+        indices.clear();
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-               water.useHeightMap(heightMap(iRow, jCol).id());
-               water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
-                                      noisePosFor(iRow, jCol),
-                                      gridSize * translation(iRow, jCol));
+                glm::vec2 tileCenter2D = gridSize * translation(iRow, jCol);
+                glm::vec3 tileCenter = glm::vec3(tileCenter2D.x, 0, -tileCenter2D.y);
+                glm::vec3 tileCorner = tileCenter + glm::vec3(sgn(planeNormal.x), 0, sgn(planeNormal.z));
+                glm::vec3 pointToCorner = tileCorner - pointInPlane;
+                bool visible = glm::dot(pointToCorner, planeNormal) > 0;
+                if (visible) {
+                    indices.push_back({iRow, jCol});
+                }
             }
         }
+
+        //
+        // Draw visible tiles
+        //
+        for (auto&& i : indices) {
+            glm::vec2 tileCenter2D = gridSize * translation(i.first, i.second);
+            glm::vec3 tileCenter = glm::vec3(tileCenter2D.x, 0, -tileCenter2D.y);
+            glm::vec3 pointToCenter = tileCenter - pointInPlane;
+            bool visible = glm::dot(pointToCenter, planeNormal) > 0;
+            if (!visible) {
+                continue;
+            }
+
+            grid.useHeightMap(heightMap(i.first, i.second).id());
+            grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
+                      mirrorPass, shadowPass,
+                      gridSize * translation(i.first, i.second));
+
+        }
+
+        if(!mirrorPass && !shadowPass)
+            for (auto&& i : indices)  {
+                water.useHeightMap(heightMap(i.first, i.second).id());
+                water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
+                           noisePosFor(i.first, i.second),
+                           gridSize * translation(i.first, i.second));
+
+            }
     }
 
     /** moves the heightMaps one column in the given direction, recomputes only obsolete heightMaps */
@@ -138,7 +197,7 @@ public:
         grid.Cleanup();
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-               heightMap(iRow, jCol).Cleanup();
+                heightMap(iRow, jCol).Cleanup();
             }
         }
     }
@@ -173,7 +232,7 @@ private:
     glm::vec2 textureCorrection(glm::vec2 pos_offset) {
         return {
             pos_offset.x * (1 - 1.0 / heightMapWidth),
-            pos_offset.y * (1 - 1.0 / heightMapHeight)
+                    pos_offset.y * (1 - 1.0 / heightMapHeight)
         };
     }
 
@@ -186,6 +245,10 @@ private:
             }
         }
         return t;
+    }
+
+    static float sgn(float val) {
+        return (0.0 < val) - (val < 0.0);
     }
 };
 

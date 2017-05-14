@@ -86,8 +86,12 @@ public:
         return glm::lookAt(mirrorPos, mirrorPos + mirrorFront, this->WorldUp);
     }
 
-    glm::vec3 getPos(){
+    const glm::vec3& getPos() {
         return this->Position;
+    }
+
+    const glm::vec3& getFront() {
+        return this->Front;
     }
 
     void setPos(glm::vec3 pos) {
