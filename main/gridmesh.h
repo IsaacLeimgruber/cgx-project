@@ -7,7 +7,10 @@
 #include "camera/fractionalview.h"
 
 struct ProgramIds{
-    GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id, zoom_id, zoomOffset_id, translation_id;
+    GLuint program_id;
+    GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id;
+    GLuint zoom_id, zoomOffset_id, translation_id;
+    GLuint heightMap_id, mirrorMap_id;
 };
 
 class GridMesh: public ILightable{
@@ -16,10 +19,6 @@ class GridMesh: public ILightable{
         GLuint vertex_array_id_;                // vertex array object
         GLuint vertex_buffer_object_position_;  // memory buffer for positions
         GLuint vertex_buffer_object_index_;     // memory buffer for indices
-        GLuint program_id_;                     // GLSL shader program ID
-        GLuint current_program_id_;
-        GLuint shadow_program_id_;
-        GLuint debug_program_id_;
         GLuint heightMapTexture_id_;            // texture ID
         GLuint normalTexture_id_;
         GLuint shadowTexture_id_;
@@ -86,7 +85,7 @@ class GridMesh: public ILightable{
                          &indices[0], GL_STATIC_DRAW);
 
             // position shader attribute
-            GLuint loc_position = glGetAttribLocation(program_id_, "gridPos");
+            GLuint loc_position = glGetAttribLocation(normalProgramIds.program_id, "gridPos");
             glEnableVertexAttribArray(loc_position);
             glVertexAttribPointer(loc_position, 2, GL_FLOAT, DONT_NORMALIZE,
                                   ZERO_STRIDE, ZERO_BUFFER_OFFSET);
@@ -95,49 +94,50 @@ class GridMesh: public ILightable{
 
         void setupLocations(){
             //Setup debug and normal program locations
-            normalProgramIds.MVP_id = glGetUniformLocation(program_id_, "MVP");
-            normalProgramIds.MV_id = glGetUniformLocation(program_id_, "MV");
-            normalProgramIds.NORMALM_id = glGetUniformLocation(program_id_, "NORMALM");
-            normalProgramIds.SHADOWMVP_id = glGetUniformLocation(program_id_, "SHADOWMVP");
-            normalProgramIds.zoom_id = glGetUniformLocation(program_id_, "zoom");
-            normalProgramIds.zoomOffset_id = glGetUniformLocation(program_id_, "zoomOffset");
-            normalProgramIds.translation_id = glGetUniformLocation(program_id_, "translation");
+            normalProgramIds.MVP_id = glGetUniformLocation(normalProgramIds.program_id, "MVP");
+            normalProgramIds.MV_id = glGetUniformLocation(normalProgramIds.program_id, "MV");
+            normalProgramIds.NORMALM_id = glGetUniformLocation(normalProgramIds.program_id, "NORMALM");
+            normalProgramIds.SHADOWMVP_id = glGetUniformLocation(normalProgramIds.program_id, "SHADOWMVP");
+            normalProgramIds.zoom_id = glGetUniformLocation(normalProgramIds.program_id, "zoom");
+            normalProgramIds.zoomOffset_id = glGetUniformLocation(normalProgramIds.program_id, "zoomOffset");
+            normalProgramIds.translation_id = glGetUniformLocation(normalProgramIds.program_id, "translation");
+            normalProgramIds.heightMap_id = glGetUniformLocation(normalProgramIds.program_id, "heightMap");
 
-            glUseProgram(shadow_program_id_);
-            shadowProgramIds.MVP_id = glGetUniformLocation(shadow_program_id_, "MVP");
-            shadowProgramIds.MV_id = glGetUniformLocation(shadow_program_id_, "MV");
-            shadowProgramIds.NORMALM_id = glGetUniformLocation(shadow_program_id_, "NORMALM");
-            shadowProgramIds.SHADOWMVP_id = glGetUniformLocation(shadow_program_id_, "SHADOWMVP");
-            shadowProgramIds.zoom_id = glGetUniformLocation(shadow_program_id_, "zoom");
-            shadowProgramIds.zoomOffset_id = glGetUniformLocation(shadow_program_id_, "zoomOffset");
-            shadowProgramIds.translation_id = glGetUniformLocation(shadow_program_id_, "translation");
+            glUseProgram(shadowProgramIds.program_id);
+            shadowProgramIds.MVP_id = glGetUniformLocation(shadowProgramIds.program_id, "MVP");
+            shadowProgramIds.MV_id = glGetUniformLocation(shadowProgramIds.program_id, "MV");
+            shadowProgramIds.NORMALM_id = glGetUniformLocation(shadowProgramIds.program_id, "NORMALM");
+            shadowProgramIds.SHADOWMVP_id = glGetUniformLocation(shadowProgramIds.program_id, "SHADOWMVP");
+            shadowProgramIds.zoom_id = glGetUniformLocation(shadowProgramIds.program_id, "zoom");
+            shadowProgramIds.zoomOffset_id = glGetUniformLocation(shadowProgramIds.program_id, "zoomOffset");
+            shadowProgramIds.translation_id = glGetUniformLocation(shadowProgramIds.program_id, "translation");
 
-            glUseProgram(debug_program_id_);
-            debugProgramIds.MVP_id = glGetUniformLocation(debug_program_id_, "MVP");
-            debugProgramIds.MV_id = glGetUniformLocation(debug_program_id_, "MV");
-            debugProgramIds.NORMALM_id = glGetUniformLocation(debug_program_id_, "NORMALM");
-            debugProgramIds.SHADOWMVP_id = glGetUniformLocation(debug_program_id_, "SHADOWMVP");
-            debugProgramIds.zoom_id = glGetUniformLocation(debug_program_id_, "zoom");
-            debugProgramIds.zoomOffset_id = glGetUniformLocation(debug_program_id_, "zoomOffset");
-            debugProgramIds.translation_id = glGetUniformLocation(debug_program_id_, "translation");
+            glUseProgram(debugProgramIds.program_id);
+            debugProgramIds.MVP_id = glGetUniformLocation(debugProgramIds.program_id, "MVP");
+            debugProgramIds.MV_id = glGetUniformLocation(debugProgramIds.program_id, "MV");
+            debugProgramIds.NORMALM_id = glGetUniformLocation(debugProgramIds.program_id, "NORMALM");
+            debugProgramIds.SHADOWMVP_id = glGetUniformLocation(debugProgramIds.program_id, "SHADOWMVP");
+            debugProgramIds.zoom_id = glGetUniformLocation(debugProgramIds.program_id, "zoom");
+            debugProgramIds.zoomOffset_id = glGetUniformLocation(debugProgramIds.program_id, "zoomOffset");
+            debugProgramIds.translation_id = glGetUniformLocation(debugProgramIds.program_id, "translation");
+            debugProgramIds.heightMap_id = glGetUniformLocation(debugProgramIds.program_id, "heightMap");
 
-
-            glUseProgram(program_id_);
+            glUseProgram(normalProgramIds.program_id);
         }
 
         void useLight(Light* l){
             this->light = l;
-            light->registerProgram(program_id_);
-            light->registerProgram(debug_program_id_);
-            glUseProgram(program_id_);
+            light->registerProgram(normalProgramIds.program_id);
+            light->registerProgram(debugProgramIds.program_id);
+            glUseProgram(normalProgramIds.program_id);
         }
 
         void useMaterial(Material m){
             this->material = m;
-            material.Setup(program_id_);
-            glUseProgram(debug_program_id_);
-                material.Setup(debug_program_id_);
-            glUseProgram(program_id_);
+            material.Setup(normalProgramIds.program_id);
+            glUseProgram(debugProgramIds.program_id);
+                material.Setup(debugProgramIds.program_id);
+            glUseProgram(normalProgramIds.program_id);
         }
 
         void useShadowMap(GLuint id){
@@ -146,41 +146,41 @@ class GridMesh: public ILightable{
 
         void loadHeightMap(GLuint heightMap){
             this->heightMapTexture_id_ = heightMap;
-            GLuint heightMapLocation = glGetUniformLocation(program_id_, "heightMap");
+            GLuint heightMapLocation = glGetUniformLocation(normalProgramIds.program_id, "heightMap");
             glUniform1i(heightMapLocation, 0);
 
-            glUseProgram(debug_program_id_);
-                heightMapLocation = glGetUniformLocation(debug_program_id_, "heightMap");
+            glUseProgram(debugProgramIds.program_id);
+                heightMapLocation = glGetUniformLocation(debugProgramIds.program_id, "heightMap");
                 glUniform1i(heightMapLocation, 0);
-            glUseProgram(program_id_);
+            glUseProgram(normalProgramIds.program_id);
         }
 
         void loadNormalMap(GLuint normalMap){
             this->normalTexture_id_ = normalMap;
-            GLuint normalMapLocation = glGetUniformLocation(program_id_, "normalMap");
+            GLuint normalMapLocation = glGetUniformLocation(normalProgramIds.program_id, "normalMap");
             glUniform1i(normalMapLocation, 1);
 
-            glUseProgram(debug_program_id_);
-                normalMapLocation = glGetUniformLocation(debug_program_id_, "normalMap");
+            glUseProgram(debugProgramIds.program_id);
+                normalMapLocation = glGetUniformLocation(debugProgramIds.program_id, "normalMap");
                 glUniform1i(normalMapLocation, 1);
-            glUseProgram(program_id_);
+            glUseProgram(normalProgramIds.program_id);
         }
 
         void loadShadowMap(GLuint shadowMap){
             this->shadowTexture_id_ = shadowMap;
-            GLuint shadowMapLocation = glGetUniformLocation(program_id_, "shadowMap");
+            GLuint shadowMapLocation = glGetUniformLocation(normalProgramIds.program_id, "shadowMap");
             glUniform1i(shadowMapLocation, 2);
         }
 
         void loadMirrorMap(GLuint mirrorMap){
             this->mirrorTexture_id_ = mirrorMap;
-            GLuint mirrorMapLocation = glGetUniformLocation(program_id_, "mirrorMap");
+            GLuint mirrorMapLocation = glGetUniformLocation(normalProgramIds.program_id, "mirrorMap");
             glUniform1i(mirrorMapLocation, 3);
 
-            glUseProgram(debug_program_id_);
-                mirrorMapLocation = glGetUniformLocation(debug_program_id_, "mirrorMap");
+            glUseProgram(debugProgramIds.program_id);
+                mirrorMapLocation = glGetUniformLocation(debugProgramIds.program_id, "mirrorMap");
                 glUniform1i(mirrorMapLocation, 3);
-            glUseProgram(program_id_);
+            glUseProgram(normalProgramIds.program_id);
         }
 
         void toggleDebugMode(){
@@ -197,9 +197,9 @@ class GridMesh: public ILightable{
             glDeleteBuffers(1, &vertex_buffer_object_position_);
             glDeleteBuffers(1, &vertex_buffer_object_index_);
             glDeleteVertexArrays(1, &vertex_array_id_);
-            glDeleteProgram(program_id_);
-            glDeleteProgram(shadow_program_id_);
-            glDeleteProgram(debug_program_id_);
+            glDeleteProgram(normalProgramIds.program_id);
+            glDeleteProgram(shadowProgramIds.program_id);
+            glDeleteProgram(debugProgramIds.program_id);
             glDeleteTextures(1, &heightMapTexture_id_);
             glDeleteTextures(1, &normalTexture_id_);
             glDeleteTextures(1, &mirrorTexture_id_);

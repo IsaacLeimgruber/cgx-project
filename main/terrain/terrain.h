@@ -22,27 +22,27 @@ class Grid: public GridMesh{
 
         void Init(GLuint heightMap, GLuint shadowMap) {
             // compile the shaders.
-            program_id_ = icg_helper::LoadShaders("terrain_vshader.glsl",
+            normalProgramIds.program_id = icg_helper::LoadShaders("terrain_vshader.glsl",
                                                   "terrain_fshader.glsl",
                                                   "terrain_tcshader.glsl",
                                                   "terrain_teshader.glsl");
 
-            shadow_program_id_ = icg_helper::LoadShaders("terrain_vshader_shadow.glsl",
+            shadowProgramIds.program_id = icg_helper::LoadShaders("terrain_vshader_shadow.glsl",
                                                   "terrain_fshader_shadow.glsl",
                                                   "terrain_tcshader_shadow.glsl",
                                                   "terrain_teshader_shadow.glsl");
 
 
-            debug_program_id_ = icg_helper::LoadShaders("terrain_vshader_debug.glsl",
+            debugProgramIds.program_id = icg_helper::LoadShaders("terrain_vshader_debug.glsl",
                                                   "terrain_fshader_debug.glsl",
                                                   "terrain_tcshader_debug.glsl",
                                                   "terrain_teshader_debug.glsl",
                                                   "terrain_gshader_debug.glsl");
-            if(!program_id_ || !shadow_program_id_ || !debug_program_id_) {
+            if(!normalProgramIds.program_id || !shadowProgramIds.program_id || !debugProgramIds.program_id) {
                 exit(EXIT_FAILURE);
             }
 
-            glUseProgram(program_id_);
+            glUseProgram(normalProgramIds.program_id);
 
             // vertex coordinates and indices
             genGrid(8);
@@ -57,21 +57,21 @@ class Grid: public GridMesh{
                 rockTextureId = Utils::loadImage("rock512.tga");
                 sandTextureId = Utils::loadImage("sand256.tga");
                 snowTextureId = Utils::loadImage("snow512.tga");
-                glUniform1i(glGetUniformLocation(program_id_, "grassTex"), 4);
-                glUniform1i(glGetUniformLocation(program_id_, "rockTex"), 5);
-                glUniform1i(glGetUniformLocation(program_id_, "sandTex"), 6);
-                glUniform1i(glGetUniformLocation(program_id_, "snowTex"), 7);
+                glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "grassTex"), 4);
+                glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "rockTex"), 5);
+                glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "sandTex"), 6);
+                glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "snowTex"), 7);
             }
 
             //Tesselation configuration
             glPatchParameteri(GL_PATCH_VERTICES, 4);
 
             setupLocations();
-            mirrorPassId = glGetUniformLocation(program_id_, "mirrorPass");
+            mirrorPassId = glGetUniformLocation(normalProgramIds.program_id, "mirrorPass");
 
-            glUseProgram(debug_program_id_);
-            mirrorPassDebugId = glGetUniformLocation(debug_program_id_, "mirrorPass");
-            glUseProgram(program_id_);
+            glUseProgram(debugProgramIds.program_id);
+            mirrorPassDebugId = glGetUniformLocation(debugProgramIds.program_id, "mirrorPass");
+            glUseProgram(normalProgramIds.program_id);
 
             // to avoid the current object being polluted
             glBindVertexArray(0);
@@ -91,10 +91,9 @@ class Grid: public GridMesh{
                   bool shadowPass = false,
                   const glm::vec2 &translation = glm::vec2(0, 0)) {
 
-            current_program_id_= (shadowPass) ? shadow_program_id_ : program_id_;
             currentProgramIds = (shadowPass) ? shadowProgramIds : normalProgramIds;
 
-            glUseProgram(current_program_id_);
+            glUseProgram(currentProgramIds.program_id);
 
             glUniformMatrix4fv(currentProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
             glUniform2fv(currentProgramIds.translation_id, 1, glm::value_ptr(translation));
@@ -102,7 +101,7 @@ class Grid: public GridMesh{
 
             //update light
             if(light != nullptr)
-                light->updateProgram(current_program_id_);
+                light->updateProgram(currentProgramIds.program_id);
 
             // if mirror pass is enabled then we cull underwater fragments
             glUniform1i(mirrorPassId, mirrorPass);
@@ -114,12 +113,11 @@ class Grid: public GridMesh{
 
             if(debug){
                 //New rendering on top of the previous one
-                glUseProgram(debug_program_id_);
-                current_program_id_ = debug_program_id_;
                 currentProgramIds = debugProgramIds;
+                glUseProgram(currentProgramIds.program_id);
 
                 if(light != nullptr){
-                    light->updateProgram(current_program_id_);
+                    light->updateProgram(currentProgramIds.program_id);
                 }
 
                 setupMVP(MVP, MV, NORMALM);
