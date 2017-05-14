@@ -93,36 +93,20 @@ class GridMesh: public ILightable{
         }
 
         void setupLocations(){
-            //Setup debug and normal program locations
-            normalProgramIds.MVP_id = glGetUniformLocation(normalProgramIds.program_id, "MVP");
-            normalProgramIds.MV_id = glGetUniformLocation(normalProgramIds.program_id, "MV");
-            normalProgramIds.NORMALM_id = glGetUniformLocation(normalProgramIds.program_id, "NORMALM");
-            normalProgramIds.SHADOWMVP_id = glGetUniformLocation(normalProgramIds.program_id, "SHADOWMVP");
-            normalProgramIds.zoom_id = glGetUniformLocation(normalProgramIds.program_id, "zoom");
-            normalProgramIds.zoomOffset_id = glGetUniformLocation(normalProgramIds.program_id, "zoomOffset");
-            normalProgramIds.translation_id = glGetUniformLocation(normalProgramIds.program_id, "translation");
-            normalProgramIds.heightMap_id = glGetUniformLocation(normalProgramIds.program_id, "heightMap");
+            for (auto pProgramIds : {&shadowProgramIds, &debugProgramIds, &normalProgramIds}) {
+                auto& programIds = *pProgramIds;
+                glUseProgram(programIds.program_id);
+                programIds.MVP_id = glGetUniformLocation(programIds.program_id, "MVP");
+                programIds.MV_id = glGetUniformLocation(programIds.program_id, "MV");
+                programIds.NORMALM_id = glGetUniformLocation(programIds.program_id, "NORMALM");
+                programIds.SHADOWMVP_id = glGetUniformLocation(programIds.program_id, "SHADOWMVP");
+                programIds.zoom_id = glGetUniformLocation(programIds.program_id, "zoom");
+                programIds.zoomOffset_id = glGetUniformLocation(programIds.program_id, "zoomOffset");
+                programIds.translation_id = glGetUniformLocation(programIds.program_id, "translation");
+                programIds.heightMap_id = glGetUniformLocation(programIds.program_id, "heightMap");
+            }
 
-            glUseProgram(shadowProgramIds.program_id);
-            shadowProgramIds.MVP_id = glGetUniformLocation(shadowProgramIds.program_id, "MVP");
-            shadowProgramIds.MV_id = glGetUniformLocation(shadowProgramIds.program_id, "MV");
-            shadowProgramIds.NORMALM_id = glGetUniformLocation(shadowProgramIds.program_id, "NORMALM");
-            shadowProgramIds.SHADOWMVP_id = glGetUniformLocation(shadowProgramIds.program_id, "SHADOWMVP");
-            shadowProgramIds.zoom_id = glGetUniformLocation(shadowProgramIds.program_id, "zoom");
-            shadowProgramIds.zoomOffset_id = glGetUniformLocation(shadowProgramIds.program_id, "zoomOffset");
-            shadowProgramIds.translation_id = glGetUniformLocation(shadowProgramIds.program_id, "translation");
-
-            glUseProgram(debugProgramIds.program_id);
-            debugProgramIds.MVP_id = glGetUniformLocation(debugProgramIds.program_id, "MVP");
-            debugProgramIds.MV_id = glGetUniformLocation(debugProgramIds.program_id, "MV");
-            debugProgramIds.NORMALM_id = glGetUniformLocation(debugProgramIds.program_id, "NORMALM");
-            debugProgramIds.SHADOWMVP_id = glGetUniformLocation(debugProgramIds.program_id, "SHADOWMVP");
-            debugProgramIds.zoom_id = glGetUniformLocation(debugProgramIds.program_id, "zoom");
-            debugProgramIds.zoomOffset_id = glGetUniformLocation(debugProgramIds.program_id, "zoomOffset");
-            debugProgramIds.translation_id = glGetUniformLocation(debugProgramIds.program_id, "translation");
-            debugProgramIds.heightMap_id = glGetUniformLocation(debugProgramIds.program_id, "heightMap");
-
-            glUseProgram(normalProgramIds.program_id);
+            //normapProgramIds must be used last, or use: glUseProgram(normalProgramIds.program_id) here
         }
 
         void useLight(Light* l){
@@ -146,13 +130,11 @@ class GridMesh: public ILightable{
 
         void loadHeightMap(GLuint heightMap){
             this->heightMapTexture_id_ = heightMap;
-            GLuint heightMapLocation = glGetUniformLocation(normalProgramIds.program_id, "heightMap");
-            glUniform1i(heightMapLocation, 0);
 
-            glUseProgram(debugProgramIds.program_id);
-                heightMapLocation = glGetUniformLocation(debugProgramIds.program_id, "heightMap");
-                glUniform1i(heightMapLocation, 0);
-            glUseProgram(normalProgramIds.program_id);
+            for(auto pProgramIds : {&debugProgramIds, &normalProgramIds}) {
+                glUseProgram(pProgramIds->program_id);
+                glUniform1i(pProgramIds->heightMap_id, 0);
+            }
         }
 
         void loadNormalMap(GLuint normalMap){
