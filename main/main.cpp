@@ -114,7 +114,8 @@ void computeReflections(){
     reflectionBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
-    scene.draw(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true, false);
+    scene.cullThenDraw(camera.getPos(), camera.getFront(), mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true);
+    //scene.draw(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true, false);
     reflectionBuffer.Unbind();
 
     //Code below performs blur on reflection
@@ -178,7 +179,7 @@ void Display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.cullThenDraw(camera.getPos(), camera.getFront(),
-                       MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false, false);
+                       MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
     screenQuadBuffer.Unbind();
 
 

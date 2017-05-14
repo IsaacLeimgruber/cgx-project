@@ -102,8 +102,7 @@ public:
             const glm::mat4 &NORMALM = IDENTITY_MATRIX,
             const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
             const FractionalView &FV = FractionalView(),
-            bool mirrorPass = false,
-            bool shadowPass = false)
+            bool mirrorPass = false)
     {
         //
         // Cull invisible tiles
@@ -127,22 +126,14 @@ public:
         // Draw visible tiles
         //
         for (auto&& i : indices) {
-            glm::vec2 tileCenter2D = gridSize * translation(i.first, i.second);
-            glm::vec3 tileCenter = glm::vec3(tileCenter2D.x, 0, -tileCenter2D.y);
-            glm::vec3 pointToCenter = tileCenter - pointInPlane;
-            bool visible = glm::dot(pointToCenter, planeNormal) > 0;
-            if (!visible) {
-                continue;
-            }
-
             grid.useHeightMap(heightMap(i.first, i.second).id());
             grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
-                      mirrorPass, shadowPass,
+                      mirrorPass, false,
                       gridSize * translation(i.first, i.second));
 
         }
 
-        if(!mirrorPass && !shadowPass)
+        if(!mirrorPass)
             for (auto&& i : indices)  {
                 water.useHeightMap(heightMap(i.first, i.second).id());
                 water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
