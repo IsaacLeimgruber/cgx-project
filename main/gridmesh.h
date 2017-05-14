@@ -213,34 +213,38 @@ class GridMesh: public ILightable{
         }
 
         void activateTextureUnits(bool normalTexture = true){
-            // bind textures
+            bindHeightMapTexture();
+            if (normalTexture) {
+                bindNormalMapTexture();
+            }
+            bindShadowTexture();
+            bindMirrorTexture();
+        }
+
+        void bindHeightMapTexture() {
             glActiveTexture(GL_TEXTURE0 + 0);
             glBindTexture(GL_TEXTURE_2D, heightMapTexture_id_);
+        }
 
-            if (normalTexture) {
-                glActiveTexture(GL_TEXTURE0 + 1);
-                glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
-            }
+        void bindNormalMapTexture() {
+            glActiveTexture(GL_TEXTURE0 + 1);
+            glBindTexture(GL_TEXTURE_2D, normalTexture_id_);
+        }
 
+        void bindShadowTexture() {
             glActiveTexture(GL_TEXTURE0 + 2);
             glBindTexture(GL_TEXTURE_2D, shadowTexture_id_);
+        }
 
+        void bindMirrorTexture() {
             glActiveTexture(GL_TEXTURE0 + 3);
             glBindTexture(GL_TEXTURE_2D, mirrorTexture_id_);
         }
 
         void deactivateTextureUnits() {
-            // unbind textures
-            glActiveTexture(GL_TEXTURE0 + 0);
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glActiveTexture(GL_TEXTURE0 + 1);
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glActiveTexture(GL_TEXTURE0 + 2);
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glActiveTexture(GL_TEXTURE0 + 3);
-            glBindTexture(GL_TEXTURE_2D, 0);
+            for (int i = 0; i < 4; ++i) {
+                glActiveTexture(GL_TEXTURE0 + i);
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
         }
 };
