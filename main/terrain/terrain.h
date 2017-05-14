@@ -95,6 +95,7 @@ class Grid: public GridMesh{
 
             glUseProgram(currentProgramIds.program_id);
 
+            bindHeightMapTexture();
             glUniformMatrix4fv(currentProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
             glUniform2fv(currentProgramIds.translation_id, 1, glm::value_ptr(translation));
             activateTextureUnits();

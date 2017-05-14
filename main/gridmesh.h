@@ -137,6 +137,10 @@ class GridMesh: public ILightable{
             }
         }
 
+        void useHeightMap(GLuint heightMap) {
+            this->heightMapTexture_id_ = heightMap;
+        }
+
         void loadNormalMap(GLuint normalMap){
             this->normalTexture_id_ = normalMap;
             GLuint normalMapLocation = glGetUniformLocation(normalProgramIds.program_id, "normalMap");

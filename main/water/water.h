@@ -76,6 +76,7 @@ class Water: public GridMesh{
             glUseProgram(normalProgramIds.program_id);
             currentProgramIds = normalProgramIds;
 
+            //bindHeightMapTexture();
             glUniformMatrix4fv(normalProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
             glUniform1f(time_id, glfwGetTime());
             glUniform2fv(offset_id, 1, glm::value_ptr(offset));
