@@ -10,16 +10,19 @@ class PerlinTexture {
     glm::vec2 position = glm::vec2(0.0f);
     int textureWidth;
     int textureHeight;
+    GLuint id_ {0};
 
 public:
-    GLuint init(int textureWidth = 1024, int textureHeight = 1024) {
+    void init(int textureWidth = 1024, int textureHeight = 1024) {
         this->textureWidth = textureWidth;
         this->textureHeight = textureHeight;
 
         perlin.Init();
-        int noiseBuffer_texture_id = noiseBuffer.Init(textureWidth, textureHeight, GL_RGB32F, GL_RGB, GL_FLOAT, true);
+        id_ = noiseBuffer.Init(textureWidth, textureHeight, GL_RGB32F, GL_RGB, GL_FLOAT, true);
+    }
 
-        return noiseBuffer_texture_id;
+    GLuint id() {
+        return id_;
     }
 
     void recompute() {

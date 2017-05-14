@@ -3,7 +3,9 @@
 
 #include <array>
 #include <iostream>
-#include "scene.h"
+#include "water/water.h"
+#include "terrain/terrain.h"
+#include "perlin/perlin_texture.h"
 
 /** A LargeScene is an infinite procedural terrain. Internally, it is a circular grid of Scene objects */
 class LargeScene {
@@ -26,6 +28,9 @@ class LargeScene {
     /** the noise position of the scene displayed in the bottom left corner */
     glm::vec2 noisePosition {0, 0};
 
+    Grid grid;
+    Water water;
+
 public:
     enum Direction { UP = +1, DOWN = -1 };
 
@@ -33,19 +38,19 @@ public:
     void initPerlin(int textureWidth = 1024, int textureHeight = 1024) {
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-                scene(iRow, jCol).initPerlin(textureWidth, textureHeight);
-                scene(iRow, jCol).setNoisePos(noisePosFor(iRow, jCol));
+                heightMap(iRow, jCol).init(textureWidth, textureHeight);
+                heightMap(iRow, jCol).setPos(noisePosFor(iRow, jCol));
+                heightMap(iRow, jCol).recompute();
             }
         }
     }
 
     /** initializes the scenes object */
     void init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
-        for (int iRow = 0; iRow < NROW; ++iRow) {
-            for (int jCol = 0; jCol < NCOL; ++jCol) {
-               scene(iRow, jCol).init(shadowBuffer_texture_id, reflectionBuffer_texture_id, light);
-            }
-        }
+        grid.Init(0, shadowBuffer_texture_id);
+        water.Init(0, reflectionBuffer_texture_id, shadowBuffer_texture_id);
+        grid.useLight(light);
+        water.useLight(light);
     }
 
     /** draws every scenes side by side in an ordered manner */
@@ -59,15 +64,18 @@ public:
     {
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-               scene(iRow, jCol).drawTerrain(MVP, MV, NORMALM, SHADOWMVP, FV,
+                grid.useHeightMap(heightMap(iRow, jCol).id());
+                grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
                                       mirrorPass, shadowPass,
                                       gridSize * translation(iRow, jCol));
             }
         }
+
         if(!mirrorPass && !shadowPass)
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-               scene(iRow, jCol).drawWater(MVP, MV, NORMALM, SHADOWMVP, FV,
+               water.useHeightMap(heightMap(iRow, jCol).id());
+               water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
                                       noisePosFor(iRow, jCol),
                                       gridSize * translation(iRow, jCol));
             }
@@ -82,7 +90,8 @@ public:
 
         int col = (d == DOWN) ? oldColStart : colStart;
         for(int iRow = 0; iRow < NROW; ++iRow) {
-            scene(iRow, col).setNoisePos(noisePosFor(iRow, col));
+            heightMap(iRow, col).setPos(noisePosFor(iRow, col));
+            heightMap(iRow, col).recompute();
         }
     }
 
@@ -94,7 +103,8 @@ public:
 
         int row = (d == DOWN) ? oldRowStart : rowStart;
         for(int jCol = 0; jCol < NCOL; ++jCol) {
-            scene(row, jCol).setNoisePos(noisePosFor(row, jCol));
+            heightMap(row, jCol).setPos(noisePosFor(row, jCol));
+            heightMap(row, jCol).recompute();
         }
     }
 
@@ -103,25 +113,20 @@ public:
         noisePosition += update;
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-               scene(iRow, jCol).moveNoise(update);
+                heightMap(iRow, jCol).move(update);
+                heightMap(iRow, jCol).recompute();
             }
         }
     }
 
     void toggleWireFrame() {
-        for (int iRow = 0; iRow < NROW; ++iRow) {
-            for (int jCol = 0; jCol < NCOL; ++jCol) {
-               scene(iRow, jCol).toggleWireFrame();
-            }
-        }
+        water.toggleWireFrame();
+        grid.toggleWireFrame();
     }
 
     void toggleDebugMode() {
-        for (int iRow = 0; iRow < NROW; ++iRow) {
-            for (int jCol = 0; jCol < NCOL; ++jCol) {
-               scene(iRow, jCol).toggleDebugMode();
-            }
-        }
+        water.toggleDebugMode();
+        grid.toggleDebugMode();
     }
 
     float maximumExtent(){
@@ -129,9 +134,11 @@ public:
     }
 
     void cleanup() {
+        water.Cleanup();
+        grid.Cleanup();
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-               scene(iRow, jCol).cleanup();
+               heightMap(iRow, jCol).cleanup();
             }
         }
     }
@@ -146,10 +153,10 @@ private:
         return translations[(NROW - rowStart + iRow) % NROW][(NCOL - colStart + jCol) % NCOL];
     }
 
-    /** the scene (i,j) */
-    Scene& scene(int iRow, int jCol) {
-        static Matrix<Scene> scenes;
-        return scenes[iRow][jCol];
+    /** the heightMap (i,j) */
+    PerlinTexture& heightMap(int iRow, int jCol) {
+        static Matrix<PerlinTexture> maps;
+        return maps[iRow][jCol];
     }
 
     /** the noise position of the scene (i,j) */

@@ -8,7 +8,6 @@
 #include "terrain/terrain.h"
 #include "framebuffer.h"
 #include "screenquad/screenquad.h"
-#include "large_scene.h"
 #include "scene_controler.h"
 #include "camera/camera.h"
 #include "camera/fractionalview.h"
@@ -17,6 +16,7 @@
 #include "skydome/skyDome.h"
 #include "perlin/perlin_texture.h"
 #include "blurQuad/blurquad.h"
+#include "large_scene.h"
 
 using namespace glm;
 
