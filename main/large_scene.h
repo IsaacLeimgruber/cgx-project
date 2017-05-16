@@ -68,8 +68,8 @@ public:
         water.useLight(light);
     }
 
-    /** draws every grid tile side by side in an ordered manner */
-    void draw(const glm::mat4 &MVP = IDENTITY_MATRIX,
+    /** draws every Mountain grid tile side by side in an ordered manner */
+    void drawMountains(const glm::mat4 &MVP = IDENTITY_MATRIX,
               const glm::mat4 &MV = IDENTITY_MATRIX,
               const glm::mat4 &NORMALM = IDENTITY_MATRIX,
               const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
@@ -85,16 +85,6 @@ public:
                           gridSize * translation(iRow, jCol));
             }
         }
-
-        if(!mirrorPass && !shadowPass)
-            for (int iRow = 0; iRow < NROW; ++iRow) {
-                for (int jCol = 0; jCol < NCOL; ++jCol) {
-                    water.useHeightMap(heightMap(iRow, jCol).id());
-                    water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
-                               noisePosFor(iRow, jCol),
-                               gridSize * translation(iRow, jCol));
-                }
-            }
     }
 
     void writeVisibleTilesOnly(TileSet& visible, const glm::vec3 &pointInPlane, const glm::vec3 &planeNormal)
