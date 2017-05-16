@@ -114,7 +114,7 @@ public:
         }
     }
 
-    /** draws every non-culled tile side by side in an ordered manner */
+    /** draws every non-culled mountain tile side by side in an ordered manner */
     void drawCulled(
             const glm::mat4 &MVP = IDENTITY_MATRIX,
             const glm::mat4 &MV = IDENTITY_MATRIX,
@@ -130,15 +130,50 @@ public:
                       gridSize * translation(i.first, i.second));
 
         }
+        if (!mirrorPass)
+        for (auto&& i : tilesToDraw)  {
+            water.useHeightMap(heightMap(i.first, i.second).id());
+            water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
+                       noisePosFor(i.first, i.second),
+                       gridSize * translation(i.first, i.second));
 
-        if(!mirrorPass)
-            for (auto&& i : tilesToDraw)  {
-                water.useHeightMap(heightMap(i.first, i.second).id());
-                water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
-                           noisePosFor(i.first, i.second),
-                           gridSize * translation(i.first, i.second));
+        }
+    }
 
-            }
+
+    /** draws every non-culled mountain tile side by side in an ordered manner */
+    void drawCulledMountains(
+            const glm::mat4 &MVP = IDENTITY_MATRIX,
+            const glm::mat4 &MV = IDENTITY_MATRIX,
+            const glm::mat4 &NORMALM = IDENTITY_MATRIX,
+            const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
+            const FractionalView &FV = FractionalView(),
+            bool mirrorPass = false)
+    {
+        for (auto&& i : tilesToDraw) {
+            grid.useHeightMap(heightMap(i.first, i.second).id());
+            grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
+                      mirrorPass, false,
+                      gridSize * translation(i.first, i.second));
+
+        }
+    }
+
+    /** draws every non-culled water tile side by side in an ordered manner */
+    void drawCulledWater(
+            const glm::mat4 &MVP = IDENTITY_MATRIX,
+            const glm::mat4 &MV = IDENTITY_MATRIX,
+            const glm::mat4 &NORMALM = IDENTITY_MATRIX,
+            const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
+            const FractionalView &FV = FractionalView())
+    {
+        for (auto&& i : tilesToDraw)  {
+            water.useHeightMap(heightMap(i.first, i.second).id());
+            water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
+                       noisePosFor(i.first, i.second),
+                       gridSize * translation(i.first, i.second));
+
+        }
     }
 
     /** moves the heightMaps one column in the given direction, recomputes only obsolete heightMaps */

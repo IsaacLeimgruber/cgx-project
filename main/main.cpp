@@ -113,9 +113,10 @@ void computeReflections(){
     reflectionBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
+
     // scene.cull must have been called previously while drawing this frame (done in Display() at the time)
-    scene.drawCulled(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true);
-    //scene.draw(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true, false);
+    scene.drawCulledMountains(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true);
+
     reflectionBuffer.Unbind();
 
     //Code below performs blur on reflection
@@ -181,7 +182,8 @@ void Display() {
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
-    scene.drawCulled(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
+    scene.drawCulledMountains(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
+    scene.drawCulledWater(MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
     screenQuadBuffer.Unbind();
 
 
