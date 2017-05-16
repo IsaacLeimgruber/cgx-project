@@ -78,13 +78,13 @@ void Init() {
     material = Material{};
 
     // buffers must be initialized in that order
-    int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGBA32F, GL_RGBA, GL_FLOAT, false, false);
+    int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGBA16, GL_RGBA, GL_UNSIGNED_INT, false, false);
 
     scene.initHeightMap(perlinTextureSize, perlinTextureSize);
-    reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
-    reflectionBufferPostProcessing.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
+    reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16, GL_RGBA, GL_UNSIGNED_INT, true, true);
+    reflectionBufferPostProcessing.Init(screenWidth, screenHeight, GL_RGBA16, GL_RGBA, GL_UNSIGNED_INT, true, true);
 
-    int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_FLOAT);
+    int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_UNSIGNED_INT);
 
     screenquad.Init(screenQuadBuffer_texture_id, 0);
     blurQuad.Init(screenWidth, screenHeight, reflectionBuffer.getColorTexture());

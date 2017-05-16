@@ -44,7 +44,7 @@ public:
     enum Direction { UP = +1, DOWN = -1 };
 
     struct TileSet {
-        vector<const pair<int, int>> tiles;
+        vector<pair<int, int>> tiles;
     };
 
     /** initializes the heightMaps */
