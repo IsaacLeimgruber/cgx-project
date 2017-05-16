@@ -40,6 +40,9 @@ class LargeScene {
     /** resolution of the height maps */
     int heightMapWidth, heightMapHeight;
 
+    /** the indices of the tiles to draw */
+    vector<pair<int, int>> tilesToDraw;
+
 public:
     enum Direction { UP = +1, DOWN = -1 };
 
@@ -64,7 +67,7 @@ public:
         water.useLight(light);
     }
 
-    /** draws every grid side by side in an ordered manner */
+    /** draws every grid tile side by side in an ordered manner */
     void draw(const glm::mat4 &MVP = IDENTITY_MATRIX,
               const glm::mat4 &MV = IDENTITY_MATRIX,
               const glm::mat4 &NORMALM = IDENTITY_MATRIX,
@@ -93,22 +96,10 @@ public:
             }
     }
 
-    /** draws every grid side by side in an ordered manner */
-    void cullThenDraw(
-            const glm::vec3 &pointInPlane,
-            const glm::vec3 &planeNormal,
-            const glm::mat4 &MVP = IDENTITY_MATRIX,
-            const glm::mat4 &MV = IDENTITY_MATRIX,
-            const glm::mat4 &NORMALM = IDENTITY_MATRIX,
-            const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
-            const FractionalView &FV = FractionalView(),
-            bool mirrorPass = false)
+    /** Cull grid tiles so that only visible ones will be drawn in further calls to drawMountains et drawWater */
+    void cull(const glm::vec3 &pointInPlane, const glm::vec3 &planeNormal)
     {
-        //
-        // Cull invisible tiles
-        //
-        static vector<pair<int, int>> indices;
-        indices.clear();
+        tilesToDraw.clear();
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
                 glm::vec2 tileCenter2D = gridSize * translation(iRow, jCol);
@@ -117,15 +108,22 @@ public:
                 glm::vec3 pointToCorner = tileCorner - pointInPlane;
                 bool visible = glm::dot(pointToCorner, planeNormal) > 0;
                 if (visible) {
-                    indices.push_back({iRow, jCol});
+                    tilesToDraw.push_back({iRow, jCol});
                 }
             }
         }
+    }
 
-        //
-        // Draw visible tiles
-        //
-        for (auto&& i : indices) {
+    /** draws every non-culled tile side by side in an ordered manner */
+    void drawCulled(
+            const glm::mat4 &MVP = IDENTITY_MATRIX,
+            const glm::mat4 &MV = IDENTITY_MATRIX,
+            const glm::mat4 &NORMALM = IDENTITY_MATRIX,
+            const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
+            const FractionalView &FV = FractionalView(),
+            bool mirrorPass = false)
+    {
+        for (auto&& i : tilesToDraw) {
             grid.useHeightMap(heightMap(i.first, i.second).id());
             grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
                       mirrorPass, false,
@@ -134,7 +132,7 @@ public:
         }
 
         if(!mirrorPass)
-            for (auto&& i : indices)  {
+            for (auto&& i : tilesToDraw)  {
                 water.useHeightMap(heightMap(i.first, i.second).id());
                 water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
                            noisePosFor(i.first, i.second),

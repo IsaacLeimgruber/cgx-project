@@ -110,11 +110,11 @@ void Init() {
 }
 
 void computeReflections(){
-
     reflectionBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
-    scene.cullThenDraw(camera.getPos(), camera.getFront(), mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true);
+    // scene.cull must have been called previously while drawing this frame (done in Display() at the time)
+    scene.drawCulled(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true);
     //scene.draw(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true, false);
     reflectionBuffer.Unbind();
 
@@ -149,6 +149,9 @@ void Display() {
         frameCount = 0;
     }
 
+    // the method scene.cull must be called before the scene is redrawn in the reflection buffer, that is before we call computeReflections
+    scene.cull(camera.getPos(), camera.getFront());
+
     //Compute matrices
     view_matrix = camera.GetViewMatrix();
     mirrored_view_matrix = camera.GetMirroredViewMatrix(0.0f);
@@ -178,8 +181,7 @@ void Display() {
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
-    scene.cullThenDraw(camera.getPos(), camera.getFront(),
-                       MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
+    scene.drawCulled(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
     screenQuadBuffer.Unbind();
 
 
