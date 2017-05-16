@@ -67,7 +67,7 @@ GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
 GLfloat lastSec = 0.0;
 GLuint frameCount = 0;
-
+LargeScene::TileSet visibleTiles;
 FractionalView fractionalView;
 
 void Init() {
@@ -109,35 +109,7 @@ void Init() {
     }
 }
 
-void computeReflections(){
-    reflectionBuffer.Bind();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
-
-    // scene.cull must have been called previously while drawing this frame (done in Display() at the time)
-    scene.drawCulledMountains(mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true);
-
-    reflectionBuffer.Unbind();
-
-    //Code below performs blur on reflection
-    if(enableBlurPostProcess){
-        blurQuad.setRenderingPassNumber(0);
-        blurQuad.updateTextureId(reflectionBuffer.getColorTexture());
-
-        reflectionBufferPostProcessing.Bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        blurQuad.Draw();
-        reflectionBufferPostProcessing.Unbind();
-
-        blurQuad.setRenderingPassNumber(1);
-        blurQuad.updateTextureId(reflectionBufferPostProcessing.getColorTexture());
-
-        reflectionBuffer.Bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        blurQuad.Draw();
-        reflectionBuffer.Unbind();
-    }
-}
+void computeReflections(LargeScene::TileSet const& visibleTiles);
 
 void Display() {
     GLfloat currentFrame = glfwGetTime();
@@ -150,8 +122,7 @@ void Display() {
         frameCount = 0;
     }
 
-    // the method scene.cull must be called before the scene is redrawn in the reflection buffer, that is before we call computeReflections
-    scene.cull(camera.getPos(), camera.getFront());
+    scene.writeVisibleTilesOnly(visibleTiles, camera.getPos(), camera.getFront());
 
     //Compute matrices
     view_matrix = camera.GetViewMatrix();
@@ -177,13 +148,13 @@ void Display() {
     scene.draw(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
     shadowBuffer.Unbind();
 
-    computeReflections();
+    computeReflections(visibleTiles);
 
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
-    scene.drawCulledMountains(MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
-    scene.drawCulledWater(MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
+    scene.drawMountainTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
+    scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
     screenQuadBuffer.Unbind();
 
 
@@ -194,6 +165,32 @@ void Display() {
     frameCount++;
 }
 
+void computeReflections(LargeScene::TileSet const& visibleTiles) {
+    reflectionBuffer.Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
+    scene.drawMountainTiles(visibleTiles, mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true);
+    reflectionBuffer.Unbind();
+
+    //Code below performs blur on reflection
+    if(enableBlurPostProcess){
+        blurQuad.setRenderingPassNumber(0);
+        blurQuad.updateTextureId(reflectionBuffer.getColorTexture());
+
+        reflectionBufferPostProcessing.Bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        blurQuad.Draw();
+        reflectionBufferPostProcessing.Unbind();
+
+        blurQuad.setRenderingPassNumber(1);
+        blurQuad.updateTextureId(reflectionBufferPostProcessing.getColorTexture());
+
+        reflectionBuffer.Bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        blurQuad.Draw();
+        reflectionBuffer.Unbind();
+    }
+}
 
 // transforms glfw screen coordinates into normalized OpenGL coordinates.
 vec2 TransformScreenCoords(GLFWwindow* window, int x, int y) {

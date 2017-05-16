@@ -40,11 +40,12 @@ class LargeScene {
     /** resolution of the height maps */
     int heightMapWidth, heightMapHeight;
 
-    /** the indices of the tiles to draw */
-    vector<pair<int, int>> tilesToDraw;
-
 public:
     enum Direction { UP = +1, DOWN = -1 };
+
+    struct TileSet {
+        vector<const pair<int, int>> tiles;
+    };
 
     /** initializes the heightMaps */
     void initHeightMap(int textureWidth = 1024, int textureHeight = 1024) {
@@ -96,26 +97,26 @@ public:
             }
     }
 
-    /** Cull grid tiles so that only visible ones will be drawn in further calls to drawMountains et drawWater */
-    void cull(const glm::vec3 &pointInPlane, const glm::vec3 &planeNormal)
+    void writeVisibleTilesOnly(TileSet& visible, const glm::vec3 &pointInPlane, const glm::vec3 &planeNormal)
     {
-        tilesToDraw.clear();
+        visible.tiles.clear();
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
                 glm::vec2 tileCenter2D = gridSize * translation(iRow, jCol);
                 glm::vec3 tileCenter = glm::vec3(tileCenter2D.x, 0, -tileCenter2D.y);
                 glm::vec3 tileCorner = tileCenter + glm::vec3(sgn(planeNormal.x), 0, sgn(planeNormal.z));
                 glm::vec3 pointToCorner = tileCorner - pointInPlane;
-                bool visible = glm::dot(pointToCorner, planeNormal) > 0;
-                if (visible) {
-                    tilesToDraw.push_back({iRow, jCol});
+                bool isVisible = glm::dot(pointToCorner, planeNormal) > 0;
+                if (isVisible) {
+                    visible.tiles.push_back({iRow, jCol});
                 }
             }
         }
     }
 
     /** draws every non-culled mountain tile side by side in an ordered manner */
-    void drawCulled(
+    void drawMountainTiles(
+            TileSet const& tilesToDraw,
             const glm::mat4 &MVP = IDENTITY_MATRIX,
             const glm::mat4 &MV = IDENTITY_MATRIX,
             const glm::mat4 &NORMALM = IDENTITY_MATRIX,
@@ -123,34 +124,7 @@ public:
             const FractionalView &FV = FractionalView(),
             bool mirrorPass = false)
     {
-        for (auto&& i : tilesToDraw) {
-            grid.useHeightMap(heightMap(i.first, i.second).id());
-            grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
-                      mirrorPass, false,
-                      gridSize * translation(i.first, i.second));
-
-        }
-        if (!mirrorPass)
-        for (auto&& i : tilesToDraw)  {
-            water.useHeightMap(heightMap(i.first, i.second).id());
-            water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
-                       noisePosFor(i.first, i.second),
-                       gridSize * translation(i.first, i.second));
-
-        }
-    }
-
-
-    /** draws every non-culled mountain tile side by side in an ordered manner */
-    void drawCulledMountains(
-            const glm::mat4 &MVP = IDENTITY_MATRIX,
-            const glm::mat4 &MV = IDENTITY_MATRIX,
-            const glm::mat4 &NORMALM = IDENTITY_MATRIX,
-            const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
-            const FractionalView &FV = FractionalView(),
-            bool mirrorPass = false)
-    {
-        for (auto&& i : tilesToDraw) {
+        for (auto&& i : tilesToDraw.tiles) {
             grid.useHeightMap(heightMap(i.first, i.second).id());
             grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
                       mirrorPass, false,
@@ -160,14 +134,15 @@ public:
     }
 
     /** draws every non-culled water tile side by side in an ordered manner */
-    void drawCulledWater(
+    void drawWaterTiles(
+            TileSet const& tilesToDraw,
             const glm::mat4 &MVP = IDENTITY_MATRIX,
             const glm::mat4 &MV = IDENTITY_MATRIX,
             const glm::mat4 &NORMALM = IDENTITY_MATRIX,
             const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
             const FractionalView &FV = FractionalView())
     {
-        for (auto&& i : tilesToDraw)  {
+        for (auto&& i : tilesToDraw.tiles)  {
             water.useHeightMap(heightMap(i.first, i.second).id());
             water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
                        noisePosFor(i.first, i.second),

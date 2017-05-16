@@ -105,6 +105,8 @@ void main() {
     vec3 vert = vec3(0.0f, 1.0f, 0.0f);
     float slope = dot(gridNormal, vert);//range [-1, 1], highest slope when 0
 
+
+    //heightCol = mix(SAND_COLOR, WATER_COLOR_DEEP, (vheight_F) / (WATER_HEIGHT_DEEP)); /*
         if(vheight_F <= WATER_HEIGHT){
             heightCol = mix(SAND_COLOR, WATER_COLOR_DEEP, (vheight_F) / (WATER_HEIGHT_DEEP));
 
@@ -140,7 +142,7 @@ void main() {
             }
             //heightCol = mix(heightCol, ROCK_COLOR, -TWEAK_SLOPE_MIX*x*(x - 1));
         }
-
+//*/
 
     heightCol /= 255.0f;
     float cosNL = dot(normal_MV, lightDir);
