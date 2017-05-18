@@ -183,5 +183,5 @@ void main() {
 
     float brightness = dot(color.rgb, brightnessTreshold);
 
-    brightColor = mix(vec4(0.0, 0.0, 0.0, 1.0), vec4(color), smoothstep(1.5, 9.0, brightness));
+    brightColor = mix(vec4(0.0, 0.0, 0.0, 1.0), vec4(color), smoothstep(1.5, 6.0, brightness));
 }

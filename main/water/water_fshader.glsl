@@ -160,7 +160,7 @@ void main() {
         lightingResult += visibility *
                ((vec3(0.8, 0.8, 0.8) * reflection * cosNLDiffused)
                +
-               (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 256.0) * Ls));
+               (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 512.0) * Ls));
         lightingResultScum += visibility *
                (lightingResultScum * cosNLDiffused);
     }
