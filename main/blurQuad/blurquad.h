@@ -13,7 +13,7 @@ class BlurQuad {
 
         float screenquad_width_;
         float screenquad_height_;
-        float texScale = 0.3f; //Scale the texture for the blur lookup
+        float texScale = 0.2f; //Scale the texture for the blur lookup
 
     public:
 
@@ -124,7 +124,6 @@ class BlurQuad {
         void setRenderingPassNumber(int n){
             glUseProgram(program_id_);
             glUniform1i(secondPass_id, n);
-            glUseProgram(0);
         }
 
         void Draw() {

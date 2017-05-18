@@ -20,7 +20,10 @@ in vec3 viewDir_F;
 in vec2 uv_F;
 in float vheight_F;
 
-out vec4 color;
+layout (location = 0) out vec4 color;
+layout (location = 1) out vec4 brightColor;
+
+const vec3 brightnessTreshold = vec3(1.0, 1.0, 1.0);
 
 const float SLOPE_THRESHOLD = 0.5f;
 const float MIX_SLOPE_THRESHOLD = 0.2f;
@@ -172,9 +175,13 @@ void main() {
          lightingResult +=visibility *
                 ((heightCol * cosNL * Ld)
                 +
-                (vec3(0.1f,0.1f,0.1f) * pow(max(0, dot(reflectionDir, viewDir_F)), 256) * Ls));
+                (vec3(0.0f,0.0f,0.0f) * pow(max(0, dot(reflectionDir, viewDir_F)), 0) * Ls));
     }
 
     //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -viewDir_F, lightDir);
     color = vec4(clamp(lightingResult, vec3(0.0f), vec3(1.0f)), 1.0f);
+
+    float brightness = dot(color.rgb, brightnessTreshold);
+
+    brightColor = mix(vec4(0.0, 0.0, 0.0, 1.0), vec4(color), smoothstep(1.5, 9.0, brightness));
 }

@@ -7,7 +7,8 @@ uniform vec2 stretchCoeff;
 uniform vec3 raymarchDirection;
 uniform vec3 La, Ld, Ls;
 
-out vec4 color;
+layout (location = 0) out vec4 color;
+layout (location = 1) out vec4 brightColor;
 
 const float alphaThreshold = 0.0f;
 const float edgeSmoothingStart = 0.35f;
@@ -15,6 +16,7 @@ const float edgeSmoothingEnd = 0.49f;
 const float minClamp = 0.1f;
 const float maxClamp = 0.5f;
 const vec2 uvCenter = vec2(0.5, 0.5);
+const vec3 brightnessTreshold = vec3(1.0, 1.0, 1.0);
 
 float expIncrease(in float v){
 
@@ -61,4 +63,8 @@ void main() {
     vec3 tmpColor = mix(vec3(1.0f), Ld, smoothstep(0.0f, 1.0, depthVal));
 
     color = vec4(tmpColor, clamp(alphaVal, 0.0f, 1.0f));
+
+    float brightness = dot(color.rgb, brightnessTreshold);
+
+    brightColor = mix(vec4(0.0, 0.0, 0.0, color.a), vec4(color), smoothstep(1.5, 6.0, brightness));
 }

@@ -24,9 +24,11 @@ in vec3 viewDir_MV_F;
 in vec4 gl_FragCoord;
 in vec4 shadowCoord_F;
 
-out vec4 color;
+layout (location = 0) out vec4 color;
+layout (location = 1) out vec4 brightColor;
 
 const vec3 WATER_COLOR = vec3(75.0f,126.0f,157.0f) / 255.0f;
+const vec3 brightnessTreshold = vec3(1.0, 1.0, 1.0);
 const vec3 Y = vec3(0.0f, 1.0f, 0.0f);
 const float cosWaterReflectionAngleStart = 0.20f;
 const float cosWaterReflectionAngleEnd = 0.90f;
@@ -148,7 +150,7 @@ void main() {
 
     vec4 scumColor = texture(diffuseMap, (uv_F + vec2(0.0f, valTimeShift)) * scumScale).rgba;
     vec3 lightingResult = reflection * La;
-    vec3 lightingResultScum =  scumColor.rgb;
+    vec3 lightingResultScum =  scumColor.rgb * La;
 
     if(cosNL > 0.0){
 
@@ -175,5 +177,9 @@ void main() {
     vec4 tmpColor = blendColors(vec4(lightingResultScum, scumColor.a), seaColor);
 
     color = mix(seaColor, tmpColor, smoothstep(-0.15, 0.015, tHeight_F) * smoothstep(0.001, 0.006, vpoint_F.y));
+
+    float brightness = dot(color.rgb, brightnessTreshold);
+
+    brightColor = mix(vec4(0.0, 0.0, 0.0, color.a), vec4(color), smoothstep(1.5, 6.0, brightness));
 
 }

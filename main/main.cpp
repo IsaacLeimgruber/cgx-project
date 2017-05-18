@@ -23,7 +23,8 @@ LargeScene scene;
 SceneControler sceneControler(scene);
 SkyDome skyDome;
 Camera camera;
-ColorAndDepthFBO screenQuadBuffer, reflectionBuffer, reflectionBufferPostProcessing;
+ColorAndDepthFBO screenQuadBuffer, reflectionBuffer, screenQuadBufferPostProcessing;
+DoubleColorAndDepthFBO bloomHDRBuffer;
 DepthFBO shadowBuffer;
 ScreenQuad screenquad;
 BlurQuad blurQuad;
@@ -78,15 +79,16 @@ void Init() {
     material = Material{};
 
     // buffers must be initialized in that order
-    int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGBA16, GL_RGBA, GL_UNSIGNED_INT, false, false);
-
+    int screenQuadBuffer_texture_id = screenQuadBuffer.Init(screenWidth, screenHeight, GL_RGB16F, GL_RGB, GL_FLOAT, false, false);
+    bloomHDRBuffer.Init(screenWidth, screenHeight, GL_RGB16F, GL_RGB, GL_FLOAT, true, false);
     scene.initHeightMap(perlinTextureSize, perlinTextureSize);
-    reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16, GL_RGBA, GL_UNSIGNED_INT, true, true);
-    reflectionBufferPostProcessing.Init(screenWidth, screenHeight, GL_RGBA16, GL_RGBA, GL_UNSIGNED_INT, true, true);
+    reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
+    screenQuadBufferPostProcessing.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
 
-    int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT16, GL_UNSIGNED_INT);
+    int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT32, GL_UNSIGNED_INT);
 
-    screenquad.Init(screenQuadBuffer_texture_id, 0);
+    //screenquad.Init(bloomHDRBuffer.getColorTexture(0), screenQuadBuffer_texture_id);
+    screenquad.Init(bloomHDRBuffer.getColorTexture(0), screenQuadBuffer_texture_id);
     blurQuad.Init(screenWidth, screenHeight, reflectionBuffer.getColorTexture());
     scene.init(shadowBuffer_texture_id, reflectionBuffer.getColorTexture(), &light);
     skyDome.Init();
@@ -110,6 +112,7 @@ void Init() {
 }
 
 void computeReflections(LargeScene::TileSet const& visibleTiles);
+void computeBloom();
 
 void Display() {
     GLfloat currentFrame = glfwGetTime();
@@ -150,13 +153,14 @@ void Display() {
 
     computeReflections(visibleTiles);
 
-    screenQuadBuffer.Bind();
+    bloomHDRBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
     scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
-    screenQuadBuffer.Unbind();
+    bloomHDRBuffer.Unbind();
 
+    computeBloom();
 
     glViewport(0, 0, window_width, window_height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -177,13 +181,13 @@ void computeReflections(LargeScene::TileSet const& visibleTiles) {
         blurQuad.setRenderingPassNumber(0);
         blurQuad.updateTextureId(reflectionBuffer.getColorTexture());
 
-        reflectionBufferPostProcessing.Bind();
+        screenQuadBufferPostProcessing.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         blurQuad.Draw();
-        reflectionBufferPostProcessing.Unbind();
+        screenQuadBufferPostProcessing.Unbind();
 
         blurQuad.setRenderingPassNumber(1);
-        blurQuad.updateTextureId(reflectionBufferPostProcessing.getColorTexture());
+        blurQuad.updateTextureId(screenQuadBufferPostProcessing.getColorTexture());
 
         reflectionBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -191,6 +195,27 @@ void computeReflections(LargeScene::TileSet const& visibleTiles) {
         reflectionBuffer.Unbind();
     }
 }
+
+void computeBloom() {
+
+    blurQuad.setRenderingPassNumber(0);
+    blurQuad.updateTextureId(bloomHDRBuffer.getColorTexture(1));
+
+    screenQuadBufferPostProcessing.Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    blurQuad.Draw();
+    screenQuadBufferPostProcessing.Unbind();
+
+    blurQuad.setRenderingPassNumber(1);
+    blurQuad.updateTextureId(screenQuadBufferPostProcessing.getColorTexture());
+
+    screenQuadBuffer.Bind();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    blurQuad.Draw();
+    screenQuadBuffer.Unbind();
+
+}
+
 
 // transforms glfw screen coordinates into normalized OpenGL coordinates.
 vec2 TransformScreenCoords(GLFWwindow* window, int x, int y) {
@@ -264,6 +289,18 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             break;
         case GLFW_KEY_N:
             scene.toggleDebugMode();
+            break;
+        case GLFW_KEY_U:
+            screenquad.updateExposure(-0.2);
+            break;
+        case GLFW_KEY_I:
+            screenquad.updateExposure(0.2);
+            break;
+        case GLFW_KEY_O:
+            screenquad.updateGamma(-0.1);
+            break;
+        case GLFW_KEY_P:
+            screenquad.updateGamma(0.1);
             break;
         }
     } else if(action == GLFW_RELEASE){

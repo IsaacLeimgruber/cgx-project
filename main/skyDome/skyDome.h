@@ -39,7 +39,7 @@ private:
     const vec3 sunsetColor = vec3(1.0f, 0.568f, 0.078f);
     const vec3 nightSkyColor = vec3(0.129f, 0.2f, 0.267f);
     const vec3 SUNSETCOL_topSky = vec3(0.298f, 0.494f, 0.741f);
-    const vec3 SUNSETCOL_bottomSky = vec3(0.894f, 0.533f, 0.537f);
+    const vec3 SUNSETCOL_bottomSky = vec3(0.894f, 0.333f, 0.333f);
     const vec3 mistColor = vec3(0.9f, 0.9f, 0.98f);
     const vec3 blueSkyColor = vec3(0.098f, 0.369f, 0.765f);
     const vec3 lightblueSkyColor = vec3(0.059f, 0.678f, 1.0f);
@@ -47,28 +47,29 @@ private:
     const vec3 OUTERSPACECOL_topSky = vec3(0.059f, 0.078f, 0.3f);
 
     // Sun color values
-    const vec3 SUN_COLOR = vec3(1.0f, 1.0f, 1.0f);
-    const vec3 SUN_COLOR_SUNSET = vec3(1.0f, 1.0f, 0.522f);
+    const vec3 SUN_COLOR = vec3(5.0f, 5.0f, 5.0f);
+    const vec3 SUN_COLOR_SUNSET = vec3(4.0f, 4.5f, 2.0f);
 
     // Light color values
     const vec3 LIGHTCOL_NIGHT = nightSkyColor;
-    const vec3 LIGHTCOL_SUNSET = SUNSETCOL_bottomSky;
+    const vec3 LIGHTCOL_SUNSET_DIFFUSE = vec3(0.894f, 0.333f, 0.333f);
+    const vec3 LIGHTCOL_SUNSET_SPECULAR = vec3(4.0f, 2.5f, 2.5f);
     const vec3 LIGHTCOL_DAY = vec3(0.0f, 0.0f, 0.0f);
 
     // General dome gradient begin/end positions values
     const float NIGHTGRADIENT_START = 0.0f;
     const float NIGHTGRADIENT_END = 3.0f;
     const float SUNSETGRADIENT_START = 0.0f;
-    const float SUNSETGRADIENT_END = 4.0f;
+    const float SUNSETGRADIENT_END = 3.0f;
     const float DAYGRADIENT_START = -0.4f;
-    const float DAYGRADIENT_END = 5.0f;
+    const float DAYGRADIENT_END = 4.0f;
 
     // Color change positions values
-    const float sunsetEnd = 2.5f;
-    const float sunsetBegin = 0.0f;
+    const float sunsetEnd = 6.2f;
+    const float sunsetBegin = -1.0f;
     const float nightBegin = -2.0f;
-    const float outerSpaceBegin = 4.0f;
-    const float outerSpaceEnd = 8.0f;
+    const float outerSpaceBegin = 6.0f;
+    const float outerSpaceEnd = 12.0f;
 
     // Values passed to GPU
     float domeGradBottom = DAYGRADIENT_START;
@@ -229,7 +230,7 @@ public:
         mat4 farCloudPlaneMVP = skyboxMVP * farCloudPlaneModelMatrix;
 
         float time = glfwGetTime();
-        float theta = 0.05 * time - 1.0;
+        float theta = 0.05 * time - 0.2;
 
         vec3 sunPos = sunOrbitCenter + radius * cos(theta) * sunOrbitXAxis + radius * sin(theta) * sunOrbitYAxis;
         computeSkyColors(sunPos, viewPos);
@@ -267,7 +268,7 @@ public:
             float sunSetCoeff = clamp((sunPos.y - nightBegin) / (sunsetBegin - nightBegin), 0.0f, 1.0f);
             bottomSkyColor = mix(nightSkyColor, SUNSETCOL_bottomSky, sunSetCoeff);
             topSkyColor = mix(nightSkyColor, SUNSETCOL_topSky, sunSetCoeff);
-            light->setDiffuseIntensity(mix(LIGHTCOL_NIGHT, LIGHTCOL_SUNSET, sunSetCoeff));
+            light->setDiffuseIntensity(mix(LIGHTCOL_NIGHT, LIGHTCOL_SUNSET_DIFFUSE, sunSetCoeff));
 
             sunColor = mix(SUN_COLOR, SUN_COLOR_SUNSET, sunSetCoeff);
             domeGradBottom = mix(NIGHTGRADIENT_START, SUNSETGRADIENT_START, sunSetCoeff);
@@ -280,8 +281,8 @@ public:
             sunSetCoeff = Utils::smoothExpTransition(sunSetCoeff);
             bottomSkyColor = mix(SUNSETCOL_bottomSky, mistColor, sunSetCoeff);
             topSkyColor = mix(SUNSETCOL_topSky, blueSkyColor, sunSetCoeff);
-            light->setDiffuseIntensity(mix(LIGHTCOL_SUNSET, light->getDefaultDiffuseIntensity(), sunSetCoeff));
-            light->setSpecularIntensity(mix(LIGHTCOL_SUNSET, light->getDefaultDiffuseIntensity(), sunSetCoeff));
+            light->setDiffuseIntensity(mix(LIGHTCOL_SUNSET_DIFFUSE, light->getDefaultDiffuseIntensity(), sunSetCoeff));
+            light->setSpecularIntensity(mix(LIGHTCOL_SUNSET_SPECULAR, light->getDefaultSpecularIntensity(), sunSetCoeff));
 
             sunColor = mix(SUN_COLOR_SUNSET, SUN_COLOR, sunSetCoeff);
             domeGradBottom = mix(SUNSETGRADIENT_START, DAYGRADIENT_START, sunSetCoeff);

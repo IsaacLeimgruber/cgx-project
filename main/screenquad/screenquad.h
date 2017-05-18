@@ -9,7 +9,10 @@ class ScreenQuad {
         GLuint program_id_;             // GLSL shader program ID
         GLuint vertex_buffer_object_;   // memory buffer
         GLuint texture_id_;             // texture ID
-        GLuint depthTexture_id_;
+        GLuint bloomTexture_id_;
+        GLuint exposure_id, gamma_id;
+        float exposure = 2.4;
+        float gamma = 0.7;
 
     public:
         void Init(GLuint texture , GLuint depthTexture) {
@@ -74,15 +77,28 @@ class ScreenQuad {
             GLuint tex_id = glGetUniformLocation(program_id_, "colorTex");
             glUniform1i(tex_id, 0 /*GL_TEXTURE0*/);
 
-            this->depthTexture_id_ = depthTexture;
-            glBindTexture(GL_TEXTURE_2D, depthTexture_id_);
-            GLuint depthTex_id = glGetUniformLocation(program_id_, "depthTex");
+            this->bloomTexture_id_ = depthTexture;
+            glBindTexture(GL_TEXTURE_2D, bloomTexture_id_);
+            GLuint depthTex_id = glGetUniformLocation(program_id_, "bloomTex");
             glUniform1i(depthTex_id, 1 /*GL_TEXTURE1*/);
             glBindTexture(GL_TEXTURE_2D, 0);
+
+            exposure_id = glGetUniformLocation(program_id_, "exposure");
+            gamma_id = glGetUniformLocation(program_id_, "gamma");
 
             // to avoid the current object being polluted
             glBindVertexArray(0);
             glUseProgram(0);
+        }
+
+        void updateGamma(float g){
+            gamma += g;
+            std::cout << "Gamma: " << gamma << std::endl;
+        }
+
+        void updateExposure(float e){
+            exposure += e;
+            std::cout << "Exposure: " << exposure << std::endl;
         }
 
         void Cleanup() {
@@ -98,11 +114,14 @@ class ScreenQuad {
             glUseProgram(program_id_);
             glBindVertexArray(vertex_array_id_);
 
+            glUniform1f(exposure_id, exposure);
+            glUniform1f(gamma_id, gamma);
+
             // bind texture
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, texture_id_);
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, depthTexture_id_);
+            glBindTexture(GL_TEXTURE_2D, bloomTexture_id_);
 
             // draw
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

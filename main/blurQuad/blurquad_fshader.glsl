@@ -9,11 +9,11 @@ uniform float tex_width;
 uniform float tex_height;
 uniform int second_pass;
 
-const float[3] G = float[3](0.327162,	0.345675,	0.327162);
+const float[5] G = float[5](0.26136,	0.24477,	0.28774,	0.24477,	0.26136);
 
 void main() {
 
-    int K = 1;
+    int K = 2;
 
     vec3 tot_image = vec3(0.0);
     float tot_weight = 0;

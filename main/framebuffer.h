@@ -171,7 +171,7 @@ public:
         glViewport(0, 0, width, height);
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        //glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
     }
 
     void Cleanup() {
@@ -259,6 +259,94 @@ public:
 
     void Cleanup() {
         glDeleteTextures(1, &colorTextureId);
+        glDeleteRenderbuffers(1, &depthRenderBufferId);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
+        glDeleteFramebuffers(1, &framebufferObjectId);
+    }
+};
+
+class DoubleColorAndDepthFBO: public FrameBuffer{
+
+private:
+    GLuint colorTexturesIds[2];
+    GLuint depthRenderBufferId;
+
+public:
+    virtual void Bind() {
+        glViewport(0, 0, width, height);
+        glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+        GLuint attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+        glDrawBuffers(2, attachments);
+    }
+
+    int Init(int imageWidth, int imageHeight,
+             GLint internalFormat, GLint format, GLint type, bool useInterpolation = false, bool mirrorRepeat = false) {
+        this->width = imageWidth;
+        this->height = imageHeight;
+
+        glGenTextures(2, colorTexturesIds);
+
+        // create color attachment
+        for(GLuint i = 0 ; i < 2; i++)
+        {
+            glBindTexture(GL_TEXTURE_2D, colorTexturesIds[i]);
+
+            if(mirrorRepeat){
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+            } else {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            }
+
+            if(useInterpolation){
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            } else {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            }
+
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
+                         format, type, NULL);
+        }
+
+        // create render buffer (for depth channel)
+
+        glGenRenderbuffers(1, &depthRenderBufferId);
+        glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBufferId);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+
+        // tie it all together
+        {
+            glGenFramebuffers(1, &framebufferObjectId);
+            glBindFramebuffer(GL_FRAMEBUFFER, framebufferObjectId);
+
+            for(int i = 0; i < 2; i++){
+            glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                   GL_COLOR_ATTACHMENT0 + i,
+                                   GL_TEXTURE_2D, colorTexturesIds[i],
+                                   0 /*level*/);
+            }
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                      GL_RENDERBUFFER, depthRenderBufferId);
+
+            checkFrameBufferStatus();
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0); // avoid pollution
+        }
+
+        return colorTexturesIds[0];
+    }
+
+    GLuint getColorTexture(int i){
+        return colorTexturesIds[i];
+    }
+
+    void Cleanup() {
+        glDeleteTextures(2, colorTexturesIds);
         glDeleteRenderbuffers(1, &depthRenderBufferId);
         glBindFramebuffer(GL_FRAMEBUFFER, 0 /*UNBIND*/);
         glDeleteFramebuffers(1, &framebufferObjectId);
