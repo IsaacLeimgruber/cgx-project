@@ -13,7 +13,6 @@ uniform sampler2D sandTex;
 uniform sampler2D rockTex;
 uniform vec3 La, Ld, Ls;
 uniform bool mirrorPass;
-uniform float alpha;
 
 in vec4 shadowCoord_F;
 in vec4 vpoint_MV_F;
@@ -192,5 +191,5 @@ void main() {
     }
 
     //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -viewDir_F, lightDir);
-    color = vec4(clamp(lightingResult, vec3(0.0f), vec3(1.0f)), alpha);
+    color = vec4(clamp(lightingResult, vec3(0.0f), vec3(1.0f)), 1.0f);
 }

@@ -115,15 +115,11 @@ void Init() {
     view_matrix             = camera.GetViewMatrix();
     depth_projection_matrix = glm::ortho(-sceneHalfMaxSize, sceneHalfMaxSize, -sceneHalfMaxSize, sceneHalfMaxSize, skyDomeRadius - sceneHalfMaxSize, skyDomeRadius + sceneHalfMaxSize);
     depth_view_matrix       = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 0, 0));
-    quad_model_matrix       = glm::scale(IDENTITY_MATRIX, grid_size * vec3(1.0f, 1.0f / grid_size, 1.0f));
+    depth_model_matrix      = glm::scale(IDENTITY_MATRIX, grid_size * vec3(1.0f, 1.0f, 1.0f));
     depth_mvp               = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix       = biasMatrix * depth_mvp;
-    depth_model_matrix      = quad_model_matrix;
+    quad_model_matrix       = depth_model_matrix;
 
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glDepthFunc(GL_LESS);
 
     for(auto& key : keys){
         key = false;
@@ -133,8 +129,8 @@ void Init() {
 void computeReflections(LargeScene::TileSet const& visibleTiles);
 
 void Display() {
-    glClear(GL_DEPTH_BUFFER_BIT);
-
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //perlin.Draw(vec2(0.f, 0.f));
     GLfloat currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
@@ -177,14 +173,14 @@ void Display() {
 
     shadowBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //scene.drawMountains(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
+    scene.drawMountains(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
     shadowBuffer.Unbind();
 
     computeReflections(visibleTiles);
 
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
+    //skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
     scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
     screenQuadBuffer.Unbind();
