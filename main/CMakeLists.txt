@@ -16,6 +16,9 @@ file(GLOB TEXTURES
     water/waterNormalMap2_perlinStretch.tga
     water/waterNormalMap3_perlinStretch.tga
     terrain/textures/grass512.tga
+    terrain/textures/grassbis512.tga
+    terrain/textures/grass2.tga
+    terrain/textures/grass3.tga
     terrain/textures/rock512.tga
     terrain/textures/rock512_2.tga
     terrain/textures/rock512_3.tga
@@ -59,6 +62,7 @@ file(GLOB SHADERS
     blurquad/blurquad_fshader.glsl
     perlin/perlin_vshader.glsl
     perlin/perlin_fshader.glsl
+    perlin/perlinGrass_fshader.glsl
     water/water_vshader.glsl
     water/water_fshader.glsl
     water/water_tcshader.glsl

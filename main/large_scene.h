@@ -40,6 +40,9 @@ class LargeScene {
     /** resolution of the height maps */
     int heightMapWidth, heightMapHeight;
 
+    /** resolution of the grass maps */
+    int grassMapWidth, grassMapHeight;
+
 public:
     enum Direction { UP = +1, DOWN = -1 };
 
@@ -60,9 +63,22 @@ public:
         }
     }
 
+    /** initializes the grassMaps */
+    void initGrassMap(int textureWidth = 1024, int textureHeight = 1024) {
+        grassMapWidth = textureWidth;
+        grassMapHeight = textureHeight;
+        perlin.Init("perlinGrass_fshader.glsl");
+        for (int iRow = 0; iRow < NROW; ++iRow) {
+            for (int jCol = 0; jCol < NCOL; ++jCol) {
+                grassMap(iRow, jCol).Init(textureWidth, textureHeight, GL_RGB32F, GL_RGB, GL_FLOAT, true);
+                recomputeGrassMap(iRow, jCol);
+            }
+        }
+    }
+
     /** initializes the tile objects (grid, water, etc.) */
     void init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
-        grid.Init(0, shadowBuffer_texture_id);
+        grid.Init(0, shadowBuffer_texture_id, 0);
         water.Init(0, reflectionBuffer_texture_id, shadowBuffer_texture_id);
         grid.useLight(light);
         water.useLight(light);
@@ -80,6 +96,7 @@ public:
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
                 grid.useHeightMap(heightMap(iRow, jCol).id());
+                grid.useGrassMap(grassMap(iRow, jCol).id());
                 grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
                           mirrorPass, shadowPass,
                           gridSize * translation(iRow, jCol));
@@ -116,6 +133,7 @@ public:
     {
         for (auto&& i : tilesToDraw.tiles) {
             grid.useHeightMap(heightMap(i.first, i.second).id());
+            grid.useGrassMap(grassMap(i.first, i.second).id());
             grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
                       mirrorPass, false,
                       gridSize * translation(i.first, i.second));
@@ -150,6 +168,7 @@ public:
         int col = (d == DOWN) ? oldColStart : colStart;
         for(int iRow = 0; iRow < NROW; ++iRow) {
             recomputeHeightMap(iRow, col);
+            recomputeGrassMap(iRow, col);
         }
     }
 
@@ -162,6 +181,7 @@ public:
         int row = (d == DOWN) ? oldRowStart : rowStart;
         for(int jCol = 0; jCol < NCOL; ++jCol) {
             recomputeHeightMap(row, jCol);
+            recomputeGrassMap(row, jCol);
         }
     }
 
@@ -187,6 +207,7 @@ public:
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
                 heightMap(iRow, jCol).Cleanup();
+                grassMap(iRow, jCol).Cleanup();
             }
         }
     }
@@ -208,8 +229,21 @@ private:
     /** redraws the perlin noise inside appropriate height map buffer */
     void recomputeHeightMap(int iRow, int jCol) {
         heightMap(iRow, jCol).Bind();
-        perlin.Draw(textureCorrection(noisePosFor(iRow, jCol)));
+        perlin.Draw(textureCorrection(noisePosFor(iRow, jCol), heightMapWidth, heightMapHeight));
         heightMap(iRow, jCol).Unbind();
+    }
+
+    /** the grass map buffer (i,j) */
+    ColorFBO& grassMap(int iRow, int jCol) {
+        static Matrix<ColorFBO> maps;
+        return maps[iRow][jCol];
+    }
+
+    /** redraws the perlin noise inside appropriate grass map buffer */
+    void recomputeGrassMap(int iRow, int jCol) {
+        grassMap(iRow, jCol).Bind();
+        perlin.Draw(textureCorrection(noisePosFor(iRow, jCol), grassMapWidth, grassMapHeight));
+        grassMap(iRow, jCol).Unbind();
     }
 
     /** the noise position of the grid (i,j) */
@@ -217,11 +251,11 @@ private:
         return noisePosition + translation(iRow, jCol);
     }
 
-    /** reduces the offset of one pixel for perfect heightMap texture juxtaposition */
-    glm::vec2 textureCorrection(glm::vec2 pos_offset) {
+    /** reduces the offset of one pixel for perfect texture juxtaposition */
+    glm::vec2 textureCorrection(glm::vec2 pos_offset, float width, float height) {
         return {
-            pos_offset.x * (1 - 1.0 / heightMapWidth),
-                    pos_offset.y * (1 - 1.0 / heightMapHeight)
+            pos_offset.x * (1 - 1.0 / width),
+                    pos_offset.y * (1 - 1.0 / height)
         };
     }
 
