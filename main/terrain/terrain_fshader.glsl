@@ -85,10 +85,8 @@ vec3 applyFog( in vec3  rgb,       // original color of the pixel
 
 void main() {
 
-    if(mirrorPass){
-        if(vpoint_F.y < -0.005f){
-            discard;
-        }
+    if (mirrorPass && vpoint_F.y < -0.005f) {
+        discard;
     }
 
     float grass_coef_noise = clamp(texture(grassMap, uv_F).g, 0.f, 1.f);

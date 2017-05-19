@@ -29,18 +29,19 @@ enum Camera_Movement {
     ROTATE_RIGHT
 };
 
-// Default camera values
-const GLfloat YAW        = -90.0f;
-const GLfloat PITCH      = -85.0f;
-const GLfloat SPEED      =  1.4f;
-const GLfloat SENSITIVTY =  0.05f;
-const GLfloat FOV        =  45.0f;
-const GLfloat MAX_FOV    =  90.0f;
-const GLfloat MIN_FOV    =  1.0f;
 // An abstract camera class that processes input and calculates the corresponding Eular Angles, Vectors and Matrices for use in OpenGL
 class Camera
 {
 public:
+    // Default camera values
+    static constexpr GLfloat YAW        = -90.0f;
+    static constexpr GLfloat PITCH      = -85.0f;
+    static constexpr GLfloat SPEED      =  2.0f;
+    static constexpr GLfloat SENSITIVTY =  0.05f;
+    static constexpr GLfloat FOV        =  90.0f;
+    static constexpr GLfloat MAX_FOV    =  90.0f;
+    static constexpr GLfloat MIN_FOV    =  1.0f;
+
     // Camera Attributes
     vec3 Position;
     vec3 Front;
@@ -56,7 +57,7 @@ public:
     GLfloat Fov;
 
     // Constructor with vectors
-    Camera(vec3 position = vec3(0.0f, 0.0f, 0.0f), vec3 up = vec3(0.0f, 1.0f, 0.0f), GLfloat yaw = YAW, GLfloat pitch = PITCH) : Front(vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Fov(FOV)
+    Camera(vec3 position = vec3(0.0f, 0.0f, 0.0f), vec3 up = vec3(0.0f, 1.0f, 0.0f), GLfloat speed = SPEED, GLfloat yaw = YAW, GLfloat pitch = PITCH) : Front(vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(speed), MouseSensitivity(SENSITIVTY), Fov(FOV)
     {
         this->Position = position;
         this->WorldUp = up;

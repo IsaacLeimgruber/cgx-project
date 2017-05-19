@@ -20,8 +20,9 @@
 
 using namespace glm;
 
-LargeScene scene;
-SceneControler sceneControler(scene);
+float grid_size = 1.0f;
+LargeScene scene(2 * grid_size);
+SceneControler sceneControler(scene, grid_size, grid_size);
 SkyDome skyDome;
 Camera camera;
 ColorAndDepthFBO screenQuadBuffer, reflectionBuffer, reflectionBufferPostProcessing;
@@ -89,7 +90,7 @@ void Init() {
     //perlin.Init("perlinGrass_fshader.glsl");
     start_time = glfwGetTime();
 
-    camera   = Camera{vec3(0.0, 2.5, 0.0)};
+    camera   = Camera{vec3(0.0, 10, 0.0), vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
     light    = Light{vec3(0.0, 2.0, -4.0)};
     material = Material{};
 
@@ -114,10 +115,10 @@ void Init() {
     view_matrix             = camera.GetViewMatrix();
     depth_projection_matrix = glm::ortho(-sceneHalfMaxSize, sceneHalfMaxSize, -sceneHalfMaxSize, sceneHalfMaxSize, skyDomeRadius - sceneHalfMaxSize, skyDomeRadius + sceneHalfMaxSize);
     depth_view_matrix       = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 0, 0));
-    depth_model_matrix      = IDENTITY_MATRIX;
+    depth_model_matrix      = glm::scale(IDENTITY_MATRIX, grid_size * vec3(1.0f, 1.0f, 1.0f));
     depth_mvp               = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix       = biasMatrix * depth_mvp;
-    quad_model_matrix       = IDENTITY_MATRIX; //scale(IDENTITY_MATRIX, vec3(1.01f, 1.0, 1.01f));
+    quad_model_matrix       = depth_model_matrix;
 
 
     for(auto& key : keys){
@@ -179,7 +180,7 @@ void Display() {
 
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
+    //skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
     scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
     screenQuadBuffer.Unbind();
@@ -246,7 +247,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
-    projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 150.0f);
+    projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 5000.0f);
 }
 
 // Gets called when the windows/framebuffer is resized.
@@ -259,7 +260,7 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
 
     glViewport(0, 0, window_width, window_height);
 
-    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 150.0f);
+    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 5000.0f);
 
     glfwGetWindowSize(window, &window_width_sc, &window_height_sc);
 }

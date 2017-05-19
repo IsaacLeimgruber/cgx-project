@@ -11,10 +11,11 @@
 class LargeScene {
 
     /** the dimensions of this LargeScene's rectangular matrix */
-    enum {NROW = 10, NCOL = 10};
+    enum {NROW = 3, NCOL = 3};
 
     /** the dimension of the Grid as seen per its vertex shader 2 = size([-1;1]) */
-    const float gridSize = 2.0f;
+    float gridSize = 2.0f;
+    float worldGridSize;
 
     template <class T> using Row = std::array<T, NCOL>;
     template <class T> using Matrix = std::array<Row<T>, NROW>;
@@ -45,6 +46,8 @@ class LargeScene {
 
 public:
     enum Direction { UP = +1, DOWN = -1 };
+
+    LargeScene(float worldGridSize) : worldGridSize{worldGridSize} {}
 
     struct TileSet {
         vector<pair<int, int>> tiles;
@@ -109,9 +112,9 @@ public:
         visible.tiles.clear();
         for (int iRow = 0; iRow < NROW; ++iRow) {
             for (int jCol = 0; jCol < NCOL; ++jCol) {
-                glm::vec2 tileCenter2D = gridSize * translation(iRow, jCol);
+                glm::vec2 tileCenter2D = worldGridSize * translation(iRow, jCol);
                 glm::vec3 tileCenter = glm::vec3(tileCenter2D.x, 0, -tileCenter2D.y);
-                glm::vec3 tileCorner = tileCenter + glm::vec3(sgn(planeNormal.x), 0, sgn(planeNormal.z));
+                glm::vec3 tileCorner = tileCenter + (worldGridSize / 2) * glm::vec3(sgn(planeNormal.x), 0, sgn(planeNormal.z));
                 glm::vec3 pointToCorner = tileCorner - pointInPlane;
                 bool isVisible = glm::dot(pointToCorner, planeNormal) > 0;
                 if (isVisible) {
