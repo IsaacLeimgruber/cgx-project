@@ -12,6 +12,7 @@ struct ProgramIds{
     GLuint zoom_id, zoomOffset_id, translation_id;
     GLuint heightMap_id, mirrorMap_id;
     GLuint grassMap_id;
+    GLuint alpha_id;
 };
 
 class GridMesh: public ILightable{
@@ -30,6 +31,7 @@ class GridMesh: public ILightable{
         ProgramIds currentProgramIds, normalProgramIds, shadowProgramIds, debugProgramIds;
 
         GLuint num_indices_;
+        int firstCorner;
         Light* light;
         Material material;
         int gridDimensions;
@@ -37,9 +39,13 @@ class GridMesh: public ILightable{
         bool wireframeDebugEnabled;
 
     public:
-        GridMesh():light{nullptr}, material{Material()}, debug{false}, wireframeDebugEnabled{false} {
-
-        }
+        GridMesh(int firstCorner = 0)
+            : light{nullptr}
+            , material{Material()}
+            , debug{false}
+            , wireframeDebugEnabled{false}
+            , firstCorner{firstCorner}
+        {}
 
         void genGrid(int grid_dim){
             glGenVertexArrays(1, &vertex_array_id_);
@@ -107,6 +113,7 @@ class GridMesh: public ILightable{
                 programIds.translation_id = glGetUniformLocation(programIds.program_id, "translation");
                 programIds.heightMap_id = glGetUniformLocation(programIds.program_id, "heightMap");
                 programIds.grassMap_id = glGetUniformLocation(programIds.program_id, "grassMap");
+                programIds.alpha_id = glGetUniformLocation(programIds.program_id, "alpha");
             }
 
             //normapProgramIds must be used last, or use: glUseProgram(normalProgramIds.program_id) here

@@ -153,12 +153,12 @@ public:
             std::vector<GLuint>::iterator i = indices.begin();
             for(r = 0; r < rings-1; r++) {
                 for(s = 0; s < sectors-1; s++) {
-                    *i++ = r * sectors + s;
+                    *i++ = r     * sectors + s;
+                    *i++ = r     * sectors + (s+1);
                     *i++ = (r+1) * sectors + (s+1);
-                    *i++ = r * sectors + (s+1);
-                    *i++ = r * sectors + s;
+                    *i++ = r     * sectors + s;
+                    *i++ = (r+1) * sectors + (s+1);
                     *i++ = (r+1) * sectors + s;
-                    *i++ = (r+1) * sectors + (s+1);
                 }
             }
         }

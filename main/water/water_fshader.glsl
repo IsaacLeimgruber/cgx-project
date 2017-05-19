@@ -171,8 +171,8 @@ void main() {
 
     //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -vpoint_MV_F.xyz, vec3(0.0,0.0,0.0));
 
-    vec4 seaColor = vec4(lightingResult, reflectionAlpha);
-    vec4 tmpColor = blendColors(vec4(lightingResultScum, scumColor.a), seaColor);
+    vec4 seaColor = vec4(lightingResult, reflectionAlpha * alpha);
+    vec4 tmpColor = blendColors(vec4(lightingResultScum, scumColor.a), seaColor * alpha);
 
     color = mix(seaColor, tmpColor, smoothstep(-0.15, 0.015, tHeight_F) * smoothstep(0.001, 0.006, vpoint_F.y));
 

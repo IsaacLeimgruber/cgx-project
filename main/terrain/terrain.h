@@ -16,9 +16,8 @@ class Grid: public GridMesh{
     GLuint translationId, translationDebugId;
 
     public:
-        Grid(){
-
-        }
+        Grid(int firstCorner = 0) : GridMesh(firstCorner)
+        {}
 
         void Init(GLuint heightMap, GLuint shadowMap, GLuint grassMap) {
             // compile the shaders.
@@ -45,7 +44,7 @@ class Grid: public GridMesh{
             glUseProgram(normalProgramIds.program_id);
 
             // vertex coordinates and indices
-            genGrid(8);
+            genGrid(4);
 
             // load texture
             loadHeightMap(heightMap);
@@ -92,7 +91,8 @@ class Grid: public GridMesh{
                   const FractionalView &FV = FractionalView(),
                   bool mirrorPass = false,
                   bool shadowPass = false,
-                  const glm::vec2 &translation = glm::vec2(0, 0)) {
+                  const glm::vec2 &translation = glm::vec2(0, 0),
+                  float alpha = 1) {
 
             currentProgramIds = (shadowPass) ? shadowProgramIds : normalProgramIds;
 
@@ -102,6 +102,7 @@ class Grid: public GridMesh{
             bindGrassMapTexture();
             glUniformMatrix4fv(currentProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
             glUniform2fv(currentProgramIds.translation_id, 1, glm::value_ptr(translation));
+            glUniform1f(currentProgramIds.alpha_id, alpha);
             activateTextureUnits();
 
             //update light

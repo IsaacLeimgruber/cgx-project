@@ -71,7 +71,8 @@ class Water: public GridMesh{
                   const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
                   const FractionalView &FV = FractionalView(),
                   const glm::vec2 &offset = glm::vec2(0.0f, 0.0f),
-                  const glm::vec2 translation = glm::vec2(0, 0)) {
+                  const glm::vec2 translation = glm::vec2(0, 0),
+                  float alpha = 1.f) {
 
             glUseProgram(normalProgramIds.program_id);
             currentProgramIds = normalProgramIds;
@@ -79,6 +80,7 @@ class Water: public GridMesh{
             bindHeightMapTexture();
             glUniformMatrix4fv(normalProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
             glUniform1f(time_id, glfwGetTime());
+            glUniform1f(currentProgramIds.alpha_id, alpha);
             glUniform2fv(offset_id, 1, glm::value_ptr(offset));
             glUniform2fv(currentProgramIds.translation_id, 1, glm::value_ptr(translation));
 

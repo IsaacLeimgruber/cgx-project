@@ -3,6 +3,7 @@
 
 #include <array>
 #include <iostream>
+#include <algorithm>
 #include "water/water.h"
 #include "terrain/terrain.h"
 #include "perlin/perlin.h"
@@ -11,7 +12,7 @@
 class LargeScene {
 
     /** the dimensions of this LargeScene's rectangular matrix */
-    enum {NROW = 3, NCOL = 3};
+    enum {NROW = 10, NCOL = 10};
 
     /** the dimension of the Grid as seen per its vertex shader 2 = size([-1;1]) */
     float gridSize = 2.0f;
@@ -49,8 +50,13 @@ public:
 
     LargeScene(float worldGridSize) : worldGridSize{worldGridSize} {}
 
+    struct Index {
+        int iRow;
+        int jCol;
+    };
+
     struct TileSet {
-        vector<pair<int, int>> tiles;
+        vector<pair<Index, float>> tiles;
     };
 
     /** initializes the heightMaps */
@@ -116,10 +122,30 @@ public:
                 glm::vec3 tileCenter = glm::vec3(tileCenter2D.x, 0, -tileCenter2D.y);
                 glm::vec3 tileCorner = tileCenter + (worldGridSize / 2) * glm::vec3(sgn(planeNormal.x), 0, sgn(planeNormal.z));
                 glm::vec3 pointToCorner = tileCorner - pointInPlane;
+                float depth = glm::dot(tileCenter - pointInPlane, tileCenter - pointInPlane);
                 bool isVisible = glm::dot(pointToCorner, planeNormal) > 0;
                 if (isVisible) {
-                    visible.tiles.push_back({iRow, jCol});
+                    visible.tiles.push_back({Index{iRow, jCol}, depth});
                 }
+            }
+        }
+
+        //sort tiles to that tiles nearer to pointInPlane are drawn first
+        std::sort(visible.tiles.begin(), visible.tiles.end(),
+                  [](pair<Index, float> const& a, pair<Index, float> const& b) {
+            return a.second < b.second;
+        });
+
+        //scale depth between -1 and 1
+        if (visible.tiles.back().second - visible.tiles.front().second > 1) {
+            float inv_maxDepth = 1.0f / (visible.tiles.back().second - visible.tiles.front().second);
+            for (auto& tile : visible.tiles) {
+                tile.second -= visible.tiles.front().second;
+                tile.second *= inv_maxDepth;
+            }
+        } else {
+            for (auto& tile : visible.tiles) {
+                tile.second = 0;
             }
         }
     }
@@ -135,11 +161,12 @@ public:
             bool mirrorPass = false)
     {
         for (auto&& i : tilesToDraw.tiles) {
-            grid.useHeightMap(heightMap(i.first, i.second).id());
-            grid.useGrassMap(grassMap(i.first, i.second).id());
+            grid.useHeightMap(heightMap(i.first.iRow, i.first.jCol).id());
+            grid.useGrassMap(grassMap(i.first.iRow, i.first.jCol).id());
             grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
                       mirrorPass, false,
-                      gridSize * translation(i.first, i.second));
+                      gridSize * translation(i.first.iRow, i.first.jCol),
+                      1/* - i.second*/);
 
         }
     }
@@ -154,10 +181,10 @@ public:
             const FractionalView &FV = FractionalView())
     {
         for (auto&& i : tilesToDraw.tiles)  {
-            water.useHeightMap(heightMap(i.first, i.second).id());
+            water.useHeightMap(heightMap(i.first.iRow, i.first.jCol).id());
             water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
-                       noisePosFor(i.first, i.second),
-                       gridSize * translation(i.first, i.second));
+                       noisePosFor(i.first.iRow, i.first.jCol),
+                       gridSize * translation(i.first.iRow, i.first.jCol));
 
         }
     }
