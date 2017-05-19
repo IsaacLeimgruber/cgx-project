@@ -54,8 +54,8 @@ class Grid: public GridMesh{
 
             // load terrain-specific textures
             {
-                grassTextureId = Utils::loadImage("grass2.tga");
-                grassTextureBisId = Utils::loadImage("grass3.tga");
+                grassTextureId = Utils::loadImage("grass.tga");
+                grassTextureBisId = Utils::loadImage("ground.tga");
                 rockTextureId = Utils::loadImage("rock512.tga");
                 sandTextureId = Utils::loadImage("sand256.tga");
                 snowTextureId = Utils::loadImage("snow512.tga");

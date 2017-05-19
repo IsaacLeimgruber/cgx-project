@@ -15,10 +15,8 @@ file(GLOB TEXTURES
     water/waterNormalMap_perlinStretch.tga
     water/waterNormalMap2_perlinStretch.tga
     water/waterNormalMap3_perlinStretch.tga
-    terrain/textures/grass512.tga
-    terrain/textures/grassbis512.tga
-    terrain/textures/grass2.tga
-    terrain/textures/grass3.tga
+    terrain/textures/grass.tga
+    terrain/textures/ground.tga
     terrain/textures/rock512.tga
     terrain/textures/rock512_2.tga
     terrain/textures/rock512_3.tga
