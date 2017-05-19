@@ -261,9 +261,87 @@ vec3 dfBm(vec2 P) {
 //----------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------
 
+//
+//  Perlin Noise 2D Deriv
+//  Return value range of -1.0->1.0, with format vec3( value, xderiv, yderiv )
+//  See: http://briansharpe.wordpress.com - https://github.com/BrianSharpe/Wombat/blob/master/Perlin2D_Deriv.glsl
+vec3 Perlin2D_Deriv( vec2 P )
+{
+    // establish our grid cell and unit position
+    vec2 Pi = floor(P);
+    vec4 Pf_Pfmin1 = P.xyxy - vec4( Pi, Pi + 1.0 );
+
+    // calculate the hash
+    vec4 Pt = vec4( Pi.xy, Pi.xy + 1.0 );
+    Pt = Pt - floor(Pt * ( 1.0 / 71.0 )) * 71.0;
+    Pt += vec2( 26.0, 161.0 ).xyxy;
+    Pt *= Pt;
+    Pt = Pt.xzxz * Pt.yyww;
+    vec4 hash_x = fract( Pt * ( 1.0 / 951.135664 ) );
+    vec4 hash_y = fract( Pt * ( 1.0 / 642.949883 ) );
+
+    // calculate the gradient results
+    vec4 grad_x = hash_x - 0.49999;
+    vec4 grad_y = hash_y - 0.49999;
+    vec4 norm = inversesqrt( grad_x * grad_x + grad_y * grad_y );
+    grad_x *= norm;
+    grad_y *= norm;
+    vec4 dotval = ( grad_x * Pf_Pfmin1.xzxz + grad_y * Pf_Pfmin1.yyww );
+
+    //	C2 Interpolation
+    vec4 blend = Pf_Pfmin1.xyxy * Pf_Pfmin1.xyxy * ( Pf_Pfmin1.xyxy * ( Pf_Pfmin1.xyxy * ( Pf_Pfmin1.xyxy * vec2( 6.0, 0.0 ).xxyy + vec2( -15.0, 30.0 ).xxyy ) + vec2( 10.0, -60.0 ).xxyy ) + vec2( 0.0, 30.0 ).xxyy );
+
+    //	Convert our data to a more parallel format
+    vec3 dotval0_grad0 = vec3( dotval.x, grad_x.x, grad_y.x );
+    vec3 dotval1_grad1 = vec3( dotval.y, grad_x.y, grad_y.y );
+    vec3 dotval2_grad2 = vec3( dotval.z, grad_x.z, grad_y.z );
+    vec3 dotval3_grad3 = vec3( dotval.w, grad_x.w, grad_y.w );
+
+    //	evaluate common constants
+    vec3 k0_gk0 = dotval1_grad1 - dotval0_grad0;
+    vec3 k1_gk1 = dotval2_grad2 - dotval0_grad0;
+    vec3 k2_gk2 = dotval3_grad3 - dotval2_grad2 - k0_gk0;
+
+    //	calculate final noise + deriv
+    vec3 results = dotval0_grad0
+                    + blend.x * k0_gk0
+                    + blend.y * ( k1_gk1 + blend.x * k2_gk2 );
+    results.yz += blend.zw * ( vec2( k0_gk0.x, k1_gk1.x ) + blend.yx * k2_gk2.xx );
+    return results * 1.4142135623730950488016887242097;  // scale things to a strict -1.0->1.0 range  *= 1.0/sqrt(0.5)
+}
+
+// A perlin based fBm
+// Return vector with format vec3( value, xderiv, yderiv )
+// Algorithm based on swissTurbulence at http://www.decarpentier.nl/scape-procedural-extensions
+// Adapted and derivates added by Julien Harbulot
+float swissTurbulence(vec2 p, int octaves)
+{
+     float lacunarity = 2.0;
+     float gain = 0.5;
+     float warp = 0.15;
+     float freq = 1.0;
+     float amp = 1.0;
+
+     vec2 dsum = vec2(0.0, 0.0);
+     float sum = 0;
+
+     for(int i = 0; i < octaves; ++i)
+     {
+         vec3 n = Perlin2D_Deriv((p + warp * dsum) * freq);
+         sum += amp * (1 - abs(n.x));
+         dsum += amp * n.yz * -n.x;
+
+         freq *= lacunarity;
+         amp  *= gain * clamp(sum, 0, 1);
+    }
+    return sum;
+}
+//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+
 void main() {
 
-    vec3 noise = dfBm(uv + pos_offset);
+    vec3 noise = vec3(swissTurbulence(uv + pos_offset, 8));
 
     //scale to ensure everything is btwn 0 and 1
     //noise.y =
