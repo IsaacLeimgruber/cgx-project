@@ -39,7 +39,7 @@ class Water: public GridMesh{
             currentProgramIds = normalProgramIds;
 
             // vertex coordinates and indices
-            genGrid(16);
+            genGrid(8);
 
             // load texture
             loadNormalMap(Utils::loadImage("waterNormalMap2.tga"));
