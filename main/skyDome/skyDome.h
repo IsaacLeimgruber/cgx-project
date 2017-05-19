@@ -229,7 +229,7 @@ public:
         mat4 farCloudPlaneMVP = skyboxMVP * farCloudPlaneModelMatrix;
 
         float time = glfwGetTime();
-        float theta = 0.05 * time - 1.0;
+        float theta = 0.7f;//0.05 * time;
 
         vec3 sunPos = sunOrbitCenter + radius * cos(theta) * sunOrbitXAxis + radius * sin(theta) * sunOrbitYAxis;
         computeSkyColors(sunPos, viewPos);

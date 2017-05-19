@@ -12,7 +12,7 @@ class Grid: public GridMesh{
     private:
     GLuint mirrorPassId;
     GLuint mirrorPassDebugId;
-    GLuint grassTextureId, rockTextureId, sandTextureId, snowTextureId;
+    GLuint grassTextureId, grassTextureBisId, rockTextureId, sandTextureId, snowTextureId;
     GLuint translationId, translationDebugId;
 
     public:
@@ -20,7 +20,7 @@ class Grid: public GridMesh{
 
         }
 
-        void Init(GLuint heightMap, GLuint shadowMap) {
+        void Init(GLuint heightMap, GLuint shadowMap, GLuint grassMap) {
             // compile the shaders.
             normalProgramIds.program_id = icg_helper::LoadShaders("terrain_vshader.glsl",
                                                   "terrain_fshader.glsl",
@@ -49,18 +49,21 @@ class Grid: public GridMesh{
 
             // load texture
             loadHeightMap(heightMap);
+            loadGrassMap(grassMap);
             loadShadowMap(shadowMap);
 
             // load terrain-specific textures
             {
-                grassTextureId = Utils::loadImage("grass512.tga");
+                grassTextureId = Utils::loadImage("grass.tga");
+                grassTextureBisId = Utils::loadImage("ground.tga");
                 rockTextureId = Utils::loadImage("rock512.tga");
                 sandTextureId = Utils::loadImage("sand256.tga");
                 snowTextureId = Utils::loadImage("snow512.tga");
                 glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "grassTex"), 4);
-                glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "rockTex"), 5);
-                glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "sandTex"), 6);
-                glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "snowTex"), 7);
+                glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "grassbisTex"), 5);
+                glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "rockTex"), 6);
+                glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "sandTex"), 7);
+                glUniform1i(glGetUniformLocation(normalProgramIds.program_id, "snowTex"), 8);
             }
 
             //Tesselation configuration
@@ -96,6 +99,7 @@ class Grid: public GridMesh{
             glUseProgram(currentProgramIds.program_id);
 
             bindHeightMapTexture();
+            bindGrassMapTexture();
             glUniformMatrix4fv(currentProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
             glUniform2fv(currentProgramIds.translation_id, 1, glm::value_ptr(translation));
             activateTextureUnits();
@@ -139,10 +143,12 @@ class Grid: public GridMesh{
             glActiveTexture(GL_TEXTURE0 + 4);
             glBindTexture(GL_TEXTURE_2D, grassTextureId);
             glActiveTexture(GL_TEXTURE0 + 5);
-            glBindTexture(GL_TEXTURE_2D, rockTextureId);
+            glBindTexture(GL_TEXTURE_2D, grassTextureBisId);
             glActiveTexture(GL_TEXTURE0 + 6);
-            glBindTexture(GL_TEXTURE_2D, sandTextureId);
+            glBindTexture(GL_TEXTURE_2D, rockTextureId);
             glActiveTexture(GL_TEXTURE0 + 7);
+            glBindTexture(GL_TEXTURE_2D, sandTextureId);
+            glActiveTexture(GL_TEXTURE0 + 8);
             glBindTexture(GL_TEXTURE_2D, snowTextureId);
         }
 };

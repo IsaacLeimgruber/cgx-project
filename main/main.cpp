@@ -16,6 +16,7 @@
 #include "skyDome/skyDome.h"
 #include "blurQuad/blurquad.h"
 #include "large_scene.h"
+#include "bezier/BezierCurve.h"
 
 using namespace glm;
 
@@ -29,6 +30,9 @@ ScreenQuad screenquad;
 BlurQuad blurQuad;
 Light light;
 Material material;
+
+Perlin perlin;
+
 int postProcessingTextureId;
 float perlinTextureSize = 512;
 
@@ -36,6 +40,7 @@ bool keys[1024];
 bool firstMouse = false;
 bool wireframeDebugEnabled = false;
 bool enableBlurPostProcess = true;
+bool toggleBezier = false;
 // Window size in screen coordinates
 int window_width_sc;
 int window_height_sc;
@@ -49,11 +54,19 @@ int screenHeight = 1080;
 float lastX = 0.0f;
 float lastY = 0.0f;
 
+const float DISPLACEMENT_TIME = 15.f;
 const float OFFSET_QTY = 0.04f;
+float start_time = 0.f;
 
 mat4 projection_matrix, view_matrix, mirrored_view_matrix, quad_model_matrix;
 mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_matrix, depth_mvp;
 mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
+BezierCurve bezier({
+                       vec3(-0.3, 2.5, -0.3),
+                       vec3(0, 0, -0.4),
+                       vec3(1, 0.5, 0),
+                       vec3(0.6, 1.5, 1)
+                   });
 
 mat4 biasMatrix = mat4(
             0.5, 0.0, 0.0, 0.0,
@@ -72,6 +85,9 @@ FractionalView fractionalView;
 
 void Init() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+    //perlin.Init("perlinGrass_fshader.glsl");
+    start_time = glfwGetTime();
 
     camera   = Camera{vec3(0.0, 2.5, 0.0)};
     light    = Light{vec3(0.0, 2.0, -4.0)};
@@ -112,6 +128,8 @@ void Init() {
 void computeReflections(LargeScene::TileSet const& visibleTiles);
 
 void Display() {
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //perlin.Draw(vec2(0.f, 0.f));
     GLfloat currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
@@ -127,6 +145,15 @@ void Display() {
     //Compute matrices
     view_matrix = camera.GetViewMatrix();
     mirrored_view_matrix = camera.GetMirroredViewMatrix(0.0f);
+
+    float dtime = 0.1;
+         float bezierTime = (glfwGetTime() - start_time)/DISPLACEMENT_TIME;
+         if(bezierTime <= 1.f - dtime && toggleBezier){
+         vec3 cameraPos = bezier.getPoint(bezierTime);
+         camera.setPos(cameraPos);
+         vec3 cameraTarget = bezier.getPoint(bezierTime + dtime);
+         camera.setFront(cameraTarget);
+    }
 
     MV = view_matrix * quad_model_matrix;
     MVP = projection_matrix * MV;
