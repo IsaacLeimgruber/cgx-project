@@ -127,7 +127,7 @@ void main() {
     float angle = randomAngle(gl_FragCoord.xyz, 15.0f);
     float s = sin(angle);
     float c = cos(angle);
-    float PCFRadius = 1/1200.0f;
+    float PCFRadius = 1/600.0f;
     for(int i=0; i < numSamplingPositions; i++)
     {
       // rotate offset

@@ -13,7 +13,7 @@ class BlurQuad {
 
         float screenquad_width_;
         float screenquad_height_;
-        float texScale = 0.2f; //Scale the texture for the blur lookup
+        float texScale = 1.0f; //Scale the texture for the blur lookup
 
     public:
 
@@ -126,9 +126,14 @@ class BlurQuad {
             glUniform1i(secondPass_id, n);
         }
 
-        void Draw() {
+        void Draw(float blurscale = 1.0f) {
             glUseProgram(program_id_);
             glBindVertexArray(vertex_array_id_);
+
+            glUniform1f(texWidth_id,
+                        this->screenquad_width_ * blurscale);
+            glUniform1f(texHeight_id,
+                        this->screenquad_height_ * blurscale);
 
             // bind texture
             glActiveTexture(GL_TEXTURE0);

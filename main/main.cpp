@@ -183,7 +183,7 @@ void computeReflections(LargeScene::TileSet const& visibleTiles) {
 
         screenQuadBufferPostProcessing.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        blurQuad.Draw();
+        blurQuad.Draw(1.0);
         screenQuadBufferPostProcessing.Unbind();
 
         blurQuad.setRenderingPassNumber(1);
@@ -191,7 +191,7 @@ void computeReflections(LargeScene::TileSet const& visibleTiles) {
 
         reflectionBuffer.Bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        blurQuad.Draw();
+        blurQuad.Draw(1.0);
         reflectionBuffer.Unbind();
     }
 }
@@ -203,7 +203,7 @@ void computeBloom() {
 
     screenQuadBufferPostProcessing.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    blurQuad.Draw();
+    blurQuad.Draw(0.2);
     screenQuadBufferPostProcessing.Unbind();
 
     blurQuad.setRenderingPassNumber(1);
@@ -211,7 +211,7 @@ void computeBloom() {
 
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    blurQuad.Draw();
+    blurQuad.Draw(0.2);
     screenQuadBuffer.Unbind();
 
 }
