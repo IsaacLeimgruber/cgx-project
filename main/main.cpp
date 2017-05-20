@@ -334,7 +334,7 @@ void doMovement()
     float displacementY = newPos.z - actualPos.y;
     sceneControler.move({displacementX, displacementY});
     vec2 updatedPos = sceneControler.position();
-    scene.setCenter(updatedPos);
+    scene.setCenter(updatedPos/grid_size);
     vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
     camera.setPos(cameraPos);
 }

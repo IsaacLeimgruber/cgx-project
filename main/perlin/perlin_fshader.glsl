@@ -430,7 +430,9 @@ vec3 swissTurbulence(vec2 p)
 
 void main() {
 
-    color = vec4(2 * dfBm(uv + pos_offset), 1.0f); /*
+    float scale = 2;
+    float freq = 1;
+    color = vec4(scale * dfBm(freq * (uv + pos_offset)), 1.0f); /*
 
     vec3 noise = swissTurbulence((uv + pos_offset));
     vec3 offset = vec3(-1, 0, 0);
