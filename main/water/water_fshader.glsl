@@ -9,6 +9,8 @@ uniform mat4 NORMALM;
 uniform vec3 viewPos;
 uniform vec3 La, Ld, Ls;
 uniform float alpha;
+uniform float max_vpoint_World_F;
+uniform float threshold_vpoint_World_F;
 
 uniform float time;
 uniform vec2 offset;
@@ -23,7 +25,7 @@ in vec3 lightDir_F;
 in vec3 viewDir_MV_F;
 in vec4 gl_FragCoord;
 in vec4 shadowCoord_F;
-
+in vec2 vpoint_World_F;
 out vec4 color;
 
 const vec3 WATER_COLOR = vec3(75.0f,126.0f,157.0f) / 255.0f;
@@ -59,24 +61,6 @@ float random(in vec3 seed, in float freq)
 float randomAngle(in vec3 seed, in float freq)
 {
    return random(seed, freq) * 6.283285f;
-}
-
-const float fogStart = 2.5f;
-const float fogEnd = 5.0f;
-
-vec3 applyFog( in vec3  rgb,       // original color of the pixel
-               in float distance,  // camera to point distance
-               in vec3 rayDir,
-               in vec3 sunDir)
-{
-    float d = clamp( (distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-    float fogAmount = clamp(1.0 - exp(-d * 3.0), 0.0, 1.0);
-    float rgbAmount = clamp(exp(-d * 2.0), 0.0, 1.0);
-    float sunAmount = max( dot( rayDir, sunDir ), 0.0 );
-    vec3  fogColor  = mix( vec3(0.8,0.8,0.8), // greyish
-                           vec3(1.0,0.9,0.7), // yellowish
-                           pow(sunAmount,16.0) );
-    return rgb * rgbAmount + fogColor * fogAmount;
 }
 
 //Assume dest is opaque
@@ -169,11 +153,13 @@ void main() {
                                 1.0 - smoothstep(waterReflectionDistanceStart, waterReflectionDistanceEnd, -vpoint_MV_F.z))
                                 );
 
-    //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -vpoint_MV_F.xyz, vec3(0.0,0.0,0.0));
-
-    vec4 seaColor = vec4(lightingResult, reflectionAlpha * alpha);
-    vec4 tmpColor = blendColors(vec4(lightingResultScum, scumColor.a), seaColor * alpha);
-
+    vec4 seaColor = vec4(lightingResult, reflectionAlpha);
+    vec4 tmpColor = blendColors(vec4(lightingResultScum, scumColor.a), seaColor);
     color = mix(seaColor, tmpColor, smoothstep(-0.15, 0.015, tHeight_F) * smoothstep(0.001, 0.006, vpoint_F.y));
+
+    // compute tranparency factor for a fog-effect
+    color.a *= 1- smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
+                              max(abs(vpoint_World_F.x), abs(vpoint_World_F.y))
+                              );
 
 }

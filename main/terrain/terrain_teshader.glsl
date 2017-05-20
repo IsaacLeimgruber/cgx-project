@@ -12,6 +12,7 @@ uniform sampler2D heightMap;
 
 in vec3 vpoint_TE[];
 in vec2 uv_TE[];
+in vec2 vpoint_World_TE[];
 
 out vec4 vpoint_F;
 out vec4 shadowCoord_F;
@@ -20,6 +21,7 @@ out vec4 vpoint_MV_F;
 out vec3 lightDir_F;
 out vec3 viewDir_F;
 out float vheight_F;
+out vec2 vpoint_World_F;
 
 vec2 interpolate2D(in vec2 v0, in vec2 v1, in vec2 v2, in vec2 v3)
 {
@@ -43,6 +45,7 @@ void main()
     // Interpolate the attributes of the output vertex using the barycentric coordinates
     uv_F = interpolate2D(uv_TE[0], uv_TE[1], uv_TE[2], uv_TE[3]);
     vpoint_F = vec4(interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]), 1.0f);
+    vpoint_World_F = interpolate2D(vpoint_World_TE[0], vpoint_World_TE[1], vpoint_World_TE[2], vpoint_World_TE[3]);
 
     // Set height for generated (and original) vertices
     vheight_F = texture(heightMap, uv_F).r;

@@ -11,8 +11,13 @@
 /** A LargeScene is an infinite procedural terrain. Internally, it is a circular matrix of Grid objects */
 class LargeScene {
 
-    /** the dimensions of this LargeScene's rectangular matrix */
-    enum {NROW = 10, NCOL = 10};
+    /** the dimensions of this LargeScene's rectangular matrix in number of tiles per ROW or COLumns */
+    enum {NROW = 11, NCOL = 11};
+
+    /** the number of tile to make transparent at the edge of the large scene */
+    static constexpr int nMountainTilesInFog = 4;
+    static constexpr int nWaterTilesInFog = nMountainTilesInFog;
+    static constexpr int fogStop = (NROW < NCOL ? NROW : NCOL) - 1;
 
     /** the dimension of the Grid as seen per its vertex shader 2 = size([-1;1]) */
     float gridSize = 2.0f;
@@ -44,6 +49,9 @@ class LargeScene {
 
     /** resolution of the grass maps */
     int grassMapWidth, grassMapHeight;
+
+    /** this large scene's center */
+    glm::vec2 center;
 
 public:
     enum Direction { UP = +1, DOWN = -1 };
@@ -87,8 +95,8 @@ public:
 
     /** initializes the tile objects (grid, water, etc.) */
     void init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
-        grid.Init(0, shadowBuffer_texture_id, 0);
-        water.Init(0, reflectionBuffer_texture_id, shadowBuffer_texture_id);
+        grid.Init(0, shadowBuffer_texture_id, 0, fogStop, nMountainTilesInFog);
+        water.Init(0, reflectionBuffer_texture_id, shadowBuffer_texture_id, fogStop, nWaterTilesInFog);
         grid.useLight(light);
         water.useLight(light);
     }
@@ -166,7 +174,7 @@ public:
             grid.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
                       mirrorPass, false,
                       gridSize * translation(i.first.iRow, i.first.jCol),
-                      1/* - i.second*/);
+                      gridSize * translation(i.first.iRow, i.first.jCol) - center);
 
         }
     }
@@ -184,8 +192,8 @@ public:
             water.useHeightMap(heightMap(i.first.iRow, i.first.jCol).id());
             water.Draw(MVP, MV, NORMALM, SHADOWMVP, FV,
                        noisePosFor(i.first.iRow, i.first.jCol),
-                       gridSize * translation(i.first.iRow, i.first.jCol));
-
+                       gridSize * translation(i.first.iRow, i.first.jCol),
+                       gridSize * translation(i.first.iRow, i.first.jCol) - center);
         }
     }
 
@@ -240,6 +248,11 @@ public:
                 grassMap(iRow, jCol).Cleanup();
             }
         }
+    }
+
+    void setCenter(glm::vec2 c) {
+        center = c;
+        center.y = -center.y;
     }
 
 private:

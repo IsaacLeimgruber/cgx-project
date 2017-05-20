@@ -13,6 +13,7 @@ struct ProgramIds{
     GLuint heightMap_id, mirrorMap_id;
     GLuint grassMap_id;
     GLuint alpha_id;
+    GLuint translationToSceneCenter_id;
 };
 
 class GridMesh: public ILightable{
@@ -63,7 +64,8 @@ class GridMesh: public ILightable{
 
             for(int j = 0; j < grid_dim; j++){
                 for(int i = 0; i < grid_dim; i++){
-                    vertices.push_back(-1.0f + i*spacing); vertices.push_back(-1.0f + j*spacing);
+                    vertices.push_back(-1.0f + i*spacing);
+                    vertices.push_back(-1.0f + j*spacing);
                 }
             }
 
@@ -114,6 +116,8 @@ class GridMesh: public ILightable{
                 programIds.heightMap_id = glGetUniformLocation(programIds.program_id, "heightMap");
                 programIds.grassMap_id = glGetUniformLocation(programIds.program_id, "grassMap");
                 programIds.alpha_id = glGetUniformLocation(programIds.program_id, "alpha");
+                programIds.translationToSceneCenter_id = glGetUniformLocation(programIds.program_id,
+                                                                              "translationToSceneCenter");
             }
 
             //normapProgramIds must be used last, or use: glUseProgram(normalProgramIds.program_id) here

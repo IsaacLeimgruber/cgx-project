@@ -41,7 +41,7 @@ private:
     const vec3 SUNSETCOL_topSky = vec3(0.298f, 0.494f, 0.741f);
     const vec3 SUNSETCOL_bottomSky = vec3(0.894f, 0.533f, 0.537f);
     const vec3 mistColor = vec3(0.9f, 0.9f, 0.98f);
-    const vec3 blueSkyColor = vec3(0.098f, 0.369f, 0.765f);
+    const vec3 blueSkyColor = 1.5f * vec3(0.098f, 0.369f, 0.765f);
     const vec3 lightblueSkyColor = vec3(0.059f, 0.678f, 1.0f);
     const vec3 OUTERSPACECOL_bottomSky = vec3(0.059f, 0.678f, 1.0f);
     const vec3 OUTERSPACECOL_topSky = vec3(0.059f, 0.078f, 0.3f);
@@ -61,7 +61,7 @@ private:
     const float SUNSETGRADIENT_START = 0.0f;
     const float SUNSETGRADIENT_END = 4.0f;
     const float DAYGRADIENT_START = -0.4f;
-    const float DAYGRADIENT_END = 5.0f;
+    const float DAYGRADIENT_END = 1.0f;
 
     // Color change positions values
     const float sunsetEnd = 2.5f;

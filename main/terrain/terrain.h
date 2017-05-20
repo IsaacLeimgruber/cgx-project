@@ -19,7 +19,7 @@ class Grid: public GridMesh{
         Grid(int firstCorner = 0) : GridMesh(firstCorner)
         {}
 
-        void Init(GLuint heightMap, GLuint shadowMap, GLuint grassMap) {
+        void Init(GLuint heightMap, GLuint shadowMap, GLuint grassMap, int fogStop, int fogLength) {
             // compile the shaders.
             normalProgramIds.program_id = icg_helper::LoadShaders("terrain_vshader.glsl",
                                                   "terrain_fshader.glsl",
@@ -42,6 +42,8 @@ class Grid: public GridMesh{
             }
 
             glUseProgram(normalProgramIds.program_id);
+            glUniform1f(glGetUniformLocation(normalProgramIds.program_id, "threshold_vpoint_World_F"), fogStop - fogLength);
+            glUniform1f(glGetUniformLocation(normalProgramIds.program_id, "max_vpoint_World_F"), fogStop);
 
             // vertex coordinates and indices
             genGrid(4);
@@ -92,7 +94,7 @@ class Grid: public GridMesh{
                   bool mirrorPass = false,
                   bool shadowPass = false,
                   const glm::vec2 &translation = glm::vec2(0, 0),
-                  float alpha = 1) {
+                  const glm::vec2 &translationToSceneCenter = glm::vec2(0,0)) {
 
             currentProgramIds = (shadowPass) ? shadowProgramIds : normalProgramIds;
 
@@ -102,7 +104,7 @@ class Grid: public GridMesh{
             bindGrassMapTexture();
             glUniformMatrix4fv(currentProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
             glUniform2fv(currentProgramIds.translation_id, 1, glm::value_ptr(translation));
-            glUniform1f(currentProgramIds.alpha_id, alpha);
+            glUniform2fv(currentProgramIds.translationToSceneCenter_id, 1, glm::value_ptr(translationToSceneCenter));
             activateTextureUnits();
 
             //update light

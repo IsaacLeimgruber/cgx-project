@@ -22,6 +22,10 @@ in vec3 lightDir_F;
 in vec3 viewDir_F;
 in vec2 uv_F;
 in float vheight_F;
+in vec2 vpoint_World_F;
+uniform float max_vpoint_World_F;
+uniform float threshold_vpoint_World_F;
+
 
 out vec4 color;
 
@@ -191,6 +195,8 @@ void main() {
                 (vec3(0.1f,0.1f,0.1f) * pow(max(0, dot(reflectionDir, viewDir_F)), 256) * Ls));
     }
 
-    //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -viewDir_F, lightDir);
-    color = vec4(clamp(lightingResult, vec3(0.0f), vec3(1.0f)), alpha);
+    color = vec4(clamp(lightingResult, vec3(0.0f), vec3(1.0f)), 1);
+    color.a *= 1- smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
+                              max(abs(vpoint_World_F.x), abs(vpoint_World_F.y))
+                              );
 }

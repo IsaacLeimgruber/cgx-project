@@ -15,12 +15,14 @@ in float terrainHeight_TC[];
 in vec2 uv_TC[];
 in vec2 terrainGradient_TC[];
 in vec3 vpoint_TC[];
+in vec2 vpoint_World_TC[];
 
 // attributes of the output CPs
 out float terrainHeight_TE[];
 out vec3 vpoint_TE[];
 out vec2 uv_TE[];
 out vec2 terrainGradient_TE[];
+out vec2 vpoint_World_TE[];
 
 const float CLOSEST_TESS_DISTANCE = 0.5f;
 const float FURTHEST_TESS_DISTANCE = 4.0f;
@@ -58,6 +60,7 @@ void main()
     vpoint_TE[gl_InvocationID] = vpoint_TC[gl_InvocationID];
     terrainGradient_TE[gl_InvocationID] = terrainGradient_TC[gl_InvocationID];
     terrainHeight_TE[gl_InvocationID] = terrainHeight_TC[gl_InvocationID];
+    vpoint_World_TE[gl_InvocationID] = vpoint_World_TC[gl_InvocationID];
 
 
     if(all(bvec4(offscreen(vpoint_TC[0]), offscreen(vpoint_TC[1]), offscreen(vpoint_TC[2]), offscreen(vpoint_TC[3])))
