@@ -3,9 +3,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "../gridmesh.h"
 
-#define M_PI 3.1415926535897932384626433832795
-
 using namespace glm;
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846;
+#endif
 
 class Grass: public GridMesh {
 
@@ -18,9 +20,9 @@ private:
     GLuint translationToSceneCenter_id_;
     GLuint VP_id_;          // Model, view, projection matrix ID
     GLuint quadVAO, quadVBO;
-    GLuint rows = 10;
-    GLuint cols = 10;
-    GLuint nBush = rows * rows;
+    GLuint rows = 20;
+    GLuint cols = rows;
+    GLuint nBush = rows * cols;
 
 
 public:
