@@ -18,7 +18,8 @@ private:
     GLuint VP_id_;          // Model, view, projection matrix ID
     GLuint quadVAO, quadVBO;
     GLuint rows = 10;
-    GLuint amount = rows * rows;
+    GLuint cols = 10;
+    GLuint nBush = rows * rows;
 
 
 public:
@@ -45,60 +46,51 @@ public:
         glBindVertexArray(vertex_array_id_);
 
 
-        mat4* modelMatrices = new mat4[3*amount];
-        vec2* translations = new vec2[3*amount];
+        mat4* modelMatrices = new mat4[3*nBush];
+        vec2* translations = new vec2[3*nBush];
         srand(glfwGetTime()); // initialize random seed
-        GLfloat step = 2.f/rows;
 
-        for(int i = 0; i < amount; i++){
+        GLfloat colWidth = 2.f/rows;
+        GLfloat rowHeight = 2.f/rows;
+        glm::vec3 originOffset = glm::vec3(-1, 0, -1);
+        GLfloat scaleRatio = 0.08;
 
-            mat4 model = IDENTITY_MATRIX;
-            int xcoord = i % rows;
-            int zcoord = i / rows;
+        for (int iBush = 0; iBush < rows; ++iBush) {
+            for (int jBush = 0; jBush < cols; ++jBush) {
 
-            //GLfloat displacement = (rand() % (GLint)(2 * offset * amount)) / 30.f - offset;
-            GLfloat x = xcoord * step - 1.f;
+                GLfloat xBush = colWidth  * jBush + originOffset.x;
+                GLfloat yBush = 0 + originOffset.y;
+                GLfloat zBush = (rowHeight * iBush + originOffset.z);
 
-            //displacement = (rand() % (GLint)(2 * offset * amount)) / 30.f- offset;
-            GLfloat y = 0.f; // y value has smaller displacement
+                mat4 modelMatrix = translate(IDENTITY_MATRIX, vec3(xBush, yBush, zBush));
+                modelMatrix = scale(modelMatrix, vec3(scaleRatio));
 
-            //displacement = (rand() % (GLint)(2 * offset * amount)) / 30.f - offset;
-            GLfloat z = zcoord * step - 1.f;
+                int curBushNumber = iBush + jBush * rows;
 
-            model = translate(model, vec3(x, y, z));
+                /* Each 3-tuple of subsequent instance form a bush, having the same position */
+                translations[3*curBushNumber    ] = vec2(xBush, zBush);
+                translations[3*curBushNumber + 1] = vec2(xBush, zBush);
+                translations[3*curBushNumber + 2] = vec2(xBush, zBush);
 
-            GLfloat scaleRatio = 0.08;
-            model = scale(model, vec3(scaleRatio));
-
-            //GLfloat rotAngle = M_PI;
-            //model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
-
-            /** Each 3-tuple of subsequent instance forms a bush, having the same position*/
-            translations[3*i] = vec2(x, z);
-            translations[3*i + 1] = vec2(x, z);
-            translations[3*i + 2] = vec2(x, z);
-
-            /** Each bush is composed of 3 quad-instances, each rotated by pi/3 */
-            GLfloat alpha = M_PI/3.f;
-            modelMatrices[3*i] = model;
-            model = rotate(model, alpha, glm::vec3(0.f, 1.f, 0.f));
-            modelMatrices[3*i + 1] = model;
-            model = rotate(model, alpha, glm::vec3(0.f, 1.f, 0.f));
-            modelMatrices[3*i + 2] = model;
-
+                /* Each bush is composed of 3 quad-instances, each rotated by pi/3 */
+                GLfloat alpha = M_PI/3.f;
+                modelMatrices[3*curBushNumber] = modelMatrix;
+                modelMatrices[3*curBushNumber + 1] = rotate(modelMatrix,   alpha, glm::vec3(0.f, 1.f, 0.f));
+                modelMatrices[3*curBushNumber + 2] = rotate(modelMatrix, 2*alpha, glm::vec3(0.f, 1.f, 0.f));
+            }
         }
 
         // Instances model Vertex Buffer Object
         GLuint modelVBO;
         glGenBuffers(1, &modelVBO);
         glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
-        glBufferData(GL_ARRAY_BUFFER, 3*amount * sizeof(mat4), &modelMatrices[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 3*nBush * sizeof(mat4), &modelMatrices[0], GL_STATIC_DRAW);
 
         // Instances translations Vertex Buffer Object
         GLuint translationsVBO;
         glGenBuffers(1, &translationsVBO);
         glBindBuffer(GL_ARRAY_BUFFER, translationsVBO);
-        glBufferData(GL_ARRAY_BUFFER, 3*amount * sizeof(vec2), &translations[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 3*nBush * sizeof(vec2), &translations[0], GL_STATIC_DRAW);
 
         // Generate quad VAO
         const GLfloat quadVertices[] = { -0.5f, -0.5f, 0.0f,
@@ -200,7 +192,6 @@ public:
 
             GLuint tex_id = glGetUniformLocation(program_id_, "colorTex");
             glUniform1i(tex_id, 7);
-            cout << "tex_id " << tex_id << endl;
             // cleanup
             glBindTexture(GL_TEXTURE_2D, 0);
             stbi_image_free(image);
@@ -227,19 +218,15 @@ public:
         glUseProgram(program_id_);
         glBindVertexArray(vertex_array_id_);
 
+        // bind textures
         bindHeightMapTexture();
         bindGrassMapTexture();
-
-        // bind textures
         glActiveTexture(GL_TEXTURE0 + 7);
         glBindTexture(GL_TEXTURE_2D, texture_id_);
-        //bindHeightMapTexture();
-        //bindGrassMapTexture();
 
         // setup MVP
         glUniformMatrix4fv(VP_id_, ONE, DONT_TRANSPOSE,
                            glm::value_ptr(VP));
-        cout << "Translation ID " << currentProgramIds.translation_id << endl;
         glUniform2fv(translation_id_, 1, glm::value_ptr(translation));
 
         // setup MVP
@@ -254,7 +241,7 @@ public:
         //grass quads must be able to overlap
         glDepthMask(false);
         glDisable(GL_CULL_FACE);
-        glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 3*amount); // 3*amount quads of 4 vertices each
+        glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 3*nBush); // 3*amount quads of 4 vertices each
         glEnable(GL_CULL_FACE);
         glDepthMask(true);
 

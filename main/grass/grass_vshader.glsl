@@ -19,7 +19,8 @@ const float SAND_HEIGHT = 0.02f,
             ROCK_HEIGHT = 0.40f;
 
 void main() {
-    vec2 coord = (bladeTranslation + vec2(1.f)) * 0.5;
+    vec2 coord = (bladeTranslation + vec2(1.0f, 1.0f)) * 0.5f;
+    coord.y = 1-coord.y;
     //vec2 pos = (gridPos + vec2(1.f))*0.5;
     float height = texture(heightMap, coord).x;
     mat4 model = instanceMatrix;
