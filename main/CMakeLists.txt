@@ -5,7 +5,8 @@ file(GLOB_RECURSE HEADERS "*.h")
 
 # these files are copied only once
 file(GLOB TEXTURES
-    grid/grid_texture.tga
+    grid/grid_texture.tga    
+    grass/grassAlpha.tga
     water/waterColorTexture.tga
     water/waterNormalMap.tga
     water/waterNormalMap2.tga
@@ -69,7 +70,9 @@ file(GLOB SHADERS
     water/debug/water_fshader_debug.glsl
     water/debug/water_tcshader_debug.glsl
     water/debug/water_teshader_debug.glsl
-    water/debug/water_gshader_debug.glsl)
+    water/debug/water_gshader_debug.glsl
+    grass/grass_vshader.glsl
+    grass/grass_fshader.glsl)
     deploy_shaders_to_build_dir(${SHADERS})
 
 add_executable(${EXERCISENAME} ${SOURCES} ${HEADERS} ${SHADERS})

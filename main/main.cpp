@@ -17,6 +17,7 @@
 #include "blurQuad/blurquad.h"
 #include "large_scene.h"
 #include "bezier/BezierCurve.h"
+#include "grass/grass.h"
 
 using namespace glm;
 
@@ -31,6 +32,7 @@ ScreenQuad screenquad;
 BlurQuad blurQuad;
 Light light;
 Material material;
+Grass grass;
 
 Perlin perlin;
 
@@ -105,7 +107,10 @@ void Init() {
 
     screenquad.Init(screenQuadBuffer_texture_id, 0);
     blurQuad.Init(screenWidth, screenHeight, reflectionBuffer.getColorTexture());
+
     scene.init(shadowBuffer_texture_id, reflectionBuffer.getColorTexture(), &light);
+    grass.Init(0 /*heightMap*/, 0 /*grassMap*/);
+
     skyDome.Init();
     skyDome.useLight(&light);
 
@@ -187,6 +192,7 @@ void Display() {
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
     scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
+    grass.Draw(projection_matrix * view_matrix);
     screenQuadBuffer.Unbind();
 
 
