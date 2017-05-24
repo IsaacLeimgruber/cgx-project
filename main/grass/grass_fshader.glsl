@@ -17,7 +17,7 @@ void main() {
     //color = texture(heightMap, uv);
     //color = color_value;
     color = heightColor;
-    //color = vec4(1.f, 0.f, 0.f, 1.f);
+    //color = texture(heightMap, uv);
 
     color.a *= 1- smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
                               max(abs(vpoint_World_F.x), abs(vpoint_World_F.y))

@@ -25,9 +25,12 @@ void main() {
     vec2 coord = (bladeTranslation + vec2(1.0f, 1.0f)) * 0.5f;
     coord.y = 1-coord.y;
     float height = texture(heightMap, coord).x;
+    float grass_coef_noise = clamp(texture(grassMap, coord).g, 0.f, 1.f);
+    float ground_threshold = 0.6;
 
     // early culling when the vertex is not inside the grass altitude range
-    if (height < SAND_HEIGHT || ROCK_HEIGHT < height) {
+    if (height < SAND_HEIGHT || ROCK_HEIGHT < height ||
+            grass_coef_noise > ground_threshold) {
         gl_Position = vec4(0, 0, 0, 0); //(0,0) is outside frustrum
         vpoint_World_F = vec2(0, 0);
         return;
