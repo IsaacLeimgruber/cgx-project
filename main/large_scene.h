@@ -205,7 +205,9 @@ public:
     void drawGrassTiles(TileSet const& tilesToDraw, const glm::mat4 &VP = IDENTITY_MATRIX) {
         for (auto&& i : tilesToDraw.tiles)  {
             grass.useHeightMap(heightMap(i.first.iRow, i.first.jCol).id());
-            grass.Draw(VP, gridSize * translation(i.first.iRow, i.first.jCol));
+            grass.Draw(VP,
+                       gridSize * translation(i.first.iRow, i.first.jCol),
+                       gridSize * translation(i.first.iRow, i.first.jCol) - center);
         }
     }
 

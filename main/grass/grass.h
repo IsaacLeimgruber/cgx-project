@@ -15,6 +15,7 @@ private:
     GLuint vertex_buffer_object_;   // memory buffer
     GLuint texture_id_;             // texture ID
     GLuint translation_id_;
+    GLuint translationToSceneCenter_id_;
     GLuint VP_id_;          // Model, view, projection matrix ID
     GLuint quadVAO, quadVBO;
     GLuint rows = 10;
@@ -37,6 +38,16 @@ public:
         }
 
         glUseProgram(program_id_);
+
+        translation_id_ = glGetUniformLocation(program_id_, "translation");
+        VP_id_ = glGetUniformLocation(program_id_, "VP");
+        translationToSceneCenter_id_ = glGetUniformLocation(program_id_, "translationToSceneCenter");
+        if (translationToSceneCenter_id_ == 0) {
+            cout << "Unable to init translationToSceneCenter_id_" << endl;
+            exit(EXIT_FAILURE);
+        }
+        glUniform1f(glGetUniformLocation(program_id_, "threshold_vpoint_World_F"), 2.0f);//fogStop - fogLength);
+        glUniform1f(glGetUniformLocation(program_id_, "max_vpoint_World_F"), 10.0f);//fogStop);
 
         // vertex coordinates and indices
         genGrid(8);
@@ -197,9 +208,6 @@ public:
             stbi_image_free(image);
         }
 
-        translation_id_ = glGetUniformLocation(program_id_, "translation");
-        VP_id_ = glGetUniformLocation(program_id_, "VP");
-
         // to avoid the current object being polluted
         glBindVertexArray(0);
         glUseProgram(0);
@@ -214,7 +222,7 @@ public:
         glDeleteTextures(1, &texture_id_);
     }
 
-    void Draw(const mat4 &VP = IDENTITY_MATRIX, vec2 translation = vec2(0.f, 0.f)) {
+    void Draw(const mat4 &VP = IDENTITY_MATRIX, vec2 translation = vec2(0.f, 0.f), const glm::vec2 &translationToSceneCenter = glm::vec2(0,0)) {
         glUseProgram(program_id_);
         glBindVertexArray(vertex_array_id_);
 
@@ -228,6 +236,7 @@ public:
         glUniformMatrix4fv(VP_id_, ONE, DONT_TRANSPOSE,
                            glm::value_ptr(VP));
         glUniform2fv(translation_id_, 1, glm::value_ptr(translation));
+        glUniform2fv(translationToSceneCenter_id_, 1, glm::value_ptr(translationToSceneCenter));
 
         // setup MVP
         //glUniformMatrix4fv(view_id_, ONE, DONT_TRANSPOSE,

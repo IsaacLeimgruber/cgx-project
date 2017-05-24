@@ -7,10 +7,13 @@ layout (location = 3) in mat4 instanceMatrix;
 in vec2 vtexcoord;
 out vec2 uv;
 out vec4 heightColor;
+out vec2 vpoint_World_F;
+
 in vec2 gridPos;
 
 uniform mat4 VP;
 uniform vec2 translation;
+uniform vec2 translationToSceneCenter;
 uniform sampler2D heightMap;
 uniform sampler2D grassMap;
 
@@ -25,10 +28,11 @@ void main() {
     float height = texture(heightMap, coord).x;
     mat4 model = instanceMatrix;
     model[3][1] += height;
-    gl_Position = VP * (model * vec4(vpoint, 1.0) + vec4(translation.x, 0, -translation.y, 0));
+    vec4 vertexModelPos = (model * vec4(vpoint, 1.0) + vec4(translation.x, 0, -translation.y, 0));
+    gl_Position = VP * vertexModelPos;
     uv = vtexcoord;
     heightColor = vec4(vec3(height) + 0.2, 1.f);
-
+    vpoint_World_F = translationToSceneCenter + bladeTranslation;
     /*
 void main() {
     //Outputs UV coordinate
