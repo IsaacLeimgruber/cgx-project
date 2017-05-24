@@ -230,9 +230,6 @@ public:
         bindHeightMapTexture();
         bindGrassMapTexture();
 
-        //grass quads must be able to overlap
-        glDepthMask(false);
-
         // bind textures
         glActiveTexture(GL_TEXTURE0 + 7);
         glBindTexture(GL_TEXTURE_2D, texture_id_);
@@ -253,9 +250,15 @@ public:
         //glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
         glBindVertexArray(quadVAO);
+
+        //grass quads must be able to overlap
+        glDepthMask(false);
+        glDisable(GL_CULL_FACE);
         glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 3*amount); // 3*amount quads of 4 vertices each
-        glBindVertexArray(0);
+        glEnable(GL_CULL_FACE);
         glDepthMask(true);
+
+        glBindVertexArray(0);
         glUseProgram(0);
     }
 };
