@@ -202,8 +202,10 @@ public:
         }
     }
 
-    void drawGrassTiles(const glm::mat4 &VP = IDENTITY_MATRIX) {
-        grass.Draw(VP);
+    void drawGrassTiles(TileSet const& tilesToDraw, const glm::mat4 &VP = IDENTITY_MATRIX) {
+        for (auto&& i : tilesToDraw.tiles)  {
+            grass.Draw(VP, gridSize * translation(i.first.iRow, i.first.jCol));
+        }
     }
 
     /** moves the heightMaps one column in the given direction, recomputes only obsolete heightMaps */

@@ -14,6 +14,7 @@ private:
     GLuint program_id_;             // GLSL shader program ID
     GLuint vertex_buffer_object_;   // memory buffer
     GLuint texture_id_;             // texture ID
+    GLuint translation_id_;
     GLuint VP_id_;          // Model, view, projection matrix ID
     GLuint quadVAO, quadVBO;
     GLuint rows = 10;
@@ -29,6 +30,7 @@ public:
         // compile the shaders
         program_id_ = icg_helper::LoadShaders("grass_vshader.glsl",
                                               "grass_fshader.glsl");
+
         if(!program_id_) {
             exit(EXIT_FAILURE);
         }
@@ -198,16 +200,14 @@ public:
 
             GLuint tex_id = glGetUniformLocation(program_id_, "colorTex");
             glUniform1i(tex_id, 7);
-
+            cout << "tex_id " << tex_id << endl;
             // cleanup
             glBindTexture(GL_TEXTURE_2D, 0);
             stbi_image_free(image);
         }
 
-        // other uniforms
-        {
-            VP_id_ = glGetUniformLocation(program_id_, "VP");
-        }
+        translation_id_ = glGetUniformLocation(program_id_, "translation");
+        VP_id_ = glGetUniformLocation(program_id_, "VP");
 
         // to avoid the current object being polluted
         glBindVertexArray(0);
@@ -223,7 +223,7 @@ public:
         glDeleteTextures(1, &texture_id_);
     }
 
-    void Draw(const mat4 &VP = IDENTITY_MATRIX, vec2 translation = vec2(0.f, 0.f) ) {
+    void Draw(const mat4 &VP = IDENTITY_MATRIX, vec2 translation = vec2(0.f, 0.f)) {
         glUseProgram(program_id_);
         glBindVertexArray(vertex_array_id_);
 
@@ -242,6 +242,9 @@ public:
         // setup MVP
         glUniformMatrix4fv(VP_id_, ONE, DONT_TRANSPOSE,
                            glm::value_ptr(VP));
+        cout << "Translation ID " << currentProgramIds.translation_id << endl;
+        glUniform2fv(translation_id_, 1, glm::value_ptr(translation));
+
         // setup MVP
         //glUniformMatrix4fv(view_id_, ONE, DONT_TRANSPOSE,
           //                 glm::value_ptr(IDENTITY_MATRIX));

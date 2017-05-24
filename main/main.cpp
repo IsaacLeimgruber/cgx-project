@@ -187,7 +187,7 @@ void Display() {
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
     scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
-    scene.drawGrassTiles(projection_matrix * view_matrix);
+    scene.drawGrassTiles(visibleTiles, projection_matrix * view_matrix);
     screenQuadBuffer.Unbind();
 
 
