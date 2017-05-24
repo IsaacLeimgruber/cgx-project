@@ -24,8 +24,15 @@ const float SAND_HEIGHT = 0.02f,
 void main() {
     vec2 coord = (bladeTranslation + vec2(1.0f, 1.0f)) * 0.5f;
     coord.y = 1-coord.y;
-    //vec2 pos = (gridPos + vec2(1.f))*0.5;
     float height = texture(heightMap, coord).x;
+
+    // early culling when the vertex is not inside the grass altitude range
+    if (height < SAND_HEIGHT || ROCK_HEIGHT < height) {
+        gl_Position = vec4(0, 0, 0, 0); //(0,0) is outside frustrum
+        vpoint_World_F = vec2(0, 0);
+        return;
+    }
+
     mat4 model = instanceMatrix;
     model[3][1] += height;
     vec4 vertexModelPos = (model * vec4(vpoint, 1.0) + vec4(translation.x, 0, -translation.y, 0));
@@ -33,17 +40,4 @@ void main() {
     uv = vtexcoord;
     heightColor = vec4(vec3(height) + 0.2, 1.f);
     vpoint_World_F = translationToSceneCenter + bladeTranslation;
-    /*
-void main() {
-    //Outputs UV coordinate
-    uv_TC = (gridPos + vec2(1.0f, 1.0f)) * 0.5f;
-
-    vec3 terrainHDxDy = texture(heightMap, uv_TC).xyz;
-    terrainGradient_TC = normalize(vec2(terrainHDxDy.y, -terrainHDxDy.z));
-    terrainHeight_TC = terrainHDxDy.x;
-
-    vpoint_TC = vec3(gridPos.x + translation.x, waterHeight, -gridPos.y - translation.y);
-
-}
-*/
 }
