@@ -7,6 +7,7 @@
 #include "water/water.h"
 #include "terrain/terrain.h"
 #include "perlin/perlin.h"
+#include "grass/grass.h"
 
 /** A LargeScene is an infinite procedural terrain. Internally, it is a circular matrix of Grid objects */
 class LargeScene {
@@ -40,6 +41,9 @@ class LargeScene {
 
     /** the grid's water tile we reuse at each (i,j) position */
     Water water;
+
+    /** the grid's grass tile we reuse at each (i,j) position */
+    Grass grass;
 
     /** the noise algorithm */
     Perlin perlin;
@@ -95,6 +99,7 @@ public:
 
     /** initializes the tile objects (grid, water, etc.) */
     void init(int shadowBuffer_texture_id, int reflectionBuffer_texture_id, Light* light) {
+        grass.Init(0 /*heightMap*/, 0 /*grassMap*/);
         grid.Init(0, shadowBuffer_texture_id, 0, fogStop, nMountainTilesInFog);
         water.Init(0, reflectionBuffer_texture_id, shadowBuffer_texture_id, fogStop, nWaterTilesInFog);
         grid.useLight(light);
@@ -197,6 +202,10 @@ public:
         }
     }
 
+    void drawGrassTiles(const glm::mat4 &VP = IDENTITY_MATRIX) {
+        grass.Draw(VP);
+    }
+
     /** moves the heightMaps one column in the given direction, recomputes only obsolete heightMaps */
     void moveCols(Direction d) {
         int oldColStart = colStart;
@@ -226,7 +235,7 @@ public:
     /** A circle with diameter maximumExtent can contain this whole LargeScene */
     float maximumExtent(){
         constexpr float sqrt2 = 1.42;
-        return sqrt2 * max(NROW, NCOL) * gridSize;
+        return sqrt2 * std::max(NROW, NCOL) * gridSize;
     }
 
     void toggleWireFrame() {
