@@ -95,33 +95,36 @@ public:
         float second_quad_maxz = bushScaleRatio * sin(second_quad_angle);
         float third_quad_maxx = bushScaleRatio* cos(third_quad_angle);
         float third_quad_maxz = bushScaleRatio* sin(third_quad_angle);
+        //applying a small deviation to the upper vertices gives a small inclination to each quad
+        // allowing a grass visibility from above
+        float upper_vertices_deviation = bushScaleRatio/3.f;
 
         const GLfloat quadVertices[] = {
             //QUAD 1/3 of the bush
             -bushScaleRatio, 0.f, 0.0f,
             +bushScaleRatio, 0.f, 0.0f,
-            -bushScaleRatio, +bushHeight, 0.0f,
+            -bushScaleRatio, +bushHeight, 0.0f - upper_vertices_deviation,
 
-            +bushScaleRatio, +bushHeight, 0.0f,
-            -bushScaleRatio, +bushHeight, 0.0f,
+            +bushScaleRatio, +bushHeight, 0.0f - upper_vertices_deviation,
+            -bushScaleRatio, +bushHeight, 0.0f - upper_vertices_deviation,
             +bushScaleRatio, 0.f, 0.0f,
 
             //QUAD 2/3 of the bush
             -second_quad_maxx, 0.f, -second_quad_maxz,
             +second_quad_maxx, 0.f, +second_quad_maxz,
-            -second_quad_maxx, +bushHeight, -second_quad_maxz,
+            -second_quad_maxx - upper_vertices_deviation, +bushHeight, -second_quad_maxz,
 
-            +second_quad_maxx, +bushHeight, +second_quad_maxz,
-            -second_quad_maxx, +bushHeight, -second_quad_maxz,
+            +second_quad_maxx - upper_vertices_deviation, +bushHeight, +second_quad_maxz,
+            -second_quad_maxx - upper_vertices_deviation, +bushHeight, -second_quad_maxz,
             +second_quad_maxx, 0.f, +second_quad_maxz,
 
             //QUAD 3/3 of the bush
-            -third_quad_maxx, 0.f, -third_quad_maxz,
-            +third_quad_maxx, 0.f, +third_quad_maxz,
-            -third_quad_maxx, +bushHeight, -third_quad_maxz,
+            -third_quad_maxx , 0.f, -third_quad_maxz,
+            +third_quad_maxx , 0.f, +third_quad_maxz,
+            -third_quad_maxx + upper_vertices_deviation, +bushHeight, -third_quad_maxz,
 
-            +third_quad_maxx, +bushHeight, +third_quad_maxz,
-            -third_quad_maxx, +bushHeight, -third_quad_maxz,
+            +third_quad_maxx + upper_vertices_deviation, +bushHeight, +third_quad_maxz,
+            -third_quad_maxx + upper_vertices_deviation, +bushHeight, -third_quad_maxz,
             +third_quad_maxx, 0.f, +third_quad_maxz
 
         };
