@@ -1,7 +1,6 @@
 #version 410 core
 layout (location = 0) in vec3 vpoint;
 layout (location = 7) in vec2 bladeTranslation;
-layout (location = 3) in mat4 instanceMatrix;
 
 //in vec3 vpoint;
 in vec2 vtexcoord;
