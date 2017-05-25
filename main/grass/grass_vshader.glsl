@@ -19,7 +19,7 @@ uniform sampler2D grassMap;
 const float SAND_HEIGHT = 0.02f,
             GRASS_HEIGHT = 0.3f,
             ROCK_HEIGHT = 0.40f;
-const float bushHeight = 0.08;
+const float bushHeight = 0.2;
 
 void main() {
     vec2 coord = (bladeTranslation + vec2(1.0f, 1.0f)) * 0.5f;
@@ -36,8 +36,10 @@ void main() {
         vpoint_World_F = vec2(0, 0);
         return;
     }
-
-    vec4 vertexModelPos = (instanceMatrix * vec4(vpoint, 1.0) + vec4(translation.x, height + bushHeight/2.f, -translation.y, 0));
+    mat4 model = mat4(1.f);
+    model[3][0] = bladeTranslation.x;
+    model[3][2] = bladeTranslation.y;
+    vec4 vertexModelPos = (model* vec4(vpoint, 1.0) + vec4(translation.x, height + bushHeight/2.f, -translation.y, 0));
     gl_Position = VP * vertexModelPos;
     uv = vtexcoord;
     heightColor = vec4(vec3(height) + 0.2, 1.f);

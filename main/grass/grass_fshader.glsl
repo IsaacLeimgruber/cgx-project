@@ -10,16 +10,16 @@ uniform sampler2D grassAlpha;
 uniform sampler2D heightMap;
 
 void main() {
-    vec4 color_value = texture(grassAlpha, vec2(uv.x, 1.f - uv.y));
-    if(color_value.a < 0.1){
-        color = vec4(0.f);
+   vec4 color_value = texture(grassAlpha, vec2(uv.x, 1.05f - uv.y));
+    if(color_value.a < 0.2){
+        discard;
     }
     //color = texture(heightMap, uv);
     color = color_value;
     //color = heightColor;
     //color = texture(heightMap, uv);
 
-    color.a *= 1- smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
+    color.a *= 1 - smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
                               max(abs(vpoint_World_F.x), abs(vpoint_World_F.y))
                               );
 }

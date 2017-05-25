@@ -168,7 +168,7 @@ void Display() {
     mMV = mirrored_view_matrix * quad_model_matrix;
     mMVP = projection_matrix * mMV;
     mNORMALM = inverse(transpose(mMV));
-
+/*
     //shadow matrices
     depth_view_matrix = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 1, 0));
     depth_model_matrix = IDENTITY_MATRIX;
@@ -176,18 +176,20 @@ void Display() {
     depth_bias_matrix = biasMatrix * depth_mvp;
 
     shadowBuffer.Bind();
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //scene.drawMountains(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
     shadowBuffer.Unbind();
-
-    computeReflections(visibleTiles);
+*/
+    //computeReflections(visibleTiles);
 
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
-    scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
-    scene.drawGrassTiles(visibleTiles, projection_matrix * view_matrix);
+   // scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
+    scene.drawGrassTiles(visibleTiles, projection_matrix * view_matrix,
+                         vec2(camera.getPos().x, camera.getPos().z));
     screenQuadBuffer.Unbind();
 
 

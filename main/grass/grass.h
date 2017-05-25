@@ -26,6 +26,9 @@ private:
     GLuint cols = rows;
     GLuint nBush = rows * cols;
     GLuint grass_tex_location = 1;
+    vector<mat4> modelMatrices{3*nBush};
+    vector<vec2> translations{3*nBush};
+    GLfloat bushScaleRatio = 0.08;
 
 
 public:
@@ -62,17 +65,18 @@ public:
         glBindVertexArray(quadVAO);
 
 
-        mat4* modelMatrices = new mat4[3*nBush];
-        vec2* translations = new vec2[3*nBush];
+
         srand(glfwGetTime()); // initialize random seed
 
         GLfloat colWidth = 2.f/rows;
         GLfloat rowHeight = 2.f/rows;
         glm::vec3 originOffset = glm::vec3(-1, 0, -1);
-        GLfloat scaleRatio = 0.08;
+
         GLfloat offset = 0.5f;
         for (int iBush = 0; iBush < rows; ++iBush) {
             for (int jBush = 0; jBush < cols; ++jBush) {
+              //for (int iBush = rows - 1; iBush >= 0; --iBush) {
+                //for (int jBush = cols - 1; jBush >= 0; --jBush) {
                 GLfloat x_random_offset = (rand() % (GLint)(2 * colWidth * 100)) / 100.0f - colWidth;
                 GLfloat xBush = colWidth  * jBush + originOffset.x + x_random_offset;
                 GLfloat yBush = 0 + originOffset.y;
@@ -80,7 +84,7 @@ public:
                 GLfloat zBush = (rowHeight * iBush + originOffset.z + z_random_offset);
 
                 mat4 modelMatrix = translate(IDENTITY_MATRIX, vec3(xBush, yBush, zBush));
-                modelMatrix = scale(modelMatrix, vec3(scaleRatio));
+               // modelMatrix = scale(modelMatrix, vec3(scaleRatio));
 
                 int curBushNumber = iBush + jBush * rows;
 
@@ -110,10 +114,15 @@ public:
         glBufferData(GL_ARRAY_BUFFER, 3*nBush * sizeof(vec2), &translations[0], GL_STATIC_DRAW);
 
         // Generate quad VAO
-        const GLfloat quadVertices[] = { -0.5f, -0.5f, 0.0f,
-                                         +0.5f, -0.5f, 0.0f,
-                                         -0.5f, +0.5f, 0.0f,
-                                         +0.5f, +0.5f, 0.0f
+        const GLfloat quadVertices[] = { -bushScaleRatio, -bushScaleRatio, 0.0f,
+                                         +bushScaleRatio, -bushScaleRatio, 0.0f,
+                                         -bushScaleRatio, +bushScaleRatio, 0.0f,
+
+                                         +bushScaleRatio, +bushScaleRatio, 0.0f,
+                                         -bushScaleRatio, +bushScaleRatio, 0.0f,
+                                         +bushScaleRatio, -bushScaleRatio, 0.0f
+
+
                                        };
 
 
@@ -158,7 +167,11 @@ public:
             const GLfloat vertex_texture_coordinates[] = { /*V1*/ 0.0f, 0.0f,
                                                            /*V2*/ 1.0f, 0.0f,
                                                            /*V3*/ 0.0f, 1.0f,
-                                                           /*V4*/ 1.0f, 1.0f};
+
+                                                           /*V4*/ 1.0f, 1.0f,
+                                                           /*V3*/ 0.0f, 1.0f,
+                                                           /*V2*/ 1.0f, 0.0f
+                                                           };
 
             // buffer
             glGenBuffers(1, &vertex_buffer_object_);
@@ -205,9 +218,40 @@ public:
         glDeleteTextures(1, &grassAlpha_id_);
     }
 
-    void Draw(const mat4 &VP = IDENTITY_MATRIX, vec2 translation = vec2(0.f, 0.f), const glm::vec2 &translationToSceneCenter = glm::vec2(0,0)) {
+    static float norm(const vec2 &v){
+        return sqrt(v.x*v.x + v.y*v.y);
+    }
+
+    static float dist(vec2 point, vec2 reference){
+        return norm(point - reference);
+    }
+
+    static vec2 tr_value(const mat4 &mat){
+        float x = mat[3][0];
+        float z = mat[3][2];
+        return vec2(x, z);
+    }
+
+    void sortInstances(const vec2 &cameraPos){
+
+        //sort translations
+       sort(begin(translations),
+             end(translations),
+             [cameraPos](const vec2& lhs, const vec2& rhs){ return dist(cameraPos, lhs) < dist(cameraPos, rhs); });
+        //sort models
+       //sort(begin(modelMatrices),
+         //    end(modelMatrices),
+           //  [cameraPos](const mat4& lhs, const mat4& rhs){
+           //return dist(cameraPos, tr_value(lhs)) < dist(cameraPos, tr_value(rhs)); });
+    }
+
+    void Draw(const mat4 &VP = IDENTITY_MATRIX, vec2 translation = vec2(0.f, 0.f),
+              const glm::vec2 &translationToSceneCenter = glm::vec2(0,0),
+              const vec2 cameraPos = vec2(0.f, 0.f)) {
         glUseProgram(program_id_);
 
+        //sort translations and model matrices to draw back to front depending on cameraPosition
+        sortInstances(cameraPos);
 
         // bind textures
         bindHeightMapTexture();
@@ -229,9 +273,16 @@ public:
 
         //grass quads must be able to overlap
         glDepthMask(false);
+
+        //We don't want the alpha part of the texture to occlude other bushes or quads
+        //So we activate alpha blending
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_BLEND);
+        //We want to see grass from any direction (from the back)
         glDisable(GL_CULL_FACE);
-        glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 3*nBush); // 3*amount quads of 4 vertices each
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 3*nBush); // 3*amount quads of 4 vertices each
         glEnable(GL_CULL_FACE);
+        glDisable(GL_BLEND);
         glDepthMask(true);
 
         glBindVertexArray(0);

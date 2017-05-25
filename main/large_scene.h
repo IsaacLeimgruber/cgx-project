@@ -202,12 +202,14 @@ public:
         }
     }
 
-    void drawGrassTiles(TileSet const& tilesToDraw, const glm::mat4 &VP = IDENTITY_MATRIX) {
+    void drawGrassTiles(TileSet const& tilesToDraw, const glm::mat4 &VP = IDENTITY_MATRIX,
+                        const vec2 cameraPos = vec2(0.f, 0.f)) {
         for (auto&& i : tilesToDraw.tiles)  {
             grass.useHeightMap(heightMap(i.first.iRow, i.first.jCol).id());
             grass.Draw(VP,
                        gridSize * translation(i.first.iRow, i.first.jCol),
-                       gridSize * translation(i.first.iRow, i.first.jCol) - center);
+                       gridSize * translation(i.first.iRow, i.first.jCol) - center,
+                       cameraPos);
         }
     }
 
