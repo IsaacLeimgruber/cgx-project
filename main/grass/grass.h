@@ -216,30 +216,11 @@ public:
         glDeleteTextures(1, &grassAlpha_id_);
     }
 
-    static float norm(const vec2 &v){
-        return sqrt(v.x*v.x + v.y*v.y);
-    }
-
-    static float dist(vec2 point, vec2 reference){
-        return norm(point - reference);
-    }
-
-    /** Sorts the instances by their distance to the camera, allowing a Draw from back to front*/
-    void sortInstances(const vec2 &cameraPos){
-
-        //sort translations
-        sort(begin(translations),
-             end(translations),
-             [cameraPos](const vec2& lhs, const vec2& rhs){ return dist(cameraPos, lhs) < dist(cameraPos, rhs); });
-    }
-
     void Draw(const mat4 &VP = IDENTITY_MATRIX, vec2 translation = vec2(0.f, 0.f),
               const glm::vec2 &translationToSceneCenter = glm::vec2(0,0),
               const vec2 cameraPos = vec2(0.f, 0.f)) {
         glUseProgram(program_id_);
 
-        //sort translations and model matrices to draw back to front depending on cameraPosition
-        sortInstances(cameraPos);
 
         // bind textures
         bindHeightMapTexture();
