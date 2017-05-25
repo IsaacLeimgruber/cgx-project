@@ -39,7 +39,7 @@ void main() {
     mat4 model = mat4(1.f);
     model[3][0] = bladeTranslation.x;
     model[3][2] = bladeTranslation.y;
-    vec4 vertexModelPos = (model* vec4(vpoint, 1.0) + vec4(translation.x, height + bushHeight/2.f, -translation.y, 0));
+    vec4 vertexModelPos = (model* vec4(vpoint, 1.0) + vec4(translation.x, height, -translation.y, 0));
     gl_Position = VP * vertexModelPos;
     uv = vtexcoord;
     heightColor = vec4(vec3(height) + 0.2, 1.f);

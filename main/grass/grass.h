@@ -26,8 +26,8 @@ private:
     GLuint cols = rows;
     GLuint nBush = rows * cols;
     GLuint grass_tex_location = 1;
-    vector<mat4> modelMatrices{3*nBush};
-    vector<vec2> translations{3*nBush};
+    vector<mat4> modelMatrices{nBush};
+    vector<vec2> translations{nBush};
     GLfloat bushScaleRatio = 0.08;
 
 
@@ -89,15 +89,8 @@ public:
                 int curBushNumber = iBush + jBush * rows;
 
                 /* Each 3-tuple of subsequent instance form a bush, having the same position */
-                translations[3*curBushNumber    ] = vec2(xBush, zBush);
-                translations[3*curBushNumber + 1] = vec2(xBush, zBush);
-                translations[3*curBushNumber + 2] = vec2(xBush, zBush);
+                translations[curBushNumber    ] = vec2(xBush, zBush);
 
-                /* Each bush is composed of 3 quad-instances, each rotated by pi/3 */
-                GLfloat alpha = M_PI/3.f;
-                modelMatrices[3*curBushNumber] = modelMatrix;
-                modelMatrices[3*curBushNumber + 1] = rotate(modelMatrix,   alpha, glm::vec3(0.f, 1.f, 0.f));
-                modelMatrices[3*curBushNumber + 2] = rotate(modelMatrix, 2*alpha, glm::vec3(0.f, 1.f, 0.f));
             }
         }
 
@@ -123,31 +116,31 @@ public:
         // Generate quad VAO
         const GLfloat quadVertices[] = {
             //QUAD 1/3 of the bush
-            -bushScaleRatio, -bushScaleRatio, 0.0f,
-            +bushScaleRatio, -bushScaleRatio, 0.0f,
-            -bushScaleRatio, +bushScaleRatio, 0.0f,
+            -bushScaleRatio, 0.f, 0.0f,
+            +bushScaleRatio, 0.f, 0.0f,
+            -bushScaleRatio, +2*bushScaleRatio, 0.0f,
 
-            +bushScaleRatio, +bushScaleRatio, 0.0f,
-            -bushScaleRatio, +bushScaleRatio, 0.0f,
-            +bushScaleRatio, -bushScaleRatio, 0.0f,
+            +bushScaleRatio, +2*bushScaleRatio, 0.0f,
+            -bushScaleRatio, +2*bushScaleRatio, 0.0f,
+            +bushScaleRatio, 0.f, 0.0f,
 
             //QUAD 2/3 of the bush
-            -second_quad_maxx, -bushScaleRatio, -second_quad_maxz,
-            +second_quad_maxx, -bushScaleRatio, +second_quad_maxz,
-            -second_quad_maxx, +bushScaleRatio, -second_quad_maxz,
+            -second_quad_maxx, 0.f, -second_quad_maxz,
+            +second_quad_maxx, 0.f, +second_quad_maxz,
+            -second_quad_maxx, +2*bushScaleRatio, -second_quad_maxz,
 
-            +second_quad_maxx, +bushScaleRatio, +second_quad_maxz,
-            -second_quad_maxx, +bushScaleRatio, -second_quad_maxz,
-            +second_quad_maxx, -bushScaleRatio, +second_quad_maxz,
+            +second_quad_maxx, +2*bushScaleRatio, +second_quad_maxz,
+            -second_quad_maxx, +2*bushScaleRatio, -second_quad_maxz,
+            +second_quad_maxx, 0.f, +second_quad_maxz,
 
             //QUAD 3/3 of the bush
-            -third_quad_maxx, -bushScaleRatio, -third_quad_maxz,
-            +third_quad_maxx, -bushScaleRatio, +third_quad_maxz,
-            -third_quad_maxx, +bushScaleRatio, -third_quad_maxz,
+            -third_quad_maxx, 0.f, -third_quad_maxz,
+            +third_quad_maxx, 0.f, +third_quad_maxz,
+            -third_quad_maxx, +2*bushScaleRatio, -third_quad_maxz,
 
-            +third_quad_maxx, +bushScaleRatio, +third_quad_maxz,
-            -third_quad_maxx, +bushScaleRatio, -third_quad_maxz,
-            +third_quad_maxx, -bushScaleRatio, +third_quad_maxz
+            +third_quad_maxx, +2*bushScaleRatio, +third_quad_maxz,
+            -third_quad_maxx, +2*bushScaleRatio, -third_quad_maxz,
+            +third_quad_maxx, 0.f, +third_quad_maxz
 
 
         };
@@ -323,7 +316,7 @@ public:
         glEnable(GL_BLEND);
         //We want to see grass from any direction (from the back)
         glDisable(GL_CULL_FACE);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 18, 3*nBush); // 3*amount quads of 4 vertices each
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 18, nBush); // 3*amount quads of 4 vertices each
         glEnable(GL_CULL_FACE);
         glDisable(GL_BLEND);
         glDepthMask(true);
