@@ -254,8 +254,6 @@ public:
         //sort translations and model matrices to draw back to front depending on cameraPosition
         sortInstances(cameraPos);
 
-        glBufferData(GL_ARRAY_BUFFER, nBush * sizeof(vec2), &translations[0], GL_STATIC_DRAW);
-
         // bind textures
         bindHeightMapTexture();
         bindGrassMapTexture();
