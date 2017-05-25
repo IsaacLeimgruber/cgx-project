@@ -156,7 +156,7 @@ class GridMesh: public ILightable{
 
             for(auto pProgramIds : {&debugProgramIds, &normalProgramIds}) {
                 glUseProgram(pProgramIds->program_id);
-                glUniform1i(pProgramIds->grassMap_id, 0);
+                glUniform1i(pProgramIds->grassMap_id, 4);
             }
         }
 

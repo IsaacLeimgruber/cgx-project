@@ -1,22 +1,22 @@
 #version 410 core
 in vec2 uv;
-uniform sampler2D colorTex;
-uniform sampler2D heightMap;
 in vec4 heightColor;
+in vec2 vpoint_World_F;
 out vec4 color;
 
-in vec2 vpoint_World_F;
 uniform float max_vpoint_World_F;
 uniform float threshold_vpoint_World_F;
+uniform sampler2D grassAlpha;
+uniform sampler2D heightMap;
 
 void main() {
-    //vec4 color_value = texture(colorTex, uv);
-    //if(color_value.a < 0.1){
-    //    color = vec4(0.f);
-    //}
+    vec4 color_value = texture(grassAlpha, uv);
+    if(color_value.a < 0.1){
+        color = vec4(0.f);
+    }
     //color = texture(heightMap, uv);
-    //color = color_value;
-    color = heightColor;
+    color = color_value;
+    //color = heightColor;
     //color = texture(heightMap, uv);
 
     color.a *= 1- smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,

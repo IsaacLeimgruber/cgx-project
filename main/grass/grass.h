@@ -2,6 +2,7 @@
 #include "icg_helper.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "../gridmesh.h"
+#include "../utils.h"
 
 using namespace glm;
 
@@ -12,17 +13,19 @@ using namespace glm;
 class Grass: public GridMesh {
 
 private:
-    GLuint vertex_array_id_;        // vertex array object
+
     GLuint program_id_;             // GLSL shader program ID
     GLuint vertex_buffer_object_;   // memory buffer
-    GLuint texture_id_;             // texture ID
+    GLuint grassAlpha_id_;             // texture ID
     GLuint translation_id_;
+    GLuint heightMapTexture_id_, grassMapTexture_id_;
     GLuint translationToSceneCenter_id_;
     GLuint VP_id_;          // Model, view, projection matrix ID
     GLuint quadVAO, quadVBO;
     GLuint rows = 10;
     GLuint cols = rows;
     GLuint nBush = rows * cols;
+    GLuint grass_tex_location = 1;
 
 
 public:
@@ -55,8 +58,8 @@ public:
         genGrid(8);
 
         // vertex one vertex Array
-        glGenVertexArrays(1, &vertex_array_id_);
-        glBindVertexArray(vertex_array_id_);
+        glGenVertexArrays(1, &quadVAO);
+        glBindVertexArray(quadVAO);
 
 
         mat4* modelMatrices = new mat4[3*nBush];
@@ -173,41 +176,21 @@ public:
 
         // load texture
         {
+            this->heightMapTexture_id_ = heightMap;
+            glUseProgram(program_id_);
+            glUniform1i(grassMapTexture_id_, 0);
 
-            loadHeightMap(heightMap);
-            loadGrassMap(grassMap);
+            this->grassMapTexture_id_ = grassMap;
+            glUseProgram(program_id_);
+            glUniform1i(grassMapTexture_id_, 4);
 
-            int width;
-            int height;
-            int nb_component;
-            string filename = "grassAlpha.tga";
-            // set stb_image to have the same coordinates as OpenGL
-            stbi_set_flip_vertically_on_load(1);
-            unsigned char* image = stbi_load(filename.c_str(), &width,
-                                             &height, &nb_component, 0);
+            //loadHeightMap(heightMap);
+            //loadGrassMap(grassMap);
 
-            if(image == nullptr) {
-                throw(string("Failed to load texture"));
-            }
+            grassAlpha_id_ = Utils::loadImage("grassAlpha.tga");
+            int grass_id = glGetUniformLocation(program_id_, "grassAlpha");
+            glUniform1i(grass_id, grass_tex_location);
 
-            glGenTextures(1, &texture_id_);
-            glBindTexture(GL_TEXTURE_2D, texture_id_);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-            if(nb_component == 3) {
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
-                             GL_RGB, GL_UNSIGNED_BYTE, image);
-            } else if(nb_component == 4) {
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
-                             GL_RGBA, GL_UNSIGNED_BYTE, image);
-            }
-
-            GLuint tex_id = glGetUniformLocation(program_id_, "colorTex");
-            glUniform1i(tex_id, 7);
-            // cleanup
-            glBindTexture(GL_TEXTURE_2D, 0);
-            stbi_image_free(image);
         }
 
         // to avoid the current object being polluted
@@ -220,19 +203,17 @@ public:
         glUseProgram(0);
         glDeleteBuffers(1, &vertex_buffer_object_);
         glDeleteProgram(program_id_);
-        glDeleteVertexArrays(1, &vertex_array_id_);
-        glDeleteTextures(1, &texture_id_);
+        glDeleteVertexArrays(1, &quadVAO);
+        glDeleteTextures(1, &grassAlpha_id_);
     }
 
     void Draw(const mat4 &VP = IDENTITY_MATRIX, vec2 translation = vec2(0.f, 0.f), const glm::vec2 &translationToSceneCenter = glm::vec2(0,0)) {
         glUseProgram(program_id_);
-        glBindVertexArray(vertex_array_id_);
+
 
         // bind textures
         bindHeightMapTexture();
         bindGrassMapTexture();
-        glActiveTexture(GL_TEXTURE0 + 7);
-        glBindTexture(GL_TEXTURE_2D, texture_id_);
 
         // setup MVP
         glUniformMatrix4fv(VP_id_, ONE, DONT_TRANSPOSE,
@@ -240,12 +221,11 @@ public:
         glUniform2fv(translation_id_, 1, glm::value_ptr(translation));
         glUniform2fv(translationToSceneCenter_id_, 1, glm::value_ptr(translationToSceneCenter));
 
-        // setup MVP
-        //glUniformMatrix4fv(view_id_, ONE, DONT_TRANSPOSE,
-          //                 glm::value_ptr(IDENTITY_MATRIX));
+        glActiveTexture(GL_TEXTURE0 + grass_tex_location);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
-        // draw
-        //glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glActiveTexture(GL_TEXTURE0 + grass_tex_location);
+        glBindTexture(GL_TEXTURE_2D, grassAlpha_id_);
 
         glBindVertexArray(quadVAO);
 
