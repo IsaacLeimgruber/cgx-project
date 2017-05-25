@@ -28,6 +28,7 @@ private:
     GLuint grass_tex_location = 1;
     vector<vec2> translations{nBush};
     GLfloat bushScaleRatio = 0.08;
+    GLfloat bushHeight = 2 * bushScaleRatio;
     GLuint translationsVBO;
 
 
@@ -63,8 +64,6 @@ public:
         // vertex one vertex Array
         glGenVertexArrays(1, &quadVAO);
         glBindVertexArray(quadVAO);
-
-
 
         srand(glfwGetTime()); // initialize random seed
 
@@ -111,28 +110,28 @@ public:
             //QUAD 1/3 of the bush
             -bushScaleRatio, 0.f, 0.0f,
             +bushScaleRatio, 0.f, 0.0f,
-            -bushScaleRatio, +2*bushScaleRatio, 0.0f,
+            -bushScaleRatio, +bushHeight, 0.0f,
 
-            +bushScaleRatio, +2*bushScaleRatio, 0.0f,
-            -bushScaleRatio, +2*bushScaleRatio, 0.0f,
+            +bushScaleRatio, +bushHeight, 0.0f,
+            -bushScaleRatio, +bushHeight, 0.0f,
             +bushScaleRatio, 0.f, 0.0f,
 
             //QUAD 2/3 of the bush
             -second_quad_maxx, 0.f, -second_quad_maxz,
             +second_quad_maxx, 0.f, +second_quad_maxz,
-            -second_quad_maxx, +2*bushScaleRatio, -second_quad_maxz,
+            -second_quad_maxx, +bushHeight, -second_quad_maxz,
 
-            +second_quad_maxx, +2*bushScaleRatio, +second_quad_maxz,
-            -second_quad_maxx, +2*bushScaleRatio, -second_quad_maxz,
+            +second_quad_maxx, +bushHeight, +second_quad_maxz,
+            -second_quad_maxx, +bushHeight, -second_quad_maxz,
             +second_quad_maxx, 0.f, +second_quad_maxz,
 
             //QUAD 3/3 of the bush
             -third_quad_maxx, 0.f, -third_quad_maxz,
             +third_quad_maxx, 0.f, +third_quad_maxz,
-            -third_quad_maxx, +2*bushScaleRatio, -third_quad_maxz,
+            -third_quad_maxx, +bushHeight, -third_quad_maxz,
 
-            +third_quad_maxx, +2*bushScaleRatio, +third_quad_maxz,
-            -third_quad_maxx, +2*bushScaleRatio, -third_quad_maxz,
+            +third_quad_maxx, +bushHeight, +third_quad_maxz,
+            -third_quad_maxx, +bushHeight, -third_quad_maxz,
             +third_quad_maxx, 0.f, +third_quad_maxz
 
         };
@@ -232,12 +231,7 @@ public:
         return norm(point - reference);
     }
 
-    static vec2 tr_value(const mat4 &mat){
-        float x = mat[3][0];
-        float z = mat[3][2];
-        return vec2(x, z);
-    }
-
+    /** Sorts the instances by their distance to the camera, allowing a Draw from back to front*/
     void sortInstances(const vec2 &cameraPos){
 
         //sort translations
@@ -263,9 +257,6 @@ public:
                            glm::value_ptr(VP));
         glUniform2fv(translation_id_, 1, glm::value_ptr(translation));
         glUniform2fv(translationToSceneCenter_id_, 1, glm::value_ptr(translationToSceneCenter));
-
-        glActiveTexture(GL_TEXTURE0 + grass_tex_location);
-        glBindTexture(GL_TEXTURE_2D, 0);
 
         glActiveTexture(GL_TEXTURE0 + grass_tex_location);
         glBindTexture(GL_TEXTURE_2D, grassAlpha_id_);
