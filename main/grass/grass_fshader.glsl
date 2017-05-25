@@ -10,7 +10,7 @@ uniform sampler2D grassAlpha;
 uniform sampler2D heightMap;
 
 void main() {
-    vec4 color_value = texture(grassAlpha, uv);
+    vec4 color_value = texture(grassAlpha, vec2(uv.x, 1.f - uv.y));
     if(color_value.a < 0.1){
         color = vec4(0.f);
     }

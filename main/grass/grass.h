@@ -70,13 +70,14 @@ public:
         GLfloat rowHeight = 2.f/rows;
         glm::vec3 originOffset = glm::vec3(-1, 0, -1);
         GLfloat scaleRatio = 0.08;
-
+        GLfloat offset = 0.5f;
         for (int iBush = 0; iBush < rows; ++iBush) {
             for (int jBush = 0; jBush < cols; ++jBush) {
-
-                GLfloat xBush = colWidth  * jBush + originOffset.x;
+                GLfloat x_random_offset = (rand() % (GLint)(2 * colWidth * 100)) / 100.0f - colWidth;
+                GLfloat xBush = colWidth  * jBush + originOffset.x + x_random_offset;
                 GLfloat yBush = 0 + originOffset.y;
-                GLfloat zBush = (rowHeight * iBush + originOffset.z);
+                GLfloat z_random_offset = (rand() % (GLint)(2 * colWidth * 100)) / 100.0f - colWidth;
+                GLfloat zBush = (rowHeight * iBush + originOffset.z + z_random_offset);
 
                 mat4 modelMatrix = translate(IDENTITY_MATRIX, vec3(xBush, yBush, zBush));
                 modelMatrix = scale(modelMatrix, vec3(scaleRatio));
@@ -183,9 +184,6 @@ public:
             this->grassMapTexture_id_ = grassMap;
             glUseProgram(program_id_);
             glUniform1i(grassMapTexture_id_, 4);
-
-            //loadHeightMap(heightMap);
-            //loadGrassMap(grassMap);
 
             grassAlpha_id_ = Utils::loadImage("grassAlpha.tga");
             int grass_id = glGetUniformLocation(program_id_, "grassAlpha");
