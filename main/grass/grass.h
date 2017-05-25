@@ -18,9 +18,8 @@ private:
     GLuint vertex_buffer_object_;   // memory buffer
     GLuint grassAlpha_id_;             // texture ID
     GLuint translation_id_;
-    GLuint heightMapTexture_id_, grassMapTexture_id_;
     GLuint translationToSceneCenter_id_;
-    GLuint VP_id_;          // Model, view, projection matrix ID
+    GLuint VP_id_;          // view, projection matrix ID
     GLuint quadVAO, quadVBO;
     GLuint rows = 20;
     GLuint cols = rows;
@@ -71,25 +70,16 @@ public:
         GLfloat rowHeight = 2.f/rows;
         glm::vec3 originOffset = glm::vec3(-1, 0, -1);
 
-        GLfloat offset = 0.5f;
         for (int iBush = 0; iBush < rows; ++iBush) {
             for (int jBush = 0; jBush < cols; ++jBush) {
-                //for (int iBush = rows - 1; iBush >= 0; --iBush) {
-                //for (int jBush = cols - 1; jBush >= 0; --jBush) {
                 GLfloat x_random_offset = (rand() % (GLint)(2 * colWidth * 100)) / 100.0f - colWidth;
                 GLfloat xBush = colWidth  * jBush + originOffset.x + x_random_offset;
-                GLfloat yBush = 0 + originOffset.y;
                 GLfloat z_random_offset = (rand() % (GLint)(2 * colWidth * 100)) / 100.0f - colWidth;
                 GLfloat zBush = (rowHeight * iBush + originOffset.z + z_random_offset);
 
-                mat4 modelMatrix = translate(IDENTITY_MATRIX, vec3(xBush, yBush, zBush));
-                // modelMatrix = scale(modelMatrix, vec3(scaleRatio));
-
                 int curBushNumber = iBush + jBush * rows;
 
-                /* Each 3-tuple of subsequent instance form a bush, having the same position */
                 translations[curBushNumber] = vec2(xBush, zBush);
-
             }
         }
 
