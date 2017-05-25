@@ -28,6 +28,7 @@ private:
     GLuint grass_tex_location = 1;
     vector<vec2> translations{nBush};
     GLfloat bushScaleRatio = 0.08;
+    GLuint translationsVBO;
 
 
 public:
@@ -94,10 +95,9 @@ public:
         }
 
         // Instances translations Vertex Buffer Object
-        GLuint translationsVBO;
         glGenBuffers(1, &translationsVBO);
         glBindBuffer(GL_ARRAY_BUFFER, translationsVBO);
-        glBufferData(GL_ARRAY_BUFFER, 3*nBush * sizeof(vec2), &translations[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, nBush * sizeof(vec2), &translations[0], GL_STATIC_DRAW);
 
         // Generate quad VAO
         float second_quad_angle = M_PI / 3;
@@ -243,7 +243,7 @@ public:
         //sort translations
         sort(begin(translations),
              end(translations),
-             [cameraPos](const vec2& lhs, const vec2& rhs){ return dist(cameraPos, lhs) > dist(cameraPos, rhs); });
+             [cameraPos](const vec2& lhs, const vec2& rhs){ return dist(cameraPos, lhs) < dist(cameraPos, rhs); });
     }
 
     void Draw(const mat4 &VP = IDENTITY_MATRIX, vec2 translation = vec2(0.f, 0.f),
@@ -253,6 +253,8 @@ public:
 
         //sort translations and model matrices to draw back to front depending on cameraPosition
         sortInstances(cameraPos);
+
+        glBufferData(GL_ARRAY_BUFFER, nBush * sizeof(vec2), &translations[0], GL_STATIC_DRAW);
 
         // bind textures
         bindHeightMapTexture();
@@ -273,7 +275,6 @@ public:
         glBindVertexArray(quadVAO);
 
         //grass quads must be able to overlap
-        glDepthMask(false);
 
         //We don't want the alpha part of the texture to occlude other bushes or quads
         //So we activate alpha blending
@@ -287,7 +288,6 @@ public:
 
         glEnable(GL_CULL_FACE);
         glDisable(GL_BLEND);
-        glDepthMask(true);
 
         glBindVertexArray(0);
         glUseProgram(0);
