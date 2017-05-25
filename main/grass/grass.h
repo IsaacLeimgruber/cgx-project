@@ -22,7 +22,7 @@ private:
     GLuint translationToSceneCenter_id_;
     GLuint VP_id_;          // Model, view, projection matrix ID
     GLuint quadVAO, quadVBO;
-    GLuint rows = 10;
+    GLuint rows = 5;
     GLuint cols = rows;
     GLuint nBush = rows * cols;
     GLuint grass_tex_location = 1;
@@ -75,7 +75,7 @@ public:
         GLfloat offset = 0.5f;
         for (int iBush = 0; iBush < rows; ++iBush) {
             for (int jBush = 0; jBush < cols; ++jBush) {
-              //for (int iBush = rows - 1; iBush >= 0; --iBush) {
+                //for (int iBush = rows - 1; iBush >= 0; --iBush) {
                 //for (int jBush = cols - 1; jBush >= 0; --jBush) {
                 GLfloat x_random_offset = (rand() % (GLint)(2 * colWidth * 100)) / 100.0f - colWidth;
                 GLfloat xBush = colWidth  * jBush + originOffset.x + x_random_offset;
@@ -84,7 +84,7 @@ public:
                 GLfloat zBush = (rowHeight * iBush + originOffset.z + z_random_offset);
 
                 mat4 modelMatrix = translate(IDENTITY_MATRIX, vec3(xBush, yBush, zBush));
-               // modelMatrix = scale(modelMatrix, vec3(scaleRatio));
+                // modelMatrix = scale(modelMatrix, vec3(scaleRatio));
 
                 int curBushNumber = iBush + jBush * rows;
 
@@ -113,17 +113,44 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, translationsVBO);
         glBufferData(GL_ARRAY_BUFFER, 3*nBush * sizeof(vec2), &translations[0], GL_STATIC_DRAW);
 
+        float second_quad_angle = M_PI / 3;
+        float third_quad_angle = 2 * M_PI / 3;
+        float second_quad_maxx = bushScaleRatio* cos(second_quad_angle);
+        float second_quad_maxz = bushScaleRatio * sin(second_quad_angle);
+
+        float third_quad_maxx = bushScaleRatio* cos(third_quad_angle);
+        float third_quad_maxz = bushScaleRatio* sin(third_quad_angle);
         // Generate quad VAO
-        const GLfloat quadVertices[] = { -bushScaleRatio, -bushScaleRatio, 0.0f,
-                                         +bushScaleRatio, -bushScaleRatio, 0.0f,
-                                         -bushScaleRatio, +bushScaleRatio, 0.0f,
+        const GLfloat quadVertices[] = {
+            //QUAD 1/3 of the bush
+            -bushScaleRatio, -bushScaleRatio, 0.0f,
+            +bushScaleRatio, -bushScaleRatio, 0.0f,
+            -bushScaleRatio, +bushScaleRatio, 0.0f,
 
-                                         +bushScaleRatio, +bushScaleRatio, 0.0f,
-                                         -bushScaleRatio, +bushScaleRatio, 0.0f,
-                                         +bushScaleRatio, -bushScaleRatio, 0.0f
+            +bushScaleRatio, +bushScaleRatio, 0.0f,
+            -bushScaleRatio, +bushScaleRatio, 0.0f,
+            +bushScaleRatio, -bushScaleRatio, 0.0f,
+
+            //QUAD 2/3 of the bush
+            -second_quad_maxx, -bushScaleRatio, -second_quad_maxz,
+            +second_quad_maxx, -bushScaleRatio, +second_quad_maxz,
+            -second_quad_maxx, +bushScaleRatio, -second_quad_maxz,
+
+            +second_quad_maxx, +bushScaleRatio, +second_quad_maxz,
+            -second_quad_maxx, +bushScaleRatio, -second_quad_maxz,
+            +second_quad_maxx, -bushScaleRatio, +second_quad_maxz,
+
+            //QUAD 3/3 of the bush
+            -third_quad_maxx, -bushScaleRatio, -third_quad_maxz,
+            +third_quad_maxx, -bushScaleRatio, +third_quad_maxz,
+            -third_quad_maxx, +bushScaleRatio, -third_quad_maxz,
+
+            +third_quad_maxx, +bushScaleRatio, +third_quad_maxz,
+            -third_quad_maxx, +bushScaleRatio, -third_quad_maxz,
+            +third_quad_maxx, -bushScaleRatio, +third_quad_maxz
 
 
-                                       };
+        };
 
 
         // Generate quad VAO
@@ -170,8 +197,24 @@ public:
 
                                                            /*V4*/ 1.0f, 1.0f,
                                                            /*V3*/ 0.0f, 1.0f,
+                                                           /*V2*/ 1.0f, 0.0f,
+
+                                                           /*V1*/ 0.0f, 0.0f,
+                                                           /*V2*/ 1.0f, 0.0f,
+                                                           /*V3*/ 0.0f, 1.0f,
+
+                                                           /*V4*/ 1.0f, 1.0f,
+                                                           /*V3*/ 0.0f, 1.0f,
+                                                           /*V2*/ 1.0f, 0.0f,
+
+                                                           /*V1*/ 0.0f, 0.0f,
+                                                           /*V2*/ 1.0f, 0.0f,
+                                                           /*V3*/ 0.0f, 1.0f,
+
+                                                           /*V4*/ 1.0f, 1.0f,
+                                                           /*V3*/ 0.0f, 1.0f,
                                                            /*V2*/ 1.0f, 0.0f
-                                                           };
+                                                         };
 
             // buffer
             glGenBuffers(1, &vertex_buffer_object_);
@@ -235,14 +278,14 @@ public:
     void sortInstances(const vec2 &cameraPos){
 
         //sort translations
-       sort(begin(translations),
+        sort(begin(translations),
              end(translations),
              [cameraPos](const vec2& lhs, const vec2& rhs){ return dist(cameraPos, lhs) < dist(cameraPos, rhs); });
         //sort models
-       //sort(begin(modelMatrices),
-         //    end(modelMatrices),
-           //  [cameraPos](const mat4& lhs, const mat4& rhs){
-           //return dist(cameraPos, tr_value(lhs)) < dist(cameraPos, tr_value(rhs)); });
+        //sort(begin(modelMatrices),
+        //    end(modelMatrices),
+        //  [cameraPos](const mat4& lhs, const mat4& rhs){
+        //return dist(cameraPos, tr_value(lhs)) < dist(cameraPos, tr_value(rhs)); });
     }
 
     void Draw(const mat4 &VP = IDENTITY_MATRIX, vec2 translation = vec2(0.f, 0.f),
@@ -280,7 +323,7 @@ public:
         glEnable(GL_BLEND);
         //We want to see grass from any direction (from the back)
         glDisable(GL_CULL_FACE);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 3*nBush); // 3*amount quads of 4 vertices each
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 18, 3*nBush); // 3*amount quads of 4 vertices each
         glEnable(GL_CULL_FACE);
         glDisable(GL_BLEND);
         glDepthMask(true);
