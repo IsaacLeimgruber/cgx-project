@@ -16,11 +16,13 @@
 #include "skyDome/skyDome.h"
 #include "blurQuad/blurquad.h"
 #include "large_scene.h"
+#include "bezier/BezierCurve.h"
 
 using namespace glm;
 
-LargeScene scene;
-SceneControler sceneControler(scene);
+float grid_size = 1.0f;
+LargeScene scene(2 * grid_size);
+SceneControler sceneControler(scene, grid_size, grid_size);
 SkyDome skyDome;
 Camera camera;
 ColorAndDepthFBO screenQuadBuffer, reflectionBuffer, screenQuadBufferPostProcessing;
@@ -30,6 +32,9 @@ ScreenQuad screenquad;
 BlurQuad blurQuad;
 Light light;
 Material material;
+
+Perlin perlin;
+
 int postProcessingTextureId;
 float perlinTextureSize = 512;
 
@@ -37,6 +42,7 @@ bool keys[1024];
 bool firstMouse = false;
 bool wireframeDebugEnabled = false;
 bool enableBlurPostProcess = true;
+bool toggleBezier = false;
 // Window size in screen coordinates
 int window_width_sc;
 int window_height_sc;
@@ -50,11 +56,19 @@ int screenHeight = 1080;
 float lastX = 0.0f;
 float lastY = 0.0f;
 
+const float DISPLACEMENT_TIME = 15.f;
 const float OFFSET_QTY = 0.04f;
+float start_time = 0.f;
 
 mat4 projection_matrix, view_matrix, mirrored_view_matrix, quad_model_matrix;
 mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_matrix, depth_mvp;
 mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
+BezierCurve bezier({
+                       vec3(-0.3, 2.5, -0.3),
+                       vec3(0, 0, -0.4),
+                       vec3(1, 0.5, 0),
+                       vec3(0.6, 1.5, 1)
+                   });
 
 mat4 biasMatrix = mat4(
             0.5, 0.0, 0.0, 0.0,
@@ -74,7 +88,10 @@ FractionalView fractionalView;
 void Init() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    camera   = Camera{vec3(0.0, 2.5, 0.0)};
+    //perlin.Init("perlinGrass_fshader.glsl");
+    start_time = glfwGetTime();
+
+    camera   = Camera{vec3(0.0, 10, 0.0), vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
     light    = Light{vec3(0.0, 2.0, -4.0)};
     material = Material{};
 
@@ -100,11 +117,15 @@ void Init() {
     view_matrix             = camera.GetViewMatrix();
     depth_projection_matrix = glm::ortho(-sceneHalfMaxSize, sceneHalfMaxSize, -sceneHalfMaxSize, sceneHalfMaxSize, skyDomeRadius - sceneHalfMaxSize, skyDomeRadius + sceneHalfMaxSize);
     depth_view_matrix       = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 0, 0));
-    depth_model_matrix      = IDENTITY_MATRIX;
+    quad_model_matrix       = glm::scale(IDENTITY_MATRIX, grid_size * vec3(1.0f, 1.0f / grid_size, 1.0f));
     depth_mvp               = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix       = biasMatrix * depth_mvp;
-    quad_model_matrix       = IDENTITY_MATRIX; //scale(IDENTITY_MATRIX, vec3(1.01f, 1.0, 1.01f));
+    depth_model_matrix      = quad_model_matrix;
 
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glDepthFunc(GL_LESS);
 
     for(auto& key : keys){
         key = false;
@@ -115,6 +136,8 @@ void computeReflections(LargeScene::TileSet const& visibleTiles);
 void computeBloom();
 
 void Display() {
+    glClear(GL_DEPTH_BUFFER_BIT);
+
     GLfloat currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
@@ -130,6 +153,15 @@ void Display() {
     //Compute matrices
     view_matrix = camera.GetViewMatrix();
     mirrored_view_matrix = camera.GetMirroredViewMatrix(0.0f);
+
+    float dtime = 0.1;
+         float bezierTime = (glfwGetTime() - start_time)/DISPLACEMENT_TIME;
+         if(bezierTime <= 1.f - dtime && toggleBezier){
+         vec3 cameraPos = bezier.getPoint(bezierTime);
+         camera.setPos(cameraPos);
+         vec3 cameraTarget = bezier.getPoint(bezierTime + dtime);
+         camera.setFront(cameraTarget);
+    }
 
     MV = view_matrix * quad_model_matrix;
     MVP = projection_matrix * MV;
@@ -147,6 +179,7 @@ void Display() {
     depth_bias_matrix = biasMatrix * depth_mvp;
 
     shadowBuffer.Bind();
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     scene.drawMountains(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
     shadowBuffer.Unbind();
@@ -158,6 +191,8 @@ void Display() {
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
     scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
+    scene.drawGrassTiles(visibleTiles, projection_matrix * view_matrix,
+                         vec2(camera.getPos().x, camera.getPos().z));
     bloomHDRBuffer.Unbind();
 
     computeBloom();
@@ -203,7 +238,7 @@ void computeBloom() {
 
     screenQuadBufferPostProcessing.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    blurQuad.Draw(0.2);
+    blurQuad.Draw(0.5);
     screenQuadBufferPostProcessing.Unbind();
 
     blurQuad.setRenderingPassNumber(1);
@@ -211,7 +246,7 @@ void computeBloom() {
 
     screenQuadBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    blurQuad.Draw(0.2);
+    blurQuad.Draw(0.5);
     screenQuadBuffer.Unbind();
 
 }
@@ -244,7 +279,7 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
-    projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 150.0f);
+    projection_matrix = perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / (GLfloat)screenHeight, 0.1f, 5000.0f);
 }
 
 // Gets called when the windows/framebuffer is resized.
@@ -257,7 +292,7 @@ void SetupProjection(GLFWwindow* window, int width, int height) {
 
     glViewport(0, 0, window_width, window_height);
 
-    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 150.0f);
+    projection_matrix = glm::perspective(glm::radians(camera.Fov), (GLfloat)screenWidth / screenHeight, 0.1f, 5000.0f);
 
     glfwGetWindowSize(window, &window_width_sc, &window_height_sc);
 }
@@ -339,6 +374,7 @@ void doMovement()
     float displacementY = newPos.z - actualPos.y;
     sceneControler.move({displacementX, displacementY});
     vec2 updatedPos = sceneControler.position();
+    scene.setCenter(updatedPos/grid_size);
     vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
     camera.setPos(cameraPos);
 }

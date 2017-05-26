@@ -14,14 +14,20 @@ in vec2 uv_TC[];
 out vec3 vpoint_TE[];
 out vec2 uv_TE[];
 
-const float CLOSEST_TESS_DISTANCE = 0.2f;
-const float FURTHEST_TESS_DISTANCE = 2.5f;
+const float CLOSEST_TESS_DISTANCE = 0.5f;
+const float FURTHEST_TESS_DISTANCE = 5.5f;
 const float MIN_TESSELATION = 4.0f;
 const float MAX_TESSELATION = 16.0f;
 
-float GetTessLevel(in float Distance0, in float Distance1)
+float GetTessLevel(in float Distance0, in float Distance1, in float height1, in float height2)
 {
-    float avgDistance = (Distance0 + Distance1) / 2.0f;
+    float avgHeight = (height1 + height2) * 0.5f;
+
+    if(avgHeight < -0.05f){
+        return 1;
+    }
+
+    float avgDistance = (Distance0 + Distance1) * 0.5f;
 
     //Clamp average between closest and furthest tesselation distance
     avgDistance = clamp(avgDistance, CLOSEST_TESS_DISTANCE, FURTHEST_TESS_DISTANCE);
@@ -76,11 +82,11 @@ void main()
    *  OL 2 = 2-1
    *  OL 3 = 2-3
    */
-   gl_TessLevelOuter[0] = GetTessLevel(EyeToVertexDistance0, EyeToVertexDistance3);
-   gl_TessLevelOuter[1] = GetTessLevel(EyeToVertexDistance1, EyeToVertexDistance0);
-   gl_TessLevelOuter[2] = GetTessLevel(EyeToVertexDistance2, EyeToVertexDistance1);
-   gl_TessLevelOuter[3] = GetTessLevel(EyeToVertexDistance3, EyeToVertexDistance2);
-   gl_TessLevelInner[0] = (gl_TessLevelOuter[1] + gl_TessLevelOuter[3]) / 2.0;
-   gl_TessLevelInner[1] = (gl_TessLevelOuter[0] + gl_TessLevelOuter[2]) / 2.0;
+   gl_TessLevelOuter[0] = GetTessLevel(EyeToVertexDistance0, EyeToVertexDistance3, vpoint_TC[0].y, vpoint_TC[3].y);
+   gl_TessLevelOuter[1] = GetTessLevel(EyeToVertexDistance1, EyeToVertexDistance0, vpoint_TC[1].y, vpoint_TC[0].y);
+   gl_TessLevelOuter[2] = GetTessLevel(EyeToVertexDistance2, EyeToVertexDistance1, vpoint_TC[2].y, vpoint_TC[1].y);
+   gl_TessLevelOuter[3] = GetTessLevel(EyeToVertexDistance3, EyeToVertexDistance2, vpoint_TC[3].y, vpoint_TC[2].y);
+   gl_TessLevelInner[0] = (gl_TessLevelOuter[1] + gl_TessLevelOuter[3]) / 2.0f;
+   gl_TessLevelInner[1] = (gl_TessLevelOuter[0] + gl_TessLevelOuter[2]) / 2.0f;
 
 }

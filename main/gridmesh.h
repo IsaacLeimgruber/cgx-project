@@ -11,6 +11,9 @@ struct ProgramIds{
     GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id;
     GLuint zoom_id, zoomOffset_id, translation_id;
     GLuint heightMap_id, mirrorMap_id;
+    GLuint grassMap_id;
+    GLuint alpha_id;
+    GLuint translationToSceneCenter_id;
 };
 
 class GridMesh: public ILightable{
@@ -20,6 +23,7 @@ class GridMesh: public ILightable{
         GLuint vertex_buffer_object_position_;  // memory buffer for positions
         GLuint vertex_buffer_object_index_;     // memory buffer for indices
         GLuint heightMapTexture_id_;            // texture ID
+        GLuint grassMapTexture_id_;
         GLuint normalTexture_id_;
         GLuint shadowTexture_id_;
         GLuint mirrorTexture_id_;
@@ -28,6 +32,7 @@ class GridMesh: public ILightable{
         ProgramIds currentProgramIds, normalProgramIds, shadowProgramIds, debugProgramIds;
 
         GLuint num_indices_;
+        int firstCorner;
         Light* light;
         Material material;
         int gridDimensions;
@@ -35,9 +40,13 @@ class GridMesh: public ILightable{
         bool wireframeDebugEnabled;
 
     public:
-        GridMesh():light{nullptr}, material{Material()}, debug{false}, wireframeDebugEnabled{false} {
-
-        }
+        GridMesh(int firstCorner = 0)
+            : light{nullptr}
+            , material{Material()}
+            , debug{false}
+            , wireframeDebugEnabled{false}
+            , firstCorner{firstCorner}
+        {}
 
         void genGrid(int grid_dim){
             glGenVertexArrays(1, &vertex_array_id_);
@@ -55,7 +64,8 @@ class GridMesh: public ILightable{
 
             for(int j = 0; j < grid_dim; j++){
                 for(int i = 0; i < grid_dim; i++){
-                    vertices.push_back(-1.0f + i*spacing); vertices.push_back(-1.0f + j*spacing);
+                    vertices.push_back(-1.0f + i*spacing);
+                    vertices.push_back(-1.0f + j*spacing);
                 }
             }
 
@@ -104,6 +114,10 @@ class GridMesh: public ILightable{
                 programIds.zoomOffset_id = glGetUniformLocation(programIds.program_id, "zoomOffset");
                 programIds.translation_id = glGetUniformLocation(programIds.program_id, "translation");
                 programIds.heightMap_id = glGetUniformLocation(programIds.program_id, "heightMap");
+                programIds.grassMap_id = glGetUniformLocation(programIds.program_id, "grassMap");
+                programIds.alpha_id = glGetUniformLocation(programIds.program_id, "alpha");
+                programIds.translationToSceneCenter_id = glGetUniformLocation(programIds.program_id,
+                                                                              "translationToSceneCenter");
             }
 
             //normapProgramIds must be used last, or use: glUseProgram(normalProgramIds.program_id) here
@@ -137,8 +151,21 @@ class GridMesh: public ILightable{
             }
         }
 
+        void loadGrassMap(GLuint grassMap){
+            this->grassMapTexture_id_ = grassMap;
+
+            for(auto pProgramIds : {&debugProgramIds, &normalProgramIds}) {
+                glUseProgram(pProgramIds->program_id);
+                glUniform1i(pProgramIds->grassMap_id, 4);
+            }
+        }
+
         void useHeightMap(GLuint heightMap) {
             this->heightMapTexture_id_ = heightMap;
+        }
+
+        void useGrassMap(GLuint grassMap){
+            this->grassMapTexture_id_ = grassMap;
         }
 
         void loadNormalMap(GLuint normalMap){
@@ -187,6 +214,7 @@ class GridMesh: public ILightable{
             glDeleteProgram(shadowProgramIds.program_id);
             glDeleteProgram(debugProgramIds.program_id);
             glDeleteTextures(1, &heightMapTexture_id_);
+            glDeleteTextures(1, &grassMapTexture_id_);
             glDeleteTextures(1, &normalTexture_id_);
             glDeleteTextures(1, &mirrorTexture_id_);
             glDeleteTextures(1, &shadowTexture_id_);
@@ -218,6 +246,7 @@ class GridMesh: public ILightable{
 
         void activateTextureUnits(bool normalTexture = true){
             bindHeightMapTexture();
+            bindGrassMapTexture();
             if (normalTexture) {
                 bindNormalMapTexture();
             }
@@ -243,10 +272,16 @@ class GridMesh: public ILightable{
         void bindMirrorTexture() {
             glActiveTexture(GL_TEXTURE0 + 3);
             glBindTexture(GL_TEXTURE_2D, mirrorTexture_id_);
+
+        }
+
+        void bindGrassMapTexture() {
+            glActiveTexture(GL_TEXTURE0 + 4);
+            glBindTexture(GL_TEXTURE_2D, grassMapTexture_id_);
         }
 
         void deactivateTextureUnits() {
-            for (int i = 0; i < 4; ++i) {
+            for (int i = 0; i < 5; ++i) {
                 glActiveTexture(GL_TEXTURE0 + i);
                 glBindTexture(GL_TEXTURE_2D, 0);
             }

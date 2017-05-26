@@ -5,12 +5,15 @@ uniform mat4 MV;
 uniform mat4 NORMALM;
 uniform sampler2DShadow shadowMap;
 uniform sampler2D heightMap;
+uniform sampler2D grassMap;
 uniform sampler2D grassTex;
+uniform sampler2D grassbisTex;
 uniform sampler2D snowTex;
 uniform sampler2D sandTex;
 uniform sampler2D rockTex;
 uniform vec3 La, Ld, Ls;
 uniform bool mirrorPass;
+uniform float alpha;
 
 in vec4 shadowCoord_F;
 in vec4 vpoint_MV_F;
@@ -19,6 +22,10 @@ in vec3 lightDir_F;
 in vec3 viewDir_F;
 in vec2 uv_F;
 in float vheight_F;
+in vec2 vpoint_World_F;
+uniform float max_vpoint_World_F;
+uniform float threshold_vpoint_World_F;
+
 
 layout (location = 0) out vec4 color;
 layout (location = 1) out vec4 brightColor;
@@ -26,7 +33,7 @@ layout (location = 1) out vec4 brightColor;
 const vec3 brightnessTreshold = vec3(1.0, 1.0, 1.0);
 
 const float SLOPE_THRESHOLD = 0.5f;
-const float MIX_SLOPE_THRESHOLD = 0.2f;
+const float MIX_SLOPE_THRESHOLD = 0.1f;
 
 const float WATER_HEIGHT = 0.01f,
             WATER_HEIGHT_DEEP = -0.3f,
@@ -86,27 +93,41 @@ vec3 applyFog( in vec3  rgb,       // original color of the pixel
 
 void main() {
 
-    if(mirrorPass){
-        if(vpoint_F.y < -0.005f){
-            discard;
-        }
+    if (mirrorPass && vpoint_F.y < -0.005f) {
+        discard;
     }
 
+    float grass_coef_noise = clamp(texture(grassMap, uv_F).g, 0.f, 1.f);
     vec2 normalDxDy = texture(heightMap, uv_F).yz;
     vec3 gridNormal = normalize(vec3(-normalDxDy.x, 1, +normalDxDy.y));
     vec3 normal_MV = (NORMALM * vec4(gridNormal, 1.0f)).xyz;
 
     vec3 lightDir = normalize(lightDir_F);
-
+        vec3 vert = vec3(0.0f, 1.0f, 0.0f);
+    float slope = dot(gridNormal, vert);//range [-1, 1], highest slope when 0
     vec3 heightCol = vec3(0.0f);
-    vec3 GRASS_COLOR = 255.0 * texture(grassTex, (uv_F) * 60.0f).rgb;
+    vec3 grassCol1 = 255.0 * texture(grassTex, uv_F * 10.0f).rgb;
+    vec3 grassCol2 = 255.0 * vec3(texture(grassbisTex, uv_F * 5.f).rgb);
+    float biasTowardGrass = 0.1;
+    float grass_coef_slope = 1 - (abs(slope) + biasTowardGrass)/(1. + biasTowardGrass);
+    float grass_coef = grass_coef_noise * grass_coef_slope;
+    float grass_threshold = 0.2;
+    float ground_threshold = 0.5;
+    vec3 GRASS_COLOR;
+    if(grass_coef > ground_threshold){
+        GRASS_COLOR = grassCol2;
+    }else if(grass_coef < grass_threshold){
+        GRASS_COLOR = grassCol1;
+    }else{
+        GRASS_COLOR = mix(grassCol1, grassCol2, smoothstep(grass_threshold, ground_threshold, grass_coef));
+    }
     vec3 ROCK_COLOR = 255.0 * texture(rockTex, (uv_F) * 5.0f).rgb;
     vec3 WATER_COLOR = ROCK_COLOR ;
     vec3 WATER_COLOR_DEEP = vec3(25.0f,66.0f,167.0f);
     vec3 SAND_COLOR = 255.0 * texture(sandTex, (uv_F) * 30.0f).rgb;
     vec3 SNOW_COLOR = 255.0 * texture(snowTex, (uv_F) * 60.0f).rgb;
-    vec3 vert = vec3(0.0f, 1.0f, 0.0f);
-    float slope = dot(gridNormal, vert);//range [-1, 1], highest slope when 0
+
+
 
 
     //heightCol = mix(SAND_COLOR, WATER_COLOR_DEEP, (vheight_F) / (WATER_HEIGHT_DEEP)); /*
@@ -134,16 +155,15 @@ void main() {
         if(abs(slope) < SLOPE_THRESHOLD && vheight_F > WATER_HEIGHT){
 
 
-            float x = 1.0f - (abs(slope)/SLOPE_THRESHOLD);// triangle centered in 0,
+            float x = 1.0f - (abs(slope)/SLOPE_THRESHOLD - MIX_SLOPE_THRESHOLD);// triangle centered in 0,
                                                         //maximum at 0 at y = 1, corners at -1 and 1
             if(slope < -MIX_SLOPE_THRESHOLD){
-                heightCol = mix(heightCol, ROCK_COLOR, (-2.0f*x));
+                heightCol = mix(heightCol, ROCK_COLOR, smoothstep(-SLOPE_THRESHOLD, -MIX_SLOPE_THRESHOLD, x));
             }else if(slope > MIX_SLOPE_THRESHOLD){
-                heightCol = mix(heightCol, ROCK_COLOR, 2.0f*x);
+                heightCol = mix(heightCol, ROCK_COLOR, smoothstep(MIX_SLOPE_THRESHOLD, SLOPE_THRESHOLD, x));
             }else{
                 heightCol = ROCK_COLOR;
             }
-            //heightCol = mix(heightCol, ROCK_COLOR, -TWEAK_SLOPE_MIX*x*(x - 1));
         }
 //*/
 
@@ -178,8 +198,10 @@ void main() {
                 (vec3(0.0f,0.0f,0.0f) * pow(max(0, dot(reflectionDir, viewDir_F)), 0) * Ls));
     }
 
-    //lightingResult = applyFog(lightingResult, length(vpoint_MV_F.z), -viewDir_F, lightDir);
     color = vec4(clamp(lightingResult, vec3(0.0f), vec3(1.0f)), 1.0f);
+    color.a *= 1- smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
+                              max(abs(vpoint_World_F.x), abs(vpoint_World_F.y))
+                              );
 
     float brightness = dot(color.rgb, brightnessTreshold);
 

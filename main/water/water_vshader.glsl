@@ -2,6 +2,7 @@
 
 uniform sampler2D heightMap;
 uniform vec2 translation;
+uniform vec2 translationToSceneCenter;
 
 in vec2 gridPos;
 
@@ -9,6 +10,7 @@ out float terrainHeight_TC;
 out vec2 uv_TC;
 out vec2 terrainGradient_TC;
 out vec3 vpoint_TC;
+out vec2 vpoint_World_TC;
 
 const float waterHeight = 0.0f;
 
@@ -21,5 +23,5 @@ void main() {
     terrainHeight_TC = terrainHDxDy.x;
 
     vpoint_TC = vec3(gridPos.x + translation.x, waterHeight, -gridPos.y - translation.y);
-
+    vpoint_World_TC = translationToSceneCenter + gridPos;
 }

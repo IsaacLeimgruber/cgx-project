@@ -19,6 +19,6 @@ void main() {
     result = vec3(1.0) - exp(-result * exposure);
     //gamma correction
     result = pow(result, vec3(1.0 / gamma));
-    color = vec4(result, 1.0f);
+    color = vec4(hdrColor, 1.0f);
 
 }

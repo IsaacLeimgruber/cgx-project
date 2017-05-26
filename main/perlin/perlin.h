@@ -17,10 +17,10 @@ private:
         float screenquad_height_;
 
 public:
-        void Init() {
+        void Init(const char* fshader = "perlin_fshader.glsl") {
             // compile the shaders
             program_id_ = icg_helper::LoadShaders("perlin_vshader.glsl",
-                                                  "perlin_fshader.glsl");
+                                                  fshader);
             if(!program_id_) {
                 exit(EXIT_FAILURE);
             }

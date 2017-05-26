@@ -20,6 +20,7 @@ in vec3 vpoint_TE[];
 in vec2 uv_TE[];
 in vec2 terrainGradient_TE[];
 in float terrainHeight_TE[];
+in vec2 vpoint_World_TE[];
 
 out float tHeight_F;
 out vec2 uv_F;
@@ -31,13 +32,14 @@ out vec3 normal_MV_F;
 out vec3 lightDir_F;
 out vec3 viewDir_MV_F;
 out vec4 shadowCoord_F;
+out vec2 vpoint_World_F;
 
 const float DEGTORAD = 3.14159265359f / 180.0f;
 const vec3 Y = vec3(0.0, 1.0f, 0.0f);
 
-float freqs[5] = float[5](15.0f, 20.0f, 23.0f, 30.0f, 40.0f);
-float amps[5] =  float[5](0.01f, 0.0055f, 0.0045f, 0.003f, 0.002f);
-float phis[5] = float[5](1.0f, 1.3f, 1.4f, 1.8f, 2.1f);
+float freqs[5] = float[5](5.0f, 10.0f, 15.0f, 25.0f, 30.0f);
+float amps[5] =  float[5](0.01f, 0.0085f, 0.0065f, 0.006f, 0.004f);
+float phis[5] = float[5](0.8f, 1.0f, 1.2f, 1.4f, 2.1f);
 vec2 dirs[5] = vec2[5](vec2(0.0f,1.0f),vec2(0.5f, 1.0f),vec2(0.3f, 1.0f),vec2(0.4f, 1.0f),vec2(-0.2f, 1.0f));
 int exps[5] = int[5](1, 2, 2, 2, 3);
 float sinWave[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -81,6 +83,7 @@ void main()
     tHeight_F = interpolate2D(terrainHeight_TE[0], terrainHeight_TE[1], terrainHeight_TE[2], terrainHeight_TE[3]);
     vec2 tGradient = interpolate2D(terrainGradient_TE[0], terrainGradient_TE[1], terrainGradient_TE[2], terrainGradient_TE[3]);
     vpoint_F = interpolate3D(vpoint_TE[0], vpoint_TE[1], vpoint_TE[2], vpoint_TE[3]);
+    vpoint_World_F = interpolate2D(vpoint_World_TE[0], vpoint_World_TE[1], vpoint_World_TE[2], vpoint_World_TE[3]);
 
     vec2 uvWithOffset = uv_F + offset;
 

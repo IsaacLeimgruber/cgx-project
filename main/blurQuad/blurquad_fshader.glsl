@@ -12,7 +12,7 @@ uniform int second_pass;
 
 const float[5] G = float[5](0.153388,	0.221461,	0.250301,	0.221461,	0.153388);
 const float[5] linG = float[5](0.212195, 0.229344, 0.116923, 0.229344, 0.212195);
-const float[5] linOffset = float[5](3.2307692308, 1.3846153846, 0.0, 1.3846153846, 3.2307692308 );
+const float[5] linOffset = float[5](-3.2307692308, -1.3846153846, 0.0, 1.3846153846, 3.2307692308 );
 void main() {
 
     int K = 2;

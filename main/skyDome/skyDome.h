@@ -41,7 +41,7 @@ private:
     const vec3 SUNSETCOL_topSky = vec3(0.298f, 0.494f, 0.741f);
     const vec3 SUNSETCOL_bottomSky = vec3(0.894f, 0.333f, 0.333f);
     const vec3 mistColor = vec3(0.9f, 0.9f, 0.98f);
-    const vec3 blueSkyColor = vec3(0.098f, 0.369f, 0.765f);
+    const vec3 blueSkyColor = 1.5f * vec3(0.098f, 0.369f, 0.765f);
     const vec3 lightblueSkyColor = vec3(0.059f, 0.678f, 1.0f);
     const vec3 OUTERSPACECOL_bottomSky = vec3(0.059f, 0.678f, 1.0f);
     const vec3 OUTERSPACECOL_topSky = vec3(0.059f, 0.078f, 0.3f);
@@ -62,7 +62,9 @@ private:
     const float SUNSETGRADIENT_START = 0.0f;
     const float SUNSETGRADIENT_END = 3.0f;
     const float DAYGRADIENT_START = -0.4f;
-    const float DAYGRADIENT_END = 4.0f;
+
+    const float DAYGRADIENT_END = 1.0f;
+
 
     // Color change positions values
     const float sunsetEnd = 6.2f;
@@ -104,7 +106,7 @@ public:
         cloudPlane.Init(0, vec2(4.0, 3.0));
         farCloudPlane.Init(0, vec2(1.0, 1.0));
         cloudPlaneModelMatrix =
-                translate(IDENTITY_MATRIX, vec3(0.0f, -8.0f, 0.0f))
+                translate(IDENTITY_MATRIX, vec3(0.0f, -10.0f, 0.0f))
                 *
                 rotate(IDENTITY_MATRIX, 0.0f, vec3(0.0f, 1.0f, 0.0f))
                 *
@@ -154,12 +156,12 @@ public:
             std::vector<GLuint>::iterator i = indices.begin();
             for(r = 0; r < rings-1; r++) {
                 for(s = 0; s < sectors-1; s++) {
-                    *i++ = r * sectors + s;
+                    *i++ = r     * sectors + s;
+                    *i++ = r     * sectors + (s+1);
                     *i++ = (r+1) * sectors + (s+1);
-                    *i++ = r * sectors + (s+1);
-                    *i++ = r * sectors + s;
+                    *i++ = r     * sectors + s;
+                    *i++ = (r+1) * sectors + (s+1);
                     *i++ = (r+1) * sectors + s;
-                    *i++ = (r+1) * sectors + (s+1);
                 }
             }
         }
@@ -230,6 +232,7 @@ public:
         mat4 farCloudPlaneMVP = skyboxMVP * farCloudPlaneModelMatrix;
 
         float time = glfwGetTime();
+
         float theta = 0.05 * time - 0.2;
 
         vec3 sunPos = sunOrbitCenter + radius * cos(theta) * sunOrbitXAxis + radius * sin(theta) * sunOrbitYAxis;

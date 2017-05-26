@@ -19,7 +19,7 @@ class Water: public GridMesh{
         Water(){
 
         }
-        void Init(GLuint heightMap, GLuint mirrorMap, GLuint shadowMap) {
+        void Init(GLuint heightMap, GLuint mirrorMap, GLuint shadowMap, int fogStop, int fogLength) {
             // compile the shaders.
             normalProgramIds.program_id = icg_helper::LoadShaders("water_vshader.glsl",
                                                   "water_fshader.glsl",
@@ -38,8 +38,11 @@ class Water: public GridMesh{
             glUseProgram(normalProgramIds.program_id);
             currentProgramIds = normalProgramIds;
 
+            glUniform1f(glGetUniformLocation(normalProgramIds.program_id, "threshold_vpoint_World_F"), fogStop - fogLength);
+            glUniform1f(glGetUniformLocation(normalProgramIds.program_id, "max_vpoint_World_F"), fogStop);
+
             // vertex coordinates and indices
-            genGrid(16);
+            genGrid(8);
 
             // load texture
             loadNormalMap(Utils::loadImage("waterNormalMap2.tga"));
@@ -71,7 +74,8 @@ class Water: public GridMesh{
                   const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
                   const FractionalView &FV = FractionalView(),
                   const glm::vec2 &offset = glm::vec2(0.0f, 0.0f),
-                  const glm::vec2 translation = glm::vec2(0, 0)) {
+                  const glm::vec2 translation = glm::vec2(0, 0),
+                  const glm::vec2 translationToSceneCenter = glm::vec2(0, 0)) {
 
             glUseProgram(normalProgramIds.program_id);
             currentProgramIds = normalProgramIds;
@@ -80,6 +84,7 @@ class Water: public GridMesh{
             glUniformMatrix4fv(normalProgramIds.SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
             glUniform1f(time_id, glfwGetTime());
             glUniform2fv(offset_id, 1, glm::value_ptr(offset));
+            glUniform2fv(currentProgramIds.translationToSceneCenter_id, 1, glm::value_ptr(translationToSceneCenter));
             glUniform2fv(currentProgramIds.translation_id, 1, glm::value_ptr(translation));
 
             if(light != nullptr)
