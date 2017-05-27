@@ -104,6 +104,7 @@ public:
         water.Init(0, reflectionBuffer_texture_id, shadowBuffer_texture_id, fogStop, nWaterTilesInFog);
         grid.useLight(light);
         water.useLight(light);
+        grass.useLight(light);
     }
 
     /** draws every Mountain grid tile side by side in an ordered manner */

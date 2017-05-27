@@ -47,4 +47,8 @@ void main() {
     gl_Position = VP * vertexModelPos;
     uv = vtexcoord;
     vpoint_World_F = translationToSceneCenter + bladeTranslation;
+
+    //vpoint_MV = ;
+    //Lighting
+    //lightDir_F = normalize((MV * vec4(lightPos, 1.0f)).xyz - vpoint_MV_F.xyz);
 }
