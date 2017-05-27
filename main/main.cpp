@@ -115,8 +115,9 @@ void Init() {
     skyDome.Init();
     skyDome.useLight(&light);
 
-    mightyShip.Init();
     mightyShipShaderProgram = icg_helper::LoadShaders("yacht_vshader.glsl", "yacht_fshader.glsl");
+    mightyShip.Init(mightyShipShaderProgram);
+    mightyShip.useLight(&light);
 
     float skyDomeRadius = skyDome.getRadius();
     float sceneHalfMaxSize = scene.maximumExtent() / 2.0;
@@ -140,7 +141,7 @@ void Init() {
 
 void computeReflections(LargeScene::TileSet const& visibleTiles);
 void computeBloom();
-void drawMightyShip(glm::mat4 const& MVP);
+void drawMightyShip(glm::mat4 const& , glm::mat4 const&, glm::mat4 const& , glm::mat4 const& );
 
 void Display() {
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -201,8 +202,21 @@ void Display() {
     scene.drawGrassTiles(visibleTiles, projection_matrix * view_matrix,
                          vec2(camera.getPos().x, camera.getPos().z));
 
-    drawMightyShip(MVP);
+    // MODEL LOADING INTEGRATION
+    glm::mat4 shipModelMatrix =
+            glm::translate(IDENTITY_MATRIX, glm::vec3(0.0, 1.0f, 0.0f))
+            *
+            glm::rotate(IDENTITY_MATRIX, -1.571f, glm::vec3(1.0f, 0.0f, 0.0f))
+            *
+            glm::scale(IDENTITY_MATRIX, glm::vec3(0.000005f, 0.000005f, 0.000005f));
 
+    glm::mat4 shipMV = view_matrix * shipModelMatrix;
+    glm::mat4 shipMVP = projection_matrix * shipMV;
+    glm::mat4 shipNORMALM = inverse(transpose(shipMV));
+
+    mightyShip.Draw(shipMVP, shipMV, shipNORMALM, depth_bias_matrix);
+
+    // END OF MODEL LOADING INTEGRATION
     bloomHDRBuffer.Unbind();
 
     computeBloom();
@@ -214,21 +228,6 @@ void Display() {
     frameCount++;
 }
 
-void drawMightyShip(const glm::mat4 &MVP){
-
-    glm::mat4 shipModelMatrix =
-            glm::translate(IDENTITY_MATRIX, glm::vec3(0.0, 1.0f, 0.0f))
-            *
-            glm::rotate(IDENTITY_MATRIX, -1.571f, glm::vec3(1.0f, 0.0f, 0.0f))
-            *
-            glm::scale(IDENTITY_MATRIX, glm::vec3(0.000005f, 0.000005f, 0.000005f));
-
-    glm::mat4 shipMat = MVP * shipModelMatrix;
-    glUseProgram(mightyShipShaderProgram);
-    // Transformation matrices
-    glUniformMatrix4fv(glGetUniformLocation(mightyShipShaderProgram, "MVP"), 1, GL_FALSE, glm::value_ptr(shipMat));
-    mightyShip.Draw(mightyShipShaderProgram);
-}
 
 void computeReflections(LargeScene::TileSet const& visibleTiles) {
     reflectionBuffer.Bind();

@@ -14,13 +14,15 @@ using namespace std;
 #include <Importer.hpp>
 #include <scene.h>
 #include <postprocess.h>
+#include "../light/light.h"
+#include "../light/lightable.h"
 #include "../utils.h"
 
 #include "Mesh.h"
 
 GLint TextureFromFile(const char* path, string directory);
 
-class Model 
+class Model: public ILightable
 {
 public:
     /*  Functions   */
@@ -30,19 +32,47 @@ public:
         this->modelPath = path;
     }
 
-    void Init(){
+    void Init(GLuint shaderProgram){
+        this->shaderProgram = shaderProgram;
         this->loadModel();
+
+        glUseProgram(shaderProgram);
+
+        MVP_id = glGetUniformLocation(shaderProgram, "MVP");
+        MV_id = glGetUniformLocation(shaderProgram, "MV");
+        NORMALM_id = glGetUniformLocation(shaderProgram, "NORMALM");
+        SHADOWMVP_id = glGetUniformLocation(shaderProgram, "SHADOWMVP");
     }
 
     // Draws the model, and thus all its meshes
-    void Draw(GLuint shader)
+    void Draw(const glm::mat4 &MVP = IDENTITY_MATRIX,
+              const glm::mat4 &MV = IDENTITY_MATRIX,
+              const glm::mat4 &NORMALM = IDENTITY_MATRIX,
+              const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX)
     {
+        glUseProgram(this->shaderProgram);
+
+        glUniformMatrix4fv(MVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(MVP));
+        glUniformMatrix4fv(MV_id, ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
+        glUniformMatrix4fv(NORMALM_id, ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
+        glUniformMatrix4fv(SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
+
+        light->updateProgram(this->shaderProgram);
+
         for(GLuint i = 0; i < this->meshes.size(); i++)
-            this->meshes[i].Draw(shader);
+            this->meshes[i].Draw(this->shaderProgram);
+    }
+
+    void useLight(Light* l){
+        this->light = l;
+        light->registerProgram(shaderProgram);
     }
     
 private:
     /*  Model Data  */
+    Light* light;
+    GLuint shaderProgram;
+    GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id;
     GLchar* modelPath;
     vector<Mesh> meshes;
     string directory;
