@@ -368,6 +368,7 @@ void doMovement()
     if(keys[GLFW_KEY_L])
         camera.ProcessKeyboard(ROTATE_RIGHT, deltaTime);
 
+
     vec2 actualPos = sceneControler.position();
     vec3 newPos = camera.getPos();
     float displacementX = newPos.x - actualPos.x;
