@@ -43,8 +43,8 @@ private:
     const vec3 mistColor = vec3(0.9f, 0.9f, 0.98f);
     const vec3 blueSkyColor = 1.5f * vec3(0.098f, 0.269f, 0.665f);
     const vec3 lightblueSkyColor = vec3(0.059f, 0.678f, 1.0f);
-    const vec3 OUTERSPACECOL_bottomSky = vec3(0.059f, 0.678f, 1.0f);
-    const vec3 OUTERSPACECOL_topSky = vec3(0.059f, 0.078f, 0.3f);
+    const vec3 OUTERSPACECOL_bottomSky = vec3(0.098f, 0.269f, 0.665f);
+    const vec3 OUTERSPACECOL_topSky = vec3(0.098f, 0.269f, 0.665f);
 
     // Sun color values
     const vec3 SUN_COLOR = vec3(5.0f, 5.0f, 5.0f);
