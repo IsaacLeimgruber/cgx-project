@@ -40,11 +40,11 @@ void main()
 
         vec3 reflectionDir = normalize(2.0f * normal * cosNL - lightDir);
         lightingResult += 1.0 *
-               ((diffuse_color * reflection * cosNLDiffused)
+               ((diffuse_color * cosNLDiffused)
                +
                (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 128.0) * Ls));
     }
 
-    color = vec4(lightingResult, 1.0);
+    color = vec4(cosNL * Ld, 1.0);
     brightColor = vec4(0.0, 0.0, 0.0, 1.0);
 }

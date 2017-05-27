@@ -20,14 +20,14 @@ out vec4 shadowCoord_F;
 void main()
 {
 
-    vec3 vpoint_MV = MV * position;
+    vec4 vpoint_MV = MV * vec4(position, 1.0);
     normal_MV_F = normalize((NORMALM * vec4(normal, 1.0f)).xyz);
     lightDir_MV_F = normalize((MV * vec4(lightPos, 1.0f)).xyz - vpoint_MV.xyz);
     viewDir_MV_F = -normalize(vpoint_MV.xyz);
     vpoint_MV_F = vpoint_MV.xyz;
 
     gl_Position = MVP * vec4(position, 1.0f);
-    shadowCoord_F = SHADOWMVP * vec4(vpoint_F, 1.0f);
+    shadowCoord_F = SHADOWMVP * vec4(position, 1.0f);
 
     TexCoords = texCoords;
 }
