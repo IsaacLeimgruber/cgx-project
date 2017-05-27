@@ -8,11 +8,12 @@ out vec2 uv;
 out vec2 vpoint_World_F;
 out vec3 lightDir;
 
+uniform float time;
 uniform mat4 V;
+uniform mat4 MV;
 uniform mat4 VP;
 uniform vec2 translation;
 uniform vec2 translationToSceneCenter;
-uniform vec3 lightPos;
 uniform sampler2D heightMap;
 uniform sampler2D grassMap;
 
@@ -22,6 +23,8 @@ const float SAND_HEIGHT = 0.02f,
 const float ground_threshold = 0.6;
 
 void main() {
+
+
 
     //normalize translation coordinates
     vec2 coord = (bladeTranslation + vec2(1.0f, 1.0f)) * 0.5f;
@@ -46,12 +49,9 @@ void main() {
     mat4 model = mat4(1.f);
     model[3][0] = bladeTranslation.x;
     model[3][2] = bladeTranslation.y;
-    vec4 vertexModelPos = (model* vec4(vpoint, 1.0) + vec4(translation.x, height, -translation.y, 0));
+    vec4 vertexModelPos = (model * vec4(vpoint, 1.0) + vec4(translation.x, height, -translation.y, 0));
     gl_Position = VP * vertexModelPos;
     uv = vtexcoord;
     vpoint_World_F = translationToSceneCenter + bladeTranslation;
 
-    vec4 vpoint_MV = V * model * vec4(vpoint, 1.f);
-    //Lighting
-    lightDir = normalize((V * vec4(lightPos, 1.0f)).xyz - vpoint_MV.xyz);
 }

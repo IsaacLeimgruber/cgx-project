@@ -20,6 +20,7 @@ private:
     GLuint translation_id_;
     GLuint translationToSceneCenter_id_;
     GLuint VP_id_;          // view, projection matrix ID
+
     GLuint quadVAO, quadVBO;
     GLuint rows = 20;
     GLuint cols = rows;
@@ -29,6 +30,7 @@ private:
     GLfloat bushScaleRatio = 0.08;
     GLfloat bushHeight = 2 * bushScaleRatio;
     GLuint translationsVBO;
+    GLuint time_id;
 
 
 public:
@@ -49,6 +51,9 @@ public:
 
         translation_id_ = glGetUniformLocation(program_id_, "translation");
         VP_id_ = glGetUniformLocation(program_id_, "VP");
+
+        time_id = glGetUniformLocation(program_id_, "time");
+
         translationToSceneCenter_id_ = glGetUniformLocation(program_id_, "translationToSceneCenter");
         if (translationToSceneCenter_id_ == 0) {
             cout << "Unable to init translationToSceneCenter_id_" << endl;
@@ -216,9 +221,10 @@ public:
         glDeleteTextures(1, &grassAlpha_id_);
     }
 
-    void Draw(const mat4 &VP = IDENTITY_MATRIX, vec2 translation = vec2(0.f, 0.f),
-              const glm::vec2 &translationToSceneCenter = glm::vec2(0,0),
-              const vec2 cameraPos = vec2(0.f, 0.f)) {
+    void Draw(const mat4 &VP = IDENTITY_MATRIX,
+              const vec2 &translation = vec2(0.f, 0.f),
+              const vec2 &translationToSceneCenter = glm::vec2(0,0),
+              const vec2 &cameraPos = vec2(0.f, 0.f)) {
         glUseProgram(program_id_);
 
 
@@ -227,10 +233,10 @@ public:
         bindGrassMapTexture();
 
         // setup MVP
-        glUniformMatrix4fv(VP_id_, ONE, DONT_TRANSPOSE,
-                           glm::value_ptr(VP));
-        glUniform2fv(translation_id_, 1, glm::value_ptr(translation));
-        glUniform2fv(translationToSceneCenter_id_, 1, glm::value_ptr(translationToSceneCenter));
+        glUniformMatrix4fv(VP_id_, ONE, DONT_TRANSPOSE, value_ptr(VP));
+        glUniform2fv(translation_id_, 1, value_ptr(translation));
+        glUniform2fv(translationToSceneCenter_id_, 1, value_ptr(translationToSceneCenter));
+        glUniform1f(time_id, glfwGetTime());
 
         glActiveTexture(GL_TEXTURE0 + grass_tex_location);
         glBindTexture(GL_TEXTURE_2D, grassAlpha_id_);
