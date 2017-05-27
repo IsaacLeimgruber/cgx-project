@@ -1,5 +1,3 @@
-
-
 #pragma once
 // Std. Includes
 #include <string>
@@ -36,20 +34,24 @@ public:
     vector<GLuint> indices;
     vector<Texture> textures;
 
+    glm::vec3 diffuseColor;
+
+
     /*  Functions  */
     // Constructor
-    Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures)
+    Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures, glm::vec3 diffuseColor)
     {
         this->vertices = vertices;
         this->indices = indices;
         this->textures = textures;
+        this->diffuseColor = diffuseColor;
 
         // Now that we have all the required data, set the vertex buffers and its attribute pointers.
         this->setupMesh();
     }
 
     // Render the mesh
-    void Draw(Shader shader) 
+    void Draw(GLuint shader)
     {
         // Bind appropriate textures
         GLuint diffuseNr = 1;
@@ -61,12 +63,14 @@ public:
 		std::string name = this->textures[i].type;
 		std::string number = (name == "texture_diffuse") ? std::to_string(diffuseNr++) : std::to_string(specularNr++);
 
-		glUniform1i(glGetUniformLocation(shader.Program, ("material." + name + number).c_str()), i);
-		glBindTexture(GL_TEXTURE_2D, this->textures[i].ID);
+        glUniform1i(glGetUniformLocation(shader, ("material." + name + number).c_str()), i);
+        glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
 		}
         
         // Also set each mesh's shininess property to a default value (if you want you could extend this to another mesh property and possibly change this value)
-        glUniform1f(glGetUniformLocation(shader.Program, "material.shininess"), 16.0f);
+        glUniform1f(glGetUniformLocation(shader, "material.shininess"), 16.0f);
+
+        glUniform3fv(glGetUniformLocation(shader, "diffuse_color"), 1, glm::value_ptr(this->diffuseColor));
 
         // Draw mesh
         glBindVertexArray(this->VAO);

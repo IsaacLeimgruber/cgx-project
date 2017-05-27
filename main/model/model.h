@@ -1,5 +1,3 @@
-
-
 #pragma once
 // Std. Includes
 #include <string>
@@ -13,10 +11,10 @@ using namespace std;
 #include <GL/glew.h> // Contains all the necessery OpenGL includes
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <SOIL.h>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#include <Importer.hpp>
+#include <scene.h>
+#include <postprocess.h>
+#include "../utils.h"
 
 #include "Mesh.h"
 
@@ -29,11 +27,15 @@ public:
     // Constructor, expects a filepath to a 3D model.
     Model(GLchar* path)
     {
-        this->loadModel(path);
+        this->modelPath = path;
+    }
+
+    void Init(){
+        this->loadModel();
     }
 
     // Draws the model, and thus all its meshes
-    void Draw(Shader shader)
+    void Draw(GLuint shader)
     {
         for(GLuint i = 0; i < this->meshes.size(); i++)
             this->meshes[i].Draw(shader);
@@ -41,14 +43,16 @@ public:
     
 private:
     /*  Model Data  */
+    GLchar* modelPath;
     vector<Mesh> meshes;
     string directory;
     vector<Texture> textures_loaded;	// Stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
 
     /*  Functions   */
     // Loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-    void loadModel(string path)
+    void loadModel()
     {
+        string path = this->modelPath;
         // Read file via ASSIMP
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -63,6 +67,7 @@ private:
 
         // Process ASSIMP's root node recursively
         this->processNode(scene->mRootNode, scene);
+        int breakpoint = 0;
     }
 
     // Processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
@@ -90,6 +95,7 @@ private:
         vector<Vertex> vertices;
         vector<GLuint> indices;
         vector<Texture> textures;
+        glm::vec3 diffuseColor;
 
         // Walk through each of the mesh's vertices
         for(GLuint i = 0; i < mesh->mNumVertices; i++)
@@ -139,6 +145,11 @@ private:
             // Specular: texture_specularN
             // Normal: texture_normalN
 
+            aiColor3D color (0.f,0.f,0.f);
+            material->Get(AI_MATKEY_COLOR_DIFFUSE,color);
+
+            diffuseColor = glm::vec3(color.r, color.g, color.b);
+
             // 1. Diffuse maps
             vector<Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
             textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
@@ -148,7 +159,7 @@ private:
         }
         
         // Return a mesh object created from the extracted mesh data
-        return Mesh(vertices, indices, textures);
+        return Mesh(vertices, indices, textures, diffuseColor);
     }
 
     // Checks all material textures of a given type and loads the textures if they're not loaded yet.
@@ -193,22 +204,6 @@ GLint TextureFromFile(const char* path, string directory)
      //Generate texture ID and load texture data 
     string filename = string(path);
     filename = directory + '/' + filename;
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    int width,height;
-    unsigned char* image = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_RGB);
-    // Assign texture to ID
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    glGenerateMipmap(GL_TEXTURE_2D);	
-
-    // Parameters
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    SOIL_free_image_data(image);
-    return textureID;
+    return Utils::loadImage(filename.c_str());
 }
 

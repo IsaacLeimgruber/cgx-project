@@ -17,6 +17,7 @@
 #include "blurQuad/blurquad.h"
 #include "large_scene.h"
 #include "bezier/BezierCurve.h"
+#include "model/model.h"
 
 using namespace glm;
 
@@ -85,6 +86,9 @@ GLuint frameCount = 0;
 LargeScene::TileSet visibleTiles;
 FractionalView fractionalView;
 
+Model mightyShip("yacht.3ds");
+GLuint mightyShipShaderProgram;
+
 void Init() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -111,6 +115,9 @@ void Init() {
     skyDome.Init();
     skyDome.useLight(&light);
 
+    mightyShip.Init();
+    mightyShipShaderProgram = icg_helper::LoadShaders("yacht_vshader.glsl", "yacht_fshader.glsl");
+
     float skyDomeRadius = skyDome.getRadius();
     float sceneHalfMaxSize = scene.maximumExtent() / 2.0;
 
@@ -121,7 +128,6 @@ void Init() {
     depth_mvp               = depth_projection_matrix * depth_view_matrix * depth_model_matrix;
     depth_bias_matrix       = biasMatrix * depth_mvp;
     depth_model_matrix      = quad_model_matrix;
-
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -134,6 +140,7 @@ void Init() {
 
 void computeReflections(LargeScene::TileSet const& visibleTiles);
 void computeBloom();
+void drawMightyShip(glm::mat4 const& MVP);
 
 void Display() {
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -193,6 +200,9 @@ void Display() {
     scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
     scene.drawGrassTiles(visibleTiles, projection_matrix * view_matrix,
                          vec2(camera.getPos().x, camera.getPos().z));
+
+    drawMightyShip(MVP);
+
     bloomHDRBuffer.Unbind();
 
     computeBloom();
@@ -202,6 +212,22 @@ void Display() {
 
     screenquad.Draw();
     frameCount++;
+}
+
+void drawMightyShip(const glm::mat4 &MVP){
+
+    glm::mat4 shipModelMatrix =
+            glm::translate(IDENTITY_MATRIX, glm::vec3(0.0, 1.0f, 0.0f))
+            *
+            glm::rotate(IDENTITY_MATRIX, -1.571f, glm::vec3(1.0f, 0.0f, 0.0f))
+            *
+            glm::scale(IDENTITY_MATRIX, glm::vec3(0.000005f, 0.000005f, 0.000005f));
+
+    glm::mat4 shipMat = MVP * shipModelMatrix;
+    glUseProgram(mightyShipShaderProgram);
+    // Transformation matrices
+    glUniformMatrix4fv(glGetUniformLocation(mightyShipShaderProgram, "MVP"), 1, GL_FALSE, glm::value_ptr(shipMat));
+    mightyShip.Draw(mightyShipShaderProgram);
 }
 
 void computeReflections(LargeScene::TileSet const& visibleTiles) {
