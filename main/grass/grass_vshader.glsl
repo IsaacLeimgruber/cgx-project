@@ -6,10 +6,13 @@ in vec2 vtexcoord;
 in vec2 gridPos;
 out vec2 uv;
 out vec2 vpoint_World_F;
+out vec3 lightDir;
 
+uniform mat4 V;
 uniform mat4 VP;
 uniform vec2 translation;
 uniform vec2 translationToSceneCenter;
+uniform vec3 lightPos;
 uniform sampler2D heightMap;
 uniform sampler2D grassMap;
 
@@ -48,7 +51,7 @@ void main() {
     uv = vtexcoord;
     vpoint_World_F = translationToSceneCenter + bladeTranslation;
 
-    //vpoint_MV = ;
+    vec4 vpoint_MV = V * model * vec4(vpoint, 1.f);
     //Lighting
-    //lightDir_F = normalize((MV * vec4(lightPos, 1.0f)).xyz - vpoint_MV_F.xyz);
+    lightDir = normalize((V * vec4(lightPos, 1.0f)).xyz - vpoint_MV.xyz);
 }
