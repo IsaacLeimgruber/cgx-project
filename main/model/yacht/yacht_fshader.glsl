@@ -6,6 +6,7 @@ layout (location = 0) out vec4 color;
 layout (location = 1) out vec4 brightColor;
 
 uniform sampler2D texture_diffuse1;
+uniform sampler2DShadow shadowMap;
 uniform bool use_tex;
 uniform bool mirror_pass;
 uniform vec3 diffuse_color;
@@ -77,7 +78,6 @@ void main()
 
     // -------------SHADOW MAPS----------------------//
 
-    float cosNL = dot(normal, lightDir);
     float bias = max(0.05f * (1.0f - cosNL), 0.005f);
     float visibility = 0;
 

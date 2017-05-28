@@ -36,7 +36,7 @@ const float SLOPE_THRESHOLD = 0.5f;
 const float MIX_SLOPE_THRESHOLD = 0.1f;
 
 const float WATER_HEIGHT = 0.01f,
-            WATER_HEIGHT_DEEP = -0.3f,
+            WATER_HEIGHT_DEEP = -0.8f,
             SAND_HEIGHT = 0.02f,
             GRASS_HEIGHT = 0.3f,
             ROCK_HEIGHT = 0.40f,
@@ -123,7 +123,7 @@ void main() {
     }
     vec3 ROCK_COLOR = 255.0 * texture(rockTex, (uv_F) * 5.0f).rgb;
     vec3 WATER_COLOR = ROCK_COLOR ;
-    vec3 WATER_COLOR_DEEP = vec3(25.0f,66.0f,167.0f);
+    vec3 WATER_COLOR_DEEP = vec3(28.5f,48.0f,78.0f);
     vec3 SAND_COLOR = 255.0 * texture(sandTex, (uv_F) * 30.0f).rgb;
     vec3 SNOW_COLOR = 255.0 * texture(snowTex, (uv_F) * 60.0f).rgb;
 
@@ -199,6 +199,7 @@ void main() {
     }
 
     color = vec4(clamp(lightingResult, vec3(0.0f), vec3(1.0f)), 1.0f);
+
     color.a *= 1- smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
                               max(abs(vpoint_World_F.x), abs(vpoint_World_F.y))
                               );

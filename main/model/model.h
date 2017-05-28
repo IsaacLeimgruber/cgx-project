@@ -32,7 +32,7 @@ public:
         this->modelPath = path;
     }
 
-    void Init(GLuint shaderProgram){
+    void Init(GLuint shaderProgram, GLuint shadowTexture){
         this->shaderProgram = shaderProgram;
         this->loadModel();
 
@@ -43,6 +43,11 @@ public:
         NORMALM_id = glGetUniformLocation(shaderProgram, "NORMALM");
         SHADOWMVP_id = glGetUniformLocation(shaderProgram, "SHADOWMVP");
         mirrorPass_id = glGetUniformLocation(shaderProgram, "mirror_pass");
+        shadowTexture_id = glGetUniformLocation(shaderProgram, "shadowMap");
+
+        this->shadowTexture_id = shadowTexture;
+        GLuint shadowMapLocation = glGetUniformLocation(shaderProgram, "shadowMap");
+        glUniform1i(shadowMapLocation, 7);
     }
 
     // Draws the model, and thus all its meshes
@@ -62,8 +67,14 @@ public:
 
         light->updateProgram(this->shaderProgram);
 
+        glActiveTexture(GL_TEXTURE0 + 7);
+        glBindTexture(GL_TEXTURE_2D, this->shadowTexture_id);
+
         for(GLuint i = 0; i < this->meshes.size(); i++)
             this->meshes[i].Draw(this->shaderProgram);
+
+        glActiveTexture(GL_TEXTURE0 + 7);
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     void useLight(Light* l){
@@ -76,6 +87,7 @@ private:
     Light* light;
     GLuint shaderProgram;
     GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id, mirrorPass_id;
+    GLuint shadowTexture_id;
     GLchar* modelPath;
     vector<Mesh> meshes;
     string directory;

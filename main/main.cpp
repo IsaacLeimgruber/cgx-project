@@ -117,7 +117,7 @@ void Init() {
     skyDome.useLight(&light);
 
     mightyShipShaderProgram = icg_helper::LoadShaders("yacht_vshader.glsl", "yacht_fshader.glsl");
-    mightyShip.Init(mightyShipShaderProgram);
+    mightyShip.Init(mightyShipShaderProgram, shadowBuffer_texture_id);
     mightyShip.useLight(&light);
 
     float skyDomeRadius = skyDome.getRadius();
@@ -183,9 +183,10 @@ void Display() {
     depth_bias_matrix = biasMatrix * depth_mvp;
 
     shadowBuffer.Bind();
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_CULL_FACE);
     scene.drawMountains(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
+    glEnable(GL_CULL_FACE);
     shadowBuffer.Unbind();
 
     computeReflections(visibleTiles);
@@ -404,6 +405,9 @@ void doMovement()
     sceneControler.move({displacementX, displacementY});
     vec2 updatedPos = sceneControler.position();
     scene.setCenter(updatedPos/grid_size);
+
+    shipM = glm::translate(IDENTITY_MATRIX, vec3(-updatedPos.x, 0.0, -updatedPos.y));
+
     vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
     camera.setPos(cameraPos);
 }
