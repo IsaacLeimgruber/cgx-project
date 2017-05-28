@@ -74,6 +74,7 @@ file(GLOB SHADERS
     model/yacht/yacht_vshader.glsl
     model/yacht/yacht_fshader.glsl
     model/yacht/yacht.3ds
+    model/yacht/yacht_tex.tga
     grass/grass_vshader.glsl
     grass/grass_fshader.glsl)
     deploy_shaders_to_build_dir(${SHADERS})

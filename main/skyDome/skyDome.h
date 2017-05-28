@@ -233,7 +233,7 @@ public:
 
         float time = glfwGetTime();
 
-        float theta = 0.05 * time - 0.2;
+        float theta = 0.30 * time - 0.2;
 
         vec3 sunPos = sunOrbitCenter + radius * cos(theta) * sunOrbitXAxis + radius * sin(theta) * sunOrbitYAxis;
         computeSkyColors(sunPos, viewPos);

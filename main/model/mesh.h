@@ -35,16 +35,19 @@ public:
     vector<Texture> textures;
 
     glm::vec3 diffuseColor;
-
+    glm::vec3 specularColor;
+    bool textured;
 
     /*  Functions  */
     // Constructor
-    Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures, glm::vec3 diffuseColor)
+    Mesh(vector<Vertex> vertices, vector<GLuint> indices, vector<Texture> textures, glm::vec3 diffuseColor, glm::vec3 specularColor, bool textured)
     {
         this->vertices = vertices;
         this->indices = indices;
         this->textures = textures;
         this->diffuseColor = diffuseColor;
+        this->specularColor = specularColor;
+        this->textured = textured;
 
         // Now that we have all the required data, set the vertex buffers and its attribute pointers.
         this->setupMesh();
@@ -68,9 +71,11 @@ public:
 		}
         
         // Also set each mesh's shininess property to a default value (if you want you could extend this to another mesh property and possibly change this value)
-        glUniform1f(glGetUniformLocation(shader, "material.shininess"), 16.0f);
+        //glUniform1f(glGetUniformLocation(shader, "material.shininess"), 16.0f);
 
         glUniform3fv(glGetUniformLocation(shader, "diffuse_color"), 1, glm::value_ptr(this->diffuseColor));
+        glUniform3fv(glGetUniformLocation(shader, "specular_color"), 1, glm::value_ptr(this->specularColor));
+        glUniform1i(glGetUniformLocation(shader, "use_tex"), this->textured);
 
         // Draw mesh
         glBindVertexArray(this->VAO);

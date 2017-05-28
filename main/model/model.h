@@ -42,13 +42,15 @@ public:
         MV_id = glGetUniformLocation(shaderProgram, "MV");
         NORMALM_id = glGetUniformLocation(shaderProgram, "NORMALM");
         SHADOWMVP_id = glGetUniformLocation(shaderProgram, "SHADOWMVP");
+        mirrorPass_id = glGetUniformLocation(shaderProgram, "mirror_pass");
     }
 
     // Draws the model, and thus all its meshes
     void Draw(const glm::mat4 &MVP = IDENTITY_MATRIX,
               const glm::mat4 &MV = IDENTITY_MATRIX,
               const glm::mat4 &NORMALM = IDENTITY_MATRIX,
-              const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX)
+              const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
+              bool mirrorPass = false)
     {
         glUseProgram(this->shaderProgram);
 
@@ -56,6 +58,7 @@ public:
         glUniformMatrix4fv(MV_id, ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
         glUniformMatrix4fv(NORMALM_id, ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
         glUniformMatrix4fv(SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
+        glUniform1i(mirrorPass_id, mirrorPass);
 
         light->updateProgram(this->shaderProgram);
 
@@ -72,7 +75,7 @@ private:
     /*  Model Data  */
     Light* light;
     GLuint shaderProgram;
-    GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id;
+    GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id, mirrorPass_id;
     GLchar* modelPath;
     vector<Mesh> meshes;
     string directory;
@@ -126,6 +129,8 @@ private:
         vector<GLuint> indices;
         vector<Texture> textures;
         glm::vec3 diffuseColor;
+        glm::vec3 specularColor;
+        bool textured = false;
 
         // Walk through each of the mesh's vertices
         for(GLuint i = 0; i < mesh->mNumVertices; i++)
@@ -175,10 +180,13 @@ private:
             // Specular: texture_specularN
             // Normal: texture_normalN
 
-            aiColor3D color (0.f,0.f,0.f);
-            material->Get(AI_MATKEY_COLOR_DIFFUSE,color);
+            aiColor3D aiDiffuseColor (0.f,0.f,0.f);
+            material->Get(AI_MATKEY_COLOR_DIFFUSE,aiDiffuseColor);
+            aiColor3D aiSpecularColor (0.f,0.f,0.f);
+            material->Get(AI_MATKEY_COLOR_SPECULAR,aiSpecularColor);
 
-            diffuseColor = glm::vec3(color.r, color.g, color.b);
+            diffuseColor = glm::vec3(aiDiffuseColor.r, aiDiffuseColor.g, aiDiffuseColor.b);
+            specularColor = glm::vec3(aiSpecularColor.r, aiSpecularColor.g, aiSpecularColor.b);
 
             // 1. Diffuse maps
             vector<Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
@@ -186,10 +194,14 @@ private:
             // 2. Specular maps
             vector<Texture> specularMaps = this->loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
             textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+
+            if(diffuseMaps.size() > 0 || specularMaps.size() > 0){
+                textured = true;
+            }
         }
         
         // Return a mesh object created from the extracted mesh data
-        return Mesh(vertices, indices, textures, diffuseColor);
+        return Mesh(vertices, indices, textures, diffuseColor, specularColor, textured);
     }
 
     // Checks all material textures of a given type and loads the textures if they're not loaded yet.
@@ -233,7 +245,16 @@ GLint TextureFromFile(const char* path, string directory)
 {
      //Generate texture ID and load texture data 
     string filename = string(path);
-    filename = directory + '/' + filename;
+    size_t dotPos = filename.find_first_of(".");
+    filename = filename.substr(0, dotPos);
+
+    // Due to bugg and lack of time we force tga textures
+    if(dotPos != string::npos){
+        filename.append(".tga");
+    }
+
+    // We don't use directories in output folder
+    //filename = directory + '/' + filename;
     return Utils::loadImage(filename.c_str());
 }
 
