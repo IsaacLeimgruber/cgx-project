@@ -3,6 +3,7 @@
 uniform sampler2D heightMap;
 uniform vec2 translation;
 
+
 in vec2 gridPos;
 
 out vec2 uv_TC;
@@ -17,5 +18,4 @@ void main() {
 
     //Already sets displacement so we can cull patches that fall outside the view frustrum
     vpoint_TC = vec3(gridPos.x + translation.x, vheight, -gridPos.y - translation.y);
-
 }

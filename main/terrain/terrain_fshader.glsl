@@ -11,6 +11,7 @@ uniform sampler2D grassbisTex;
 uniform sampler2D snowTex;
 uniform sampler2D sandTex;
 uniform sampler2D rockTex;
+uniform vec3 light_dir;
 uniform vec3 La, Ld, Ls;
 uniform bool mirrorPass;
 uniform float alpha;
@@ -70,27 +71,6 @@ float randomAngle(in vec3 seed, in float freq)
    return random(seed, freq) * 6.283285f;
 }
 
-const float fogStart = 3.5f;
-const float fogEnd = 5.0f;
-const float rgbStart = 3.5f;
-const float rgbEnd = 5.0f;
-
-vec3 applyFog( in vec3  rgb,       // original color of the pixel
-               in float distance,  // camera to point distance
-               in vec3 rayDir,
-               in vec3 sunDir)
-{
-    float d = clamp( (distance - fogStart) / (fogEnd - fogStart), 0.0, 1.0);
-    float fogAmount = smoothstep(fogStart, fogEnd, distance);
-    float rgbAmount = 1.0 - smoothstep(rgbStart, rgbEnd, distance);
-    float sunAmount = max( dot( rayDir, sunDir ), 0.0 );
-    vec3  fogColor  = mix( vec3(0.9, 0.9, 0.98), // greyish
-                           Ld, // yellowish
-                           pow(sunAmount,16.0) );
-    return rgb * rgbAmount + fogColor * fogAmount;
-}
-
-
 void main() {
 
     if (mirrorPass && vpoint_F.y < -0.005f) {
@@ -102,7 +82,8 @@ void main() {
     vec3 gridNormal = normalize(vec3(-normalDxDy.x, 1, +normalDxDy.y));
     vec3 normal_MV = (NORMALM * vec4(gridNormal, 1.0f)).xyz;
 
-    vec3 lightDir = normalize(lightDir_F);
+    vec3 lightDir = normalize((NORMALM * vec4(light_dir, 1.0)).xyz);
+
         vec3 vert = vec3(0.0f, 1.0f, 0.0f);
     float slope = dot(gridNormal, vert);//range [-1, 1], highest slope when 0
     vec3 heightCol = vec3(0.0f);
@@ -127,8 +108,9 @@ void main() {
     vec3 SAND_COLOR = 255.0 * texture(sandTex, (uv_F) * 30.0f).rgb;
     vec3 SNOW_COLOR = 255.0 * texture(snowTex, (uv_F) * 60.0f).rgb;
 
-
-
+    float fadingValue = smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
+                                  max(abs(vpoint_World_F.x), abs(vpoint_World_F.y))
+                                  );
 
     //heightCol = mix(SAND_COLOR, WATER_COLOR_DEEP, (vheight_F) / (WATER_HEIGHT_DEEP)); /*
         if(vheight_F <= WATER_HEIGHT){
@@ -186,7 +168,10 @@ void main() {
       samplingPos += vec3(rotatedOffset * PCFRadius, -bias);
       visibility += texture(shadowMap, samplingPos);
     }
+
     visibility /= numSamplingPositions;
+    visibility *= 1 - fadingValue;
+
 
     vec3 lightingResult = (heightCol * La);
 
@@ -200,11 +185,10 @@ void main() {
 
     color = vec4(clamp(lightingResult, vec3(0.0f), vec3(1.0f)), 1.0f);
 
-    color.a *= 1- smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
-                              max(abs(vpoint_World_F.x), abs(vpoint_World_F.y))
-                              );
+    color.a *= 1 - fadingValue;
 
     float brightness = dot(color.rgb, brightnessTreshold);
 
     brightColor = mix(vec4(0.0, 0.0, 0.0, 1.0), vec4(color), smoothstep(1.5, 6.0, brightness));
+    brightColor.a = color.a;
 }

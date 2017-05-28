@@ -64,7 +64,7 @@ float start_time = 0.f;
 mat4 projection_matrix, view_matrix, mirrored_view_matrix, quad_model_matrix;
 mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_matrix, depth_mvp;
 mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
-mat4 shipM, mShipMVP, mShipMV, mShipNORMALM;
+//mat4 shipM, mShipMVP, mShipMV, mShipNORMALM;
 BezierCurve bezier({
                        vec3(-0.3, 2.5, -0.3),
                        vec3(0, 0, -0.4),
@@ -87,8 +87,8 @@ GLuint frameCount = 0;
 LargeScene::TileSet visibleTiles;
 FractionalView fractionalView;
 
-Model mightyShip("yacht.3ds");
-GLuint mightyShipShaderProgram;
+//Model mightyShip("yacht.3ds");
+//GLuint mightyShipShaderProgram;
 
 void Init() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -116,9 +116,9 @@ void Init() {
     skyDome.Init();
     skyDome.useLight(&light);
 
-    mightyShipShaderProgram = icg_helper::LoadShaders("yacht_vshader.glsl", "yacht_fshader.glsl");
-    mightyShip.Init(mightyShipShaderProgram, shadowBuffer_texture_id);
-    mightyShip.useLight(&light);
+    //mightyShipShaderProgram = icg_helper::LoadShaders("yacht_vshader.glsl", "yacht_fshader.glsl");
+    //mightyShip.Init(mightyShipShaderProgram, shadowBuffer_texture_id);
+    //mightyShip.useLight(&light);
 
     float skyDomeRadius = skyDome.getRadius();
     float sceneHalfMaxSize = scene.maximumExtent() / 2.0;
@@ -198,14 +198,14 @@ void Display() {
     scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
     scene.drawGrassTiles(visibleTiles, projection_matrix * view_matrix,
                          vec2(camera.getPos().x, camera.getPos().z));
+    scene.drawModels(MVP, MV, depth_bias_matrix);
+    //glm::mat4 shipMV = view_matrix * shipM;
+    //glm::mat4 shipMVP = projection_matrix * shipMV;
+    //glm::mat4 shipNORMALM = inverse(transpose(shipMV));
 
-    glm::mat4 shipMV = view_matrix * shipM;
-    glm::mat4 shipMVP = projection_matrix * shipMV;
-    glm::mat4 shipNORMALM = inverse(transpose(shipMV));
-
-    glDisable(GL_CULL_FACE);
-    mightyShip.Draw(shipMVP, shipMV, shipNORMALM, depth_bias_matrix);
-    glEnable(GL_CULL_FACE);
+    //glDisable(GL_CULL_FACE);
+    //mightyShip.Draw(shipMVP, shipMV, shipNORMALM, depth_bias_matrix);
+    //glEnable(GL_CULL_FACE);
 
     // END OF MODEL LOADING INTEGRATION
     bloomHDRBuffer.Unbind();
@@ -227,17 +227,18 @@ void computeReflections(LargeScene::TileSet const& visibleTiles) {
     mMVP = projection_matrix * mMV;
     mNORMALM = inverse(transpose(mMV));
 
-    mShipMV = mirrored_view_matrix * shipM;
-    mShipMVP = projection_matrix * mShipMV;
-    mShipNORMALM = inverse(transpose(mShipMV));
+    //mShipMV = mirrored_view_matrix * shipM;
+    //mShipMVP = projection_matrix * mShipMV;
+    //mShipNORMALM = inverse(transpose(mShipMV));
 
     reflectionBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true);
-    glDisable(GL_CULL_FACE);
-    mightyShip.Draw(mShipMVP, mShipMV, mShipNORMALM, depth_bias_matrix, true);
-    glEnable(GL_CULL_FACE);
+    scene.drawModels(mMVP, mMV, depth_bias_matrix, true);
+    //glDisable(GL_CULL_FACE);
+    //mightyShip.Draw(mShipMVP, mShipMV, mShipNORMALM, depth_bias_matrix, true);
+    //glEnable(GL_CULL_FACE);
     reflectionBuffer.Unbind();
 
     //Code below performs blur on reflection
@@ -405,8 +406,6 @@ void doMovement()
     sceneControler.move({displacementX, displacementY});
     vec2 updatedPos = sceneControler.position();
     scene.setCenter(updatedPos/grid_size);
-
-    shipM = glm::translate(IDENTITY_MATRIX, vec3(-updatedPos.x, 0.0, -updatedPos.y));
 
     vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
     camera.setPos(cameraPos);

@@ -32,7 +32,7 @@ public:
         this->modelPath = path;
     }
 
-    void Init(GLuint shaderProgram, GLuint shadowTexture){
+    void Init(GLuint shaderProgram, GLuint shadowTexture, int fogStop, int fogLength){
         this->shaderProgram = shaderProgram;
         this->loadModel();
 
@@ -44,6 +44,9 @@ public:
         SHADOWMVP_id = glGetUniformLocation(shaderProgram, "SHADOWMVP");
         mirrorPass_id = glGetUniformLocation(shaderProgram, "mirror_pass");
         shadowTexture_id = glGetUniformLocation(shaderProgram, "shadowMap");
+        translationToSceneCenter_id = glGetUniformLocation(shaderProgram, "translationToSceneCenter");
+        glUniform1f(glGetUniformLocation(shaderProgram, "threshold_vpoint_World_F"), fogStop - fogLength);
+        glUniform1f(glGetUniformLocation(shaderProgram, "max_vpoint_World_F"), fogStop);
 
         this->shadowTexture_id = shadowTexture;
         GLuint shadowMapLocation = glGetUniformLocation(shaderProgram, "shadowMap");
@@ -55,6 +58,7 @@ public:
               const glm::mat4 &MV = IDENTITY_MATRIX,
               const glm::mat4 &NORMALM = IDENTITY_MATRIX,
               const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
+              const glm::vec2 &translationToSceneCenter = glm::vec2(0.0, 0.0),
               bool mirrorPass = false)
     {
         glUseProgram(this->shaderProgram);
@@ -63,6 +67,7 @@ public:
         glUniformMatrix4fv(MV_id, ONE, DONT_TRANSPOSE, glm::value_ptr(MV));
         glUniformMatrix4fv(NORMALM_id, ONE, DONT_TRANSPOSE, glm::value_ptr(NORMALM));
         glUniformMatrix4fv(SHADOWMVP_id, ONE, DONT_TRANSPOSE, glm::value_ptr(SHADOWMVP));
+        glUniform2fv(translationToSceneCenter_id, 1, glm::value_ptr(translationToSceneCenter));
         glUniform1i(mirrorPass_id, mirrorPass);
 
         light->updateProgram(this->shaderProgram);
@@ -86,7 +91,7 @@ private:
     /*  Model Data  */
     Light* light;
     GLuint shaderProgram;
-    GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id, mirrorPass_id;
+    GLuint MVP_id, MV_id, NORMALM_id, SHADOWMVP_id, mirrorPass_id, translationToSceneCenter_id;
     GLuint shadowTexture_id;
     GLchar* modelPath;
     vector<Mesh> meshes;

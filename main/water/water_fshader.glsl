@@ -4,9 +4,10 @@ uniform sampler2D heightMap;
 uniform sampler2D mirrorMap;
 uniform sampler2D normalMap;
 uniform sampler2DShadow shadowMap;
-
+uniform mat4 MV;
 uniform mat4 NORMALM;
 uniform vec3 viewPos;
+uniform vec3 light_dir;
 uniform vec3 La, Ld, Ls;
 uniform float alpha;
 uniform float max_vpoint_World_F;
@@ -37,7 +38,7 @@ const float cosWaterReflectionAngleStart = 0.20f;
 const float cosWaterReflectionAngleEnd = 0.80f;
 const float waterReflectionDistanceStart = 2.0f;
 const float waterReflectionDistanceEnd = 5.0f;
-const float rippleNormalWeight = 0.2f;
+const float rippleNormalWeight = 0.15f;
 const float scumScale = 2.0f;
 
 const int numSamplingPositions = 9;
@@ -87,7 +88,7 @@ vec4 blendColors(in vec4 src, in vec4 dst){
 
 void main() {
     vec2 window_size = textureSize(mirrorMap, 0);
-    vec3 lightDir = normalize(lightDir_F);
+    vec3 lightDir = normalize((NORMALM * vec4(light_dir, 1.0)).xyz);
     vec3 viewDir = normalize(viewDir_MV_F);
     vec3 normal = normalize(normal_F);
     float _u = gl_FragCoord.x / window_size.x;
@@ -107,6 +108,9 @@ void main() {
     float cosNL = dot(normal_MV, lightDir);
     float bias = max(0.05f * (1.0f - cosNL), 0.005f);
 
+    float fadingValue = smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
+                                  max(abs(vpoint_World_F.x), abs(vpoint_World_F.y))
+                                  );
 
     // generate random rotation angle for each fragment
     float angle = randomAngle(gl_FragCoord.xyz, 15.0f);
@@ -122,6 +126,7 @@ void main() {
       visibility += texture(shadowMap, samplingPos / shadowCoord_F.w);
     }
     visibility /= numSamplingPositions;
+    visibility *= 1 - fadingValue;
 
     //Flat normal is the projection of the wave normal onto the mirror surface
     vec3 flatNormal = completeNormal - dot(completeNormal, Y) * Y;
@@ -161,13 +166,11 @@ void main() {
     color = mix(seaColor, tmpColor, smoothstep(-0.15, 0.015, tHeight_F) * smoothstep(0.001, 0.006, vpoint_F.y));
 
     // compute tranparency factor for a fog-effect
-    color.a *= 1- smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
-                              max(abs(vpoint_World_F.x), abs(vpoint_World_F.y))
-                              );
+    color.a *= 1 - fadingValue;
 
     float brightness = dot(color.rgb, brightnessTreshold);
 
     brightColor = mix(vec4(0.0, 0.0, 0.0, color.a), vec4(color), smoothstep(1.5, 6.0, brightness));
-
+    brightColor.a = color.a;
 
 }

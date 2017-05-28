@@ -235,13 +235,12 @@ public:
 
         float time = glfwGetTime();
 
-        float theta = 0.30 * time - 0.2;
+        float theta = 0.05 * time - 0.2;
 
         vec3 sunPos = sunOrbitCenter + radius * cos(theta) * sunOrbitXAxis + radius * sin(theta) * sunOrbitYAxis;
         computeSkyColors(sunPos, viewPos);
 
         light->setPos(sunPos);
-        light->setLightPosCameraTranslated(sunPos + vec3(viewPos.x, -viewPos.y, viewPos.z));
 
         glUniformMatrix4fv(MVPId, 1, GL_FALSE, value_ptr(skyboxMVP));
         glUniform3fv(sunPosId, 1, value_ptr(sunPos));
