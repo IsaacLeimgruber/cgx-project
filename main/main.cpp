@@ -64,12 +64,14 @@ mat4 projection_matrix, view_matrix, mirrored_view_matrix, quad_model_matrix;
 mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_matrix, depth_mvp;
 mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
 
-bool toggleBezier = false;
+bool toggleBezier = true;
 vec3 lastBezierPos;
 BezierCurve bezier({
-                       vec3(4., 2., 0.),
-                       vec3(-1.,2.f, 0.),
-                       vec3(1.,2.f, 8.)
+                       vec3(4., 5., 0.),
+                       vec3(3.,1.f, 2.),
+                       vec3(-8.,0.5f, 2.),
+                       vec3(-10.,1.f, -1.),
+                       vec3(-15.,1.f, -4.)
                    });
 
 
@@ -164,19 +166,18 @@ void Display() {
          vec3 bezierPos = bezier.getPoint(bezierTime);
          vec3 deltaPos = bezierPos - lastBezierPos;
          lastBezierPos = bezierPos;
-         //camera.setPos(cameraPos);
+
          //vec2 actualPos = sceneControler.position();
          float displacementX = deltaPos.x;// - actualPos.x;
          float displacementZ = deltaPos.z;// - actualPos.y;
 
          sceneControler.move({displacementX, displacementZ});
          vec2 updatedPos = sceneControler.position();
-         scene.setCenter(updatedPos/grid_size);
          vec3 cameraPos = vec3(updatedPos.x, bezierPos.y, updatedPos.y);
          camera.setPos(cameraPos);
+         scene.setCenter(updatedPos/grid_size);
 
-         //vec3 cameraTarget = bezier.getPoint(bezierTime + dtime);
-         //camera.setFront(cameraTarget);
+         camera.setFront(deltaPos);
     }
 
     MV = view_matrix * quad_model_matrix;

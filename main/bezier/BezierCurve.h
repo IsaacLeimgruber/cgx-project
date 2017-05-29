@@ -46,12 +46,12 @@ public:
         return res;
     }
 
-    array<float, 40> getTimes(){
+    array<float, 300> getTimes(){
         return s_times;
     }
 
 private:
-    constexpr static int SAMPLE_NUMBER = 40;
+    constexpr static int SAMPLE_NUMBER = 300;
     const float TIME_STEP = 1.f / SAMPLE_NUMBER;
     const float SPEED = 0.005f;
 
