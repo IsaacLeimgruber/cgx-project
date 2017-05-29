@@ -59,9 +59,11 @@ float lastY = 0.0f;
 
 const float DISPLACEMENT_TIME = 10.f;
 const float OFFSET_QTY = 0.04f;
-float start_time1;
-float start_time2;
-
+float start_time1 = 100.f;
+float start_time2 = 100.f;
+float start_time3;
+float totalDispX = 0.f;
+float totalDispY = 0.f;
 mat4 projection_matrix, view_matrix, mirrored_view_matrix, quad_model_matrix;
 mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_matrix, depth_mvp;
 mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
@@ -70,18 +72,22 @@ mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
 bool untoggleAllBezier = false;
 bool toggleBezier1 = true;
 bool toggleBezier2 = true;
+bool toggleBezier3 = true;
 
 const float bezierTime1 = 10.f;
 bool startedCurve1 = false;
+float bezierTimeC1;
+float bezierTimeC2;
+float bezierTimeC3;
 
 vec3 bezier1Start = vec3(10., 5., 0.);
 vec3 lastBezierPos = bezier1Start;
-BezierCurve bezier1({
-                       bezier1Start,
-                       vec3(7.,5.f, 7.),
-                       vec3(0.,5.f, 10.)
-                   });
 
+BezierCurve bezier1({
+                        bezier1Start,
+                        vec3(7.,5.f, 7.),
+                        vec3(0.,5.f, 10.)
+                    });
 
 const float bezierTime2 = 10.f;
 bool startedCurve2 = false;
@@ -90,11 +96,21 @@ BezierCurve bezier2({
                         bezier2Start,
                         vec3(2.,9.f, 2.),
                         vec3(3.,8.f, 3.),
-                        vec3(4.,2.f, 4.),
-                        vec3(10.,2.f, 6.5),
-                        vec3(15.,1.f, 15.),
-                        vec3(19.,0.5f, 25.)
-                   });
+                        vec3(4.,3.f, 4.),
+                        vec3(10.,3.f, 6.5),
+                        vec3(15.,2.f, 15.),
+                        vec3(19.,1.5f, 25.)
+                    });
+
+const float bezierTime3 = 10.f;
+bool startedCurve3 = false;
+vec3 bezier3Start = vec3(11.,1.f, 5.);
+BezierCurve bezier3({
+                        bezier3Start,
+                        vec3(12.,1.f, 1.),
+                        vec3(6.,1.f, -2.),
+                        vec3(2.,1.f, 1.)
+                    });
 
 
 mat4 biasMatrix = mat4(
@@ -119,11 +135,12 @@ void Init() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     if(untoggleAllBezier){
-            toggleBezier1 = false;
-            toggleBezier2 = false;
-        }
+        toggleBezier1 = false;
+        toggleBezier2 = false;
+        toggleBezier3 = false;
+    }
 
-    camera   = Camera{vec3(0.0, 3.0, 0.0), vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
+    camera   = Camera{bezier1Start, vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
     light    = Light{vec3(0.0, 2.0, -4.0)};
     material = Material{};
 
@@ -215,7 +232,7 @@ void Display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
-    scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
+    //scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
     scene.drawGrassTiles(visibleTiles, projection_matrix * view_matrix,
                          vec2(camera.getPos().x, camera.getPos().z));
     scene.drawModels(MVP, MV, depth_bias_matrix);
@@ -418,15 +435,17 @@ void doMovement()
     if(keys[GLFW_KEY_L])
         camera.ProcessKeyboard(ROTATE_RIGHT, deltaTime);
 
-    float bezierTimeC1 = (glfwGetTime() - start_time1)/bezierTime1;
-    float bezierTimeC2 = (glfwGetTime() - start_time2)/bezierTime2;
+    bezierTimeC1 = (glfwGetTime() - start_time1)/bezierTime1;
+    bezierTimeC2 = (glfwGetTime() - start_time2)/bezierTime2;
+    bezierTimeC3 = (glfwGetTime() - start_time3)/bezierTime3;
+
     if(bezierTimeC1 <= 1.f && toggleBezier1 && startedCurve1){
         vec3 bezierPos = bezier1.getPoint(bezierTimeC1);
         vec3 deltaPos = bezierPos - lastBezierPos;
         lastBezierPos = bezierPos;
 
         camera.move(deltaPos);
-        vec3 radial_view = normalize(cross(normalize(deltaPos), vec3(0.f, 1.f, 0.f)) - vec3(0.f, 1.f, 0.f));
+        vec3 radial_view = normalize(cross(normalize(deltaPos), vec3(0.f, 1.f, 0.f)) - vec3(0.f, 0.7f, 0.f));
         camera.setFront(radial_view);
 
     }
@@ -437,31 +456,58 @@ void doMovement()
         lastBezierPos = bezierPos;
 
         camera.move(deltaPos);
-        vec3 radial_view = cross(deltaPos, vec3(0.f, 1.f, 0.f));
-        camera.setFront(normalize(radial_view - vec3(0.f, 1.f, 0.f)));
         camera.setFront(deltaPos);
     }
 
-    if(!startedCurve1 && toggleBezier1){
-        start_time1 = glfwGetTime();
-        lastBezierPos = bezier1Start;
-        camera.setPos(bezier1Start);
-        lastBezierPos = bezier1Start;
-        startedCurve1 = true;
+    if(0 <= bezierTimeC3 && bezierTimeC3 <= 1.f && toggleBezier3 && startedCurve3){
+        vec3 bezierPos = bezier3.getPoint(bezierTimeC3);
+        vec3 deltaPos = bezierPos - lastBezierPos;
+        lastBezierPos = bezierPos;
+
+        camera.move(deltaPos);
+        vec3 radial_view = normalize(cross(normalize(deltaPos), vec3(0.f, 1.f, 0.f)) - vec3(0.f, -0.2f, 0.f));
+        camera.setFront(-radial_view);
+
     }
 
-    if(!startedCurve2 && (glfwGetTime() - start_time1) > bezierTime1 && toggleBezier2){
-        start_time2 = glfwGetTime();
-        camera.setPos(bezier2Start);
-        lastBezierPos = bezier2Start;
+    if(!startedCurve1){
+        if(toggleBezier1){
+            lastBezierPos = bezier1Start;
+            camera.setPos(bezier1Start);
+        }
+        startedCurve1 = true;
+        start_time1 = glfwGetTime();
+    }
+
+    if(!startedCurve2 && (glfwGetTime() - start_time1) > bezierTime1){
+        if(toggleBezier2){
+            camera.setPos(bezier2Start - vec3(totalDispX, 0.f,  totalDispY));
+            totalDispX = 0.f;
+            totalDispY = 0.f;
+            lastBezierPos = bezier2Start;
+        }
         startedCurve2 = true;
+        start_time2 = glfwGetTime();
+    }
+
+    if(!startedCurve3 && (glfwGetTime() - start_time2) > bezierTime2){
+        if(toggleBezier3){
+            camera.setPos(bezier3Start - vec3(totalDispX, 0.f,  totalDispY));
+            totalDispX = 0.f;
+            totalDispY = 0.f;
+            lastBezierPos = bezier3Start;
+        }
+        startedCurve3 = true;
+        start_time3 = glfwGetTime();
     }
 
 
     vec2 actualPos = sceneControler.position();
     vec3 newPos = camera.getPos();
     float displacementX = newPos.x - actualPos.x;
+    totalDispX += displacementX;
     float displacementY = newPos.z - actualPos.y;
+    totalDispY += displacementY;
     sceneControler.move({displacementX, displacementY});
     vec2 updatedPos = sceneControler.position();
     scene.setCenter(updatedPos/grid_size);
