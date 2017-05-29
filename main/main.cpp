@@ -111,7 +111,7 @@ void Init() {
     reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     screenQuadBufferPostProcessing.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
 
-    int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT32, GL_UNSIGNED_INT);
+    int shadowBuffer_texture_id     = shadowBuffer.Init(4096, 4096, GL_DEPTH_COMPONENT32, GL_UNSIGNED_INT);
 
     //screenquad.Init(bloomHDRBuffer.getColorTexture(0), screenQuadBuffer_texture_id);
     screenquad.Init(bloomHDRBuffer.getColorTexture(0), screenQuadBuffer_texture_id);
@@ -156,7 +156,7 @@ void Display() {
     lastFrame = currentFrame;
 
     if(currentFrame - lastSec > SEC_DURATION){
-        //std::cout << "Frames per second: " << frameCount << std::endl;
+        std::cout << "Frames per second: " << frameCount << std::endl;
         lastSec = currentFrame;
         frameCount = 0;
     }
@@ -424,6 +424,7 @@ void doMovement()
     scene.setCenter(updatedPos/grid_size);
 
     vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
+
     camera.setPos(cameraPos);
 }
 
@@ -468,7 +469,7 @@ int main(int argc, char *argv[]) {
 
     // Cursor is captured and hidden
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
 
     // enable depth test.
     glEnable(GL_DEPTH_TEST);

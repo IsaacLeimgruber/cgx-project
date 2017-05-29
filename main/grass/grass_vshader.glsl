@@ -49,7 +49,7 @@ void main() {
     mat4 model = mat4(1.f);
     model[3][0] = bladeTranslation.x;
     model[3][2] = bladeTranslation.y;
-    vec4 vertexModelPos = (model * vec4(vpoint, 1.0) + vec4(translation.x, height - 0.05, -translation.y, 0));
+    vec4 vertexModelPos = (model * vec4(vpoint, 1.0) + vec4(translation.x, height - 0.03, -translation.y, 0));
     gl_Position = VP * vertexModelPos;
     uv = vtexcoord;
     vpoint_World_F = translationToSceneCenter + bladeTranslation;

@@ -87,7 +87,7 @@ void main()
     float angle = randomAngle(vpoint_F.xyz, 15.0f);
     float s = sin(angle);
     float c = cos(angle);
-    float PCFRadius = 1.0f/600.0f;
+    float PCFRadius = 1.0f/1000.0f;
     for(int i=0; i < numSamplingPositions; i++)
     {
       // rotate offset

@@ -116,7 +116,7 @@ void main() {
     float angle = randomAngle(gl_FragCoord.xyz, 15.0f);
     float s = sin(angle);
     float c = cos(angle);
-    float PCFRadius = 1/600.0f;
+    float PCFRadius = 1/1000.0f;
     for(int i=0; i < numSamplingPositions; i++)
     {
       // rotate offset
@@ -140,7 +140,7 @@ void main() {
 
     vec4 scumColor = texture(diffuseMap, (uv_F + vec2(0.0f, valTimeShift)) * scumScale).rgba;
     vec3 lightingResult = reflection * La;
-    vec3 lightingResultScum =  scumColor.rgb * La;
+    vec3 lightingResultScum =  scumColor.rgb * 2.0 * La;
 
     if(cosNL > 0.0){
 
@@ -152,7 +152,7 @@ void main() {
                +
                (vec3(1.0f, 1.0f, 1.0f) * pow(max(0.0, dot(reflectionDir, viewDir)), 512.0) * Ls));
         lightingResultScum += visibility *
-               (lightingResultScum * cosNLDiffused);
+               (lightingResultScum * 2.0 * cosNLDiffused);
     }
 
     float reflectionAlpha = mix(0.95f, 0.3f, min(

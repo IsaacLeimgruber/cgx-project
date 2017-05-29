@@ -35,9 +35,14 @@ float GetTessLevel(in float Distance0, in float Distance1, in float height1, in 
     avgDistance = clamp(avgDistance, CLOSEST_TESS_DISTANCE, FURTHEST_TESS_DISTANCE);
 
     //More tesselation the closer we are from the point
-    return mix(MAX_TESSELATION,
-               MIN_TESSELATION,
-               smoothstep(CLOSEST_TESS_DISTANCE, FURTHEST_TESS_DISTANCE, avgDistance));
+    float tessLvl = mix(MAX_TESSELATION,
+                        MIN_TESSELATION,
+                        smoothstep(CLOSEST_TESS_DISTANCE, FURTHEST_TESS_DISTANCE, avgDistance));
+    if(avgHeight < 0.5){
+        tessLvl /= 2.0;
+    }
+
+    return tessLvl;
 }
 
 bool offscreen(in vec3 v){

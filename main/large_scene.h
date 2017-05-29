@@ -14,10 +14,10 @@
 class LargeScene {
 
     /** the dimensions of this LargeScene's rectangular matrix in number of tiles per ROW or COLumns */
-    enum {NROW = 15, NCOL = 15};
+    enum {NROW = 20, NCOL = 20};
 
     /** the number of tile to make transparent at the edge of the large scene */
-    static constexpr int nMountainTilesInFog = 3;
+    static constexpr int nMountainTilesInFog = 5;
     static constexpr int nWaterTilesInFog = nMountainTilesInFog;
     static constexpr int fogStop = (NROW < NCOL ? NROW : NCOL) - 1;
 
@@ -156,21 +156,23 @@ public:
         }
 
         //sort tiles to that tiles nearer to pointInPlane are drawn first
-        std::sort(visible.tiles.begin(), visible.tiles.end(),
-                  [](pair<Index, float> const& a, pair<Index, float> const& b) {
-            return a.second < b.second;
-        });
+        if(visible.tiles.size() > 0){
+            std::sort(visible.tiles.begin(), visible.tiles.end(),
+                      [](pair<Index, float> const& a, pair<Index, float> const& b) {
+                return a.second < b.second;
+            });
 
-        //scale depth between -1 and 1
-        if (visible.tiles.back().second - visible.tiles.front().second > 1) {
-            float inv_maxDepth = 1.0f / (visible.tiles.back().second - visible.tiles.front().second);
-            for (auto& tile : visible.tiles) {
-                tile.second -= visible.tiles.front().second;
-                tile.second *= inv_maxDepth;
-            }
-        } else {
-            for (auto& tile : visible.tiles) {
-                tile.second = 0;
+            //scale depth between -1 and 1
+            if (visible.tiles.back().second - visible.tiles.front().second > 1) {
+                float inv_maxDepth = 1.0f / (visible.tiles.back().second - visible.tiles.front().second);
+                for (auto& tile : visible.tiles) {
+                    tile.second -= visible.tiles.front().second;
+                    tile.second *= inv_maxDepth;
+                }
+            } else {
+                for (auto& tile : visible.tiles) {
+                    tile.second = 0;
+                }
             }
         }
     }
