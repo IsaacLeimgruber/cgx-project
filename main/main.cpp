@@ -42,7 +42,7 @@ bool keys[1024];
 bool firstMouse = false;
 bool wireframeDebugEnabled = false;
 bool enableBlurPostProcess = true;
-bool toggleBezier = false;
+
 // Window size in screen coordinates
 int window_width_sc;
 int window_height_sc;
@@ -56,19 +56,23 @@ int screenHeight = 1080;
 float lastX = 0.0f;
 float lastY = 0.0f;
 
-const float DISPLACEMENT_TIME = 15.f;
+const float DISPLACEMENT_TIME = 10.f;
 const float OFFSET_QTY = 0.04f;
 float start_time = 0.f;
 
 mat4 projection_matrix, view_matrix, mirrored_view_matrix, quad_model_matrix;
 mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_matrix, depth_mvp;
 mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
+
+bool toggleBezier = false;
+vec3 lastBezierPos;
 BezierCurve bezier({
-                       vec3(-0.3, 2.5, -0.3),
-                       vec3(0, 0, -0.4),
-                       vec3(1, 0.5, 0),
-                       vec3(0.6, 1.5, 1)
+                       vec3(4., 2., 0.),
+                       vec3(-1.,2.f, 0.),
+                       vec3(1.,2.f, 8.)
                    });
+
+
 
 mat4 biasMatrix = mat4(
             0.5, 0.0, 0.0, 0.0,
@@ -91,7 +95,7 @@ void Init() {
     //perlin.Init("perlinGrass_fshader.glsl");
     start_time = glfwGetTime();
 
-    camera   = Camera{vec3(0.0, 10, 0.0), vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
+    camera   = Camera{vec3(0., 3.0, 0.), vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
     light    = Light{vec3(0.0, 2.0, -4.0)};
     material = Material{};
 
@@ -143,7 +147,7 @@ void Display() {
     lastFrame = currentFrame;
 
     if(currentFrame - lastSec > SEC_DURATION){
-        std::cout << "Frames per second: " << frameCount << std::endl;
+        //std::cout << "Frames per second: " << frameCount << std::endl;
         lastSec = currentFrame;
         frameCount = 0;
     }
@@ -157,10 +161,22 @@ void Display() {
     float dtime = 0.1;
          float bezierTime = (glfwGetTime() - start_time)/DISPLACEMENT_TIME;
          if(bezierTime <= 1.f - dtime && toggleBezier){
-         vec3 cameraPos = bezier.getPoint(bezierTime);
+         vec3 bezierPos = bezier.getPoint(bezierTime);
+         vec3 deltaPos = bezierPos - lastBezierPos;
+         lastBezierPos = bezierPos;
+         //camera.setPos(cameraPos);
+         //vec2 actualPos = sceneControler.position();
+         float displacementX = deltaPos.x;// - actualPos.x;
+         float displacementZ = deltaPos.z;// - actualPos.y;
+
+         sceneControler.move({displacementX, displacementZ});
+         vec2 updatedPos = sceneControler.position();
+         scene.setCenter(updatedPos/grid_size);
+         vec3 cameraPos = vec3(updatedPos.x, bezierPos.y, updatedPos.y);
          camera.setPos(cameraPos);
-         vec3 cameraTarget = bezier.getPoint(bezierTime + dtime);
-         camera.setFront(cameraTarget);
+
+         //vec3 cameraTarget = bezier.getPoint(bezierTime + dtime);
+         //camera.setFront(cameraTarget);
     }
 
     MV = view_matrix * quad_model_matrix;
@@ -190,7 +206,7 @@ void Display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
-    scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
+    //scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
     scene.drawGrassTiles(visibleTiles, projection_matrix * view_matrix,
                          vec2(camera.getPos().x, camera.getPos().z));
     bloomHDRBuffer.Unbind();

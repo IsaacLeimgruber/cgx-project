@@ -17,9 +17,9 @@ uniform vec2 translationToSceneCenter;
 uniform sampler2D heightMap;
 uniform sampler2D grassMap;
 
-const float SAND_HEIGHT = 0.02f,
-            GRASS_HEIGHT = 0.3f,
-            ROCK_HEIGHT = 0.40f;
+const float SAND_HEIGHT = 0.25f,
+            GRASS_HEIGHT = 0.4f,
+            ROCK_HEIGHT = 0.5f;
 const float ground_threshold = 0.6;
 
 void main() {
