@@ -37,14 +37,14 @@ private:
 
     //Sky color values
     const vec3 sunsetColor = vec3(1.0f, 0.568f, 0.078f);
-    const vec3 nightSkyColor = vec3(0.129f, 0.2f, 0.267f);
+    const vec3 nightSkyColor = vec3(0.05f, 0.07f, 0.150f);
     const vec3 SUNSETCOL_topSky = vec3(0.298f, 0.494f, 0.741f);
     const vec3 SUNSETCOL_bottomSky = vec3(0.894f, 0.333f, 0.333f);
     const vec3 mistColor = vec3(0.9f, 0.9f, 0.98f);
     const vec3 blueSkyColor = 1.5f * vec3(0.098f, 0.269f, 0.665f);
     const vec3 lightblueSkyColor = vec3(0.059f, 0.678f, 1.0f);
-    const vec3 OUTERSPACECOL_bottomSky = vec3(0.059f, 0.678f, 1.0f);
-    const vec3 OUTERSPACECOL_topSky = vec3(0.059f, 0.078f, 0.3f);
+    const vec3 OUTERSPACECOL_bottomSky = vec3(0.098f, 0.269f, 0.665f);
+    const vec3 OUTERSPACECOL_topSky = vec3(0.098f, 0.269f, 0.665f);
 
     // Sun color values
     const vec3 SUN_COLOR = vec3(5.0f, 5.0f, 5.0f);
@@ -52,6 +52,8 @@ private:
 
     // Light color values
     const vec3 LIGHTCOL_NIGHT = nightSkyColor;
+
+    const vec3 ZERO_COL = vec3(0.0f, 0.0f, 0.0f);
     const vec3 LIGHTCOL_SUNSET_DIFFUSE = vec3(0.894f, 0.333f, 0.333f);
     const vec3 LIGHTCOL_SUNSET_SPECULAR = vec3(4.0f, 2.5f, 2.5f);
     const vec3 LIGHTCOL_DAY = vec3(0.0f, 0.0f, 0.0f);
@@ -233,13 +235,12 @@ public:
 
         float time = glfwGetTime();
 
-        float theta = 0.02 * time - 0.2;
+        float theta = 0.01 * time - 0.2;
 
         vec3 sunPos = sunOrbitCenter + radius * cos(theta) * sunOrbitXAxis + radius * sin(theta) * sunOrbitYAxis;
         computeSkyColors(sunPos, viewPos);
 
         light->setPos(sunPos);
-        light->setLightPosCameraTranslated(sunPos + vec3(viewPos.x, -viewPos.y, viewPos.z));
 
         glUniformMatrix4fv(MVPId, 1, GL_FALSE, value_ptr(skyboxMVP));
         glUniform3fv(sunPosId, 1, value_ptr(sunPos));
@@ -271,7 +272,8 @@ public:
             float sunSetCoeff = clamp((sunPos.y - nightBegin) / (sunsetBegin - nightBegin), 0.0f, 1.0f);
             bottomSkyColor = mix(nightSkyColor, SUNSETCOL_bottomSky, sunSetCoeff);
             topSkyColor = mix(nightSkyColor, SUNSETCOL_topSky, sunSetCoeff);
-            light->setDiffuseIntensity(mix(LIGHTCOL_NIGHT, LIGHTCOL_SUNSET_DIFFUSE, sunSetCoeff));
+            light->setDiffuseIntensity(mix(ZERO_COL, LIGHTCOL_SUNSET_DIFFUSE, sunSetCoeff));
+            light->setSpecularIntensity(mix(ZERO_COL, LIGHTCOL_SUNSET_SPECULAR, sunSetCoeff));
 
             sunColor = mix(SUN_COLOR, SUN_COLOR_SUNSET, sunSetCoeff);
             domeGradBottom = mix(NIGHTGRADIENT_START, SUNSETGRADIENT_START, sunSetCoeff);

@@ -37,11 +37,11 @@ void main()
 
     float l = length(domePos_F - sunPos);
 
-    if(l < sunInnerRadius){
+    if(l < sunInnerRadius && domePos_F.y > -0.5){
         tmpColor = sunColor;
     } else {
         tmpColor = mix(bottomSkyColor, topSkyColor, smoothstep(0.0, 1.0, domeGrad));
-        if(l < sunOuterRadius){
+        if(l < sunOuterRadius && domePos_F.y > -0.5){
             tmpColor = mix(sunColor, tmpColor, smoothstep(sunInnerRadius, sunOuterRadius, l));
         }
     }

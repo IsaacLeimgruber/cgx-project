@@ -44,8 +44,8 @@ bool offscreen(vec3 v){
 
     //Rough estimate
     return  any(bvec2(vProj.z < -1.1f, vProj.z > 1.1f)) ||
-            any(lessThan(vProj.xy, vec2(-2.0f))) ||
-            any(greaterThan(vProj.xy, vec2(2.0f)));
+            any(lessThan(vProj.xy, vec2(-1.6f))) ||
+            any(greaterThan(vProj.xy, vec2(1.6f)));
 }
 
 void main()

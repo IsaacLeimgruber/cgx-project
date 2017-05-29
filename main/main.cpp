@@ -17,6 +17,7 @@
 #include "blurQuad/blurquad.h"
 #include "large_scene.h"
 #include "bezier/BezierCurve.h"
+#include "model/model.h"
 
 using namespace glm;
 
@@ -49,7 +50,7 @@ int window_height_sc;
 // OpenGL window dimensions in pixels, ignored if fullscreen
 int window_width = 1600;
 int window_height = 1200;
-const bool FULLSCREEN = false;
+const bool FULLSCREEN = true;
 // native render dimensions in pixels
 int screenWidth = 1440;
 int screenHeight = 1080;
@@ -64,6 +65,7 @@ float start_time2 = 100.f;
 mat4 projection_matrix, view_matrix, mirrored_view_matrix, quad_model_matrix;
 mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_matrix, depth_mvp;
 mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
+//mat4 shipM, mShipMVP, mShipMV, mShipNORMALM;
 
 bool untoggleAllBezier = false;
 bool toggleBezier1 = true;
@@ -111,6 +113,9 @@ GLuint frameCount = 0;
 LargeScene::TileSet visibleTiles;
 FractionalView fractionalView;
 
+//Model mightyShip("yacht.3ds");
+//GLuint mightyShipShaderProgram;
+
 void Init() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -120,7 +125,11 @@ void Init() {
     }
     //perlin.Init("perlinGrass_fshader.glsl");
 
+<<<<<<< HEAD
     camera   = Camera{bezier1Start, vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
+=======
+    camera   = Camera{vec3(0.0, 3.0, 0.0), vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
+>>>>>>> 7e3fb5354506c3d75c1db4704603a6381ae3dbee
     light    = Light{vec3(0.0, 2.0, -4.0)};
     material = Material{};
 
@@ -131,7 +140,7 @@ void Init() {
     reflectionBuffer.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
     screenQuadBufferPostProcessing.Init(screenWidth, screenHeight, GL_RGBA16F, GL_RGBA, GL_FLOAT, true, true);
 
-    int shadowBuffer_texture_id     = shadowBuffer.Init(2048, 2048, GL_DEPTH_COMPONENT32, GL_UNSIGNED_INT);
+    int shadowBuffer_texture_id     = shadowBuffer.Init(4096, 4096, GL_DEPTH_COMPONENT32, GL_UNSIGNED_INT);
 
     //screenquad.Init(bloomHDRBuffer.getColorTexture(0), screenQuadBuffer_texture_id);
     screenquad.Init(bloomHDRBuffer.getColorTexture(0), screenQuadBuffer_texture_id);
@@ -139,6 +148,10 @@ void Init() {
     scene.init(shadowBuffer_texture_id, reflectionBuffer.getColorTexture(), &light);
     skyDome.Init();
     skyDome.useLight(&light);
+
+    //mightyShipShaderProgram = icg_helper::LoadShaders("yacht_vshader.glsl", "yacht_fshader.glsl");
+    //mightyShip.Init(mightyShipShaderProgram, shadowBuffer_texture_id);
+    //mightyShip.useLight(&light);
 
     float skyDomeRadius = skyDome.getRadius();
     float sceneHalfMaxSize = scene.maximumExtent() / 2.0;
@@ -151,7 +164,6 @@ void Init() {
     depth_bias_matrix       = biasMatrix * depth_mvp;
     depth_model_matrix      = quad_model_matrix;
 
-
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glDepthFunc(GL_LESS);
@@ -163,6 +175,7 @@ void Init() {
 
 void computeReflections(LargeScene::TileSet const& visibleTiles);
 void computeBloom();
+void drawMightyShip(glm::mat4 const& , glm::mat4 const&, glm::mat4 const& , glm::mat4 const& );
 
 void Display() {
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -187,11 +200,6 @@ void Display() {
     MVP = projection_matrix * MV;
     NORMALM = inverse(transpose(MV));
 
-    //mirror matrices
-    mMV = mirrored_view_matrix * quad_model_matrix;
-    mMVP = projection_matrix * mMV;
-    mNORMALM = inverse(transpose(mMV));
-
     //shadow matrices
     depth_view_matrix = lookAt(light.getPos(), vec3(0.0,0.0,0.0), vec3(0, 1, 0));
     depth_model_matrix = IDENTITY_MATRIX;
@@ -199,9 +207,10 @@ void Display() {
     depth_bias_matrix = biasMatrix * depth_mvp;
 
     shadowBuffer.Bind();
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_CULL_FACE);
     scene.drawMountains(MVP, MV, IDENTITY_MATRIX, depth_mvp, fractionalView, false, true);
+    glEnable(GL_CULL_FACE);
     shadowBuffer.Unbind();
 
     computeReflections(visibleTiles);
@@ -210,9 +219,19 @@ void Display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView, false);
-    //scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
+    scene.drawWaterTiles(visibleTiles, MVP, MV, NORMALM, depth_bias_matrix, fractionalView);
     scene.drawGrassTiles(visibleTiles, projection_matrix * view_matrix,
                          vec2(camera.getPos().x, camera.getPos().z));
+    scene.drawModels(MVP, MV, depth_bias_matrix);
+    //glm::mat4 shipMV = view_matrix * shipM;
+    //glm::mat4 shipMVP = projection_matrix * shipMV;
+    //glm::mat4 shipNORMALM = inverse(transpose(shipMV));
+
+    //glDisable(GL_CULL_FACE);
+    //mightyShip.Draw(shipMVP, shipMV, shipNORMALM, depth_bias_matrix);
+    //glEnable(GL_CULL_FACE);
+
+    // END OF MODEL LOADING INTEGRATION
     bloomHDRBuffer.Unbind();
 
     computeBloom();
@@ -224,11 +243,26 @@ void Display() {
     frameCount++;
 }
 
+
 void computeReflections(LargeScene::TileSet const& visibleTiles) {
+
+    //mirror matrices
+    mMV = mirrored_view_matrix * quad_model_matrix;
+    mMVP = projection_matrix * mMV;
+    mNORMALM = inverse(transpose(mMV));
+
+    //mShipMV = mirrored_view_matrix * shipM;
+    //mShipMVP = projection_matrix * mShipMV;
+    //mShipNORMALM = inverse(transpose(mShipMV));
+
     reflectionBuffer.Bind();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     skyDome.Draw(quad_model_matrix, mirrored_view_matrix, projection_matrix, camera.getPos());
     scene.drawMountainTiles(visibleTiles, mMVP, mMV, mNORMALM, depth_bias_matrix, fractionalView, true);
+    scene.drawModels(mMVP, mMV, depth_bias_matrix, true);
+    //glDisable(GL_CULL_FACE);
+    //mightyShip.Draw(mShipMVP, mShipMV, mShipNORMALM, depth_bias_matrix, true);
+    //glEnable(GL_CULL_FACE);
     reflectionBuffer.Unbind();
 
     //Code below performs blur on reflection
@@ -435,7 +469,9 @@ void doMovement()
     sceneControler.move({displacementX, displacementY});
     vec2 updatedPos = sceneControler.position();
     scene.setCenter(updatedPos/grid_size);
+
     vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
+
     camera.setPos(cameraPos);
 }
 
@@ -480,7 +516,7 @@ int main(int argc, char *argv[]) {
 
     // Cursor is captured and hidden
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
 
     // enable depth test.
     glEnable(GL_DEPTH_TEST);

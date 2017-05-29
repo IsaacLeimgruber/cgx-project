@@ -22,7 +22,7 @@ private:
     GLuint VP_id_;          // view, projection matrix ID
 
     GLuint quadVAO, quadVBO;
-    GLuint rows = 20;
+    GLuint rows = 40;
     GLuint cols = rows;
     GLuint nBush = rows * cols;
     GLuint grass_tex_location = 1;
@@ -63,7 +63,7 @@ public:
         glUniform1f(glGetUniformLocation(program_id_, "max_vpoint_World_F"), 10.0f);//fogStop);
 
         // vertex coordinates and indices
-        genGrid(8);
+        genGrid(2);
 
         // vertex one vertex Array
         glGenVertexArrays(1, &quadVAO);

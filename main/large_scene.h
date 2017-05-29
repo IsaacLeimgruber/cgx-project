@@ -8,15 +8,16 @@
 #include "terrain/terrain.h"
 #include "perlin/perlin.h"
 #include "grass/grass.h"
+#include "model/model.h"
 
 /** A LargeScene is an infinite procedural terrain. Internally, it is a circular matrix of Grid objects */
 class LargeScene {
 
     /** the dimensions of this LargeScene's rectangular matrix in number of tiles per ROW or COLumns */
-    enum {NROW = 11, NCOL = 11};
+    enum {NROW = 20, NCOL = 20};
 
     /** the number of tile to make transparent at the edge of the large scene */
-    static constexpr int nMountainTilesInFog = 4;
+    static constexpr int nMountainTilesInFog = 5;
     static constexpr int nWaterTilesInFog = nMountainTilesInFog;
     static constexpr int fogStop = (NROW < NCOL ? NROW : NCOL) - 1;
 
@@ -47,6 +48,12 @@ class LargeScene {
 
     /** the noise algorithm */
     Perlin perlin;
+
+    /** A glorious ship with its shader program */
+    Model mightyShip{"yacht.3ds"};
+    GLuint mightyShipShaderProgram;
+    glm::mat4 shipModelMatrix;
+    //glm::vec2 shipWorldPos{}
 
     /** resolution of the height maps */
     int heightMapWidth, heightMapHeight;
@@ -105,6 +112,10 @@ public:
         grid.useLight(light);
         water.useLight(light);
         grass.useLight(light);
+
+        mightyShipShaderProgram = icg_helper::LoadShaders("yacht_vshader.glsl", "yacht_fshader.glsl");
+        mightyShip.Init(mightyShipShaderProgram, shadowBuffer_texture_id, fogStop, nMountainTilesInFog);
+        mightyShip.useLight(light);
     }
 
     /** draws every Mountain grid tile side by side in an ordered manner */
@@ -145,21 +156,23 @@ public:
         }
 
         //sort tiles to that tiles nearer to pointInPlane are drawn first
-        std::sort(visible.tiles.begin(), visible.tiles.end(),
-                  [](pair<Index, float> const& a, pair<Index, float> const& b) {
-            return a.second < b.second;
-        });
+        if(visible.tiles.size() > 0){
+            std::sort(visible.tiles.begin(), visible.tiles.end(),
+                      [](pair<Index, float> const& a, pair<Index, float> const& b) {
+                return a.second < b.second;
+            });
 
-        //scale depth between -1 and 1
-        if (visible.tiles.back().second - visible.tiles.front().second > 1) {
-            float inv_maxDepth = 1.0f / (visible.tiles.back().second - visible.tiles.front().second);
-            for (auto& tile : visible.tiles) {
-                tile.second -= visible.tiles.front().second;
-                tile.second *= inv_maxDepth;
-            }
-        } else {
-            for (auto& tile : visible.tiles) {
-                tile.second = 0;
+            //scale depth between -1 and 1
+            if (visible.tiles.back().second - visible.tiles.front().second > 1) {
+                float inv_maxDepth = 1.0f / (visible.tiles.back().second - visible.tiles.front().second);
+                for (auto& tile : visible.tiles) {
+                    tile.second -= visible.tiles.front().second;
+                    tile.second *= inv_maxDepth;
+                }
+            } else {
+                for (auto& tile : visible.tiles) {
+                    tile.second = 0;
+                }
             }
         }
     }
@@ -215,6 +228,35 @@ public:
         }
     }
 
+    void drawModels(
+            const glm::mat4 &MVP = IDENTITY_MATRIX,
+            const glm::mat4 &MV = IDENTITY_MATRIX,
+            const glm::mat4 &SHADOWMVP = IDENTITY_MATRIX,
+            bool mirrorPass = false){
+
+      float time = glfwGetTime();
+      float pitching = cos(time * 0.9) * 0.10;
+
+      glm::vec3 shipPos = glm::vec3(
+                  6.0 - noisePosition.x * worldGridSize,
+                  0.035,
+                  12.0 + noisePosition.y * worldGridSize);
+
+      shipModelMatrix =
+              glm::translate(IDENTITY_MATRIX, shipPos)
+              *
+              glm::rotate(IDENTITY_MATRIX, pitching, glm::vec3(1.0, 0.0, 0.0));
+
+
+      //std::cout << (-noisePosition.x * worldGridSize) << " : " << (noisePosition.y* worldGridSize) << std::endl;
+      glm::mat4 shipMVP = MVP * shipModelMatrix;
+      glm::mat4 shipMV = MV * shipModelMatrix;
+      glm::mat4 shipNORMALM = inverse(transpose(shipMV));
+      glDisable(GL_CULL_FACE);
+      mightyShip.Draw(shipMVP, shipMV, shipNORMALM, SHADOWMVP, glm::vec2(shipPos.x, -shipPos.z) - center, mirrorPass);
+      glEnable(GL_CULL_FACE);
+    }
+
     /** moves the heightMaps one column in the given direction, recomputes only obsolete heightMaps */
     void moveCols(Direction d) {
         int oldColStart = colStart;
@@ -244,7 +286,7 @@ public:
     /** A circle with diameter maximumExtent can contain this whole LargeScene */
     float maximumExtent(){
         constexpr float sqrt2 = 1.42;
-        return sqrt2 * std::max(NROW-1, NCOL-1) * gridSize;
+        return sqrt2 * std::max(NROW- (nMountainTilesInFog / 2), NCOL- (nMountainTilesInFog / 2)) * gridSize;
     }
 
     void toggleWireFrame() {

@@ -4,6 +4,9 @@ project(icg17-private)
 # load the common ICG configuration
 include(common/icg_settings.cmake)
 
+LINK_DIRECTORIES(C:/Assimp/lib)
+INCLUDE_DIRECTORIES(C:/Assimp/include)
+
 # week 1
 #add_subdirectory(lab1_helloworld)
 
