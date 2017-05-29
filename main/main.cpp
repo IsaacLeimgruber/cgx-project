@@ -56,22 +56,42 @@ int screenHeight = 1080;
 float lastX = 0.0f;
 float lastY = 0.0f;
 
-const float DISPLACEMENT_TIME = 10.f;
+
 const float OFFSET_QTY = 0.04f;
-float start_time = 0.f;
+float start_time1;
+float start_time2 = 100.f;
 
 mat4 projection_matrix, view_matrix, mirrored_view_matrix, quad_model_matrix;
 mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_matrix, depth_mvp;
 mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
 
-bool toggleBezier = true;
-vec3 lastBezierPos;
-BezierCurve bezier({
-                       vec3(4., 5., 0.),
-                       vec3(3.,1.f, 2.),
-                       vec3(-8.,0.5f, 2.),
-                       vec3(-10.,1.f, -1.),
-                       vec3(-15.,1.f, -4.)
+bool untoggleAllBezier = false;
+bool toggleBezier1 = true;
+bool toggleBezier2 = true;
+
+const float bezierTime1 = 10.f;
+bool startedCurve1 = false;
+
+vec3 bezier1Start = vec3(10., 5., 0.);
+vec3 lastBezierPos = bezier1Start;
+BezierCurve bezier1({
+                       bezier1Start,
+                       vec3(7.,5.f, 7.),
+                       vec3(0.,5.f, 10.)
+                   });
+
+
+const float bezierTime2 = 10.f;
+bool startedCurve2 = false;
+vec3 bezier2Start = vec3(1., 10., 1.);
+BezierCurve bezier2({
+                        bezier2Start,
+                        vec3(2.,9.f, 2.),
+                        vec3(3.,8.f, 3.),
+                        vec3(4.,2.f, 4.),
+                        vec3(10.,2.f, 6.5),
+                        vec3(15.,1.f, 15.),
+                        vec3(19.,0.5f, 25.)
                    });
 
 
@@ -94,10 +114,13 @@ FractionalView fractionalView;
 void Init() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
+    if(untoggleAllBezier){
+        toggleBezier1 = false;
+        toggleBezier2 = false;
+    }
     //perlin.Init("perlinGrass_fshader.glsl");
-    start_time = glfwGetTime();
 
-    camera   = Camera{vec3(0., 3.0, 0.), vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
+    camera   = Camera{bezier1Start, vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
     light    = Light{vec3(0.0, 2.0, -4.0)};
     material = Material{};
 
@@ -159,48 +182,6 @@ void Display() {
     //Compute matrices
     view_matrix = camera.GetViewMatrix();
     mirrored_view_matrix = camera.GetMirroredViewMatrix(0.0f);
-
-    /*float dtime = 0.1;
-         float bezierTime = (glfwGetTime() - start_time)/DISPLACEMENT_TIME;
-         if(bezierTime <= 1.f - dtime && toggleBezier){
-         vec3 bezierPos = bezier.getPoint(bezierTime);
-         vec3 deltaPos = bezierPos - lastBezierPos;
-         lastBezierPos = bezierPos;
-
-         camera.move(deltaPos);
-
-         vec2 actualPos = sceneControler.position();
-         vec3 newPos = camera.getPos();
-         float displacementX = newPos.x - actualPos.x;
-         float displacementY = newPos.z - actualPos.y;
-         sceneControler.move({displacementX, displacementY});
-         vec2 updatedPos = sceneControler.position();
-         scene.setCenter(updatedPos/grid_size);
-         vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
-         camera.setPos(cameraPos);*/
-
-    //vec2 actualPos = sceneControler.position();
-    /*float displacementX = deltaPos.x;// - actualPos.x;
-         float displacementZ = deltaPos.z;// - actualPos.y;
-
-         sceneControler.move({displacementX, displacementZ});
-         vec2 updatedPos = sceneControler.position();
-         vec3 cameraPos = vec3(updatedPos.x, bezierPos.y, updatedPos.y);
-         camera.setPos(cameraPos);
-         scene.setCenter(updatedPos/grid_size);
-
-         camera.setFront(deltaPos);*/
-
-    /*vec2 actualPos = sceneControler.position();
-    vec3 newPos = camera.getPos();
-    float displacementX = newPos.x - actualPos.x;
-    float displacementY = newPos.z - actualPos.y;
-    sceneControler.move({displacementX, displacementY});
-    vec2 updatedPos = sceneControler.position();
-    scene.setCenter(updatedPos/grid_size);
-    vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
-    camera.setPos(cameraPos);
-    }*/
 
     MV = view_matrix * quad_model_matrix;
     MVP = projection_matrix * MV;
@@ -407,17 +388,46 @@ void doMovement()
     if(keys[GLFW_KEY_L])
         camera.ProcessKeyboard(ROTATE_RIGHT, deltaTime);
 
-    float dtime = 0.1;
-    float bezierTime = (glfwGetTime() - start_time)/DISPLACEMENT_TIME;
-    if(bezierTime <= 1.f - dtime && toggleBezier){
-        vec3 bezierPos = bezier.getPoint(bezierTime);
+    float bezierTimeC1 = (glfwGetTime() - start_time1)/bezierTime1;
+    float bezierTimeC2 = (glfwGetTime() - start_time2)/bezierTime2;
+    if(bezierTimeC1 <= 1.f && toggleBezier1 && startedCurve1){
+        vec3 bezierPos = bezier1.getPoint(bezierTimeC1);
         vec3 deltaPos = bezierPos - lastBezierPos;
         lastBezierPos = bezierPos;
 
         camera.move(deltaPos);
+        vec3 radial_view = normalize(cross(normalize(deltaPos), vec3(0.f, 1.f, 0.f)) - vec3(0.f, 1.f, 0.f));
+        camera.setFront(radial_view);
 
+    }
+
+    if(0 <= bezierTimeC2 && bezierTimeC2 <= 1.f  && toggleBezier2 && startedCurve2){
+        vec3 bezierPos = bezier2.getPoint(bezierTimeC2);
+        vec3 deltaPos = bezierPos - lastBezierPos;
+        lastBezierPos = bezierPos;
+
+        camera.move(deltaPos);
+        vec3 radial_view = cross(deltaPos, vec3(0.f, 1.f, 0.f));
+        camera.setFront(normalize(radial_view - vec3(0.f, 1.f, 0.f)));
         camera.setFront(deltaPos);
     }
+
+    if(!startedCurve1 && toggleBezier1){
+        start_time1 = glfwGetTime();
+        lastBezierPos = bezier1Start;
+        camera.setPos(bezier1Start);
+        lastBezierPos = bezier1Start;
+        startedCurve1 = true;
+    }
+
+    if(!startedCurve2 && (glfwGetTime() - start_time1) > bezierTime1 && toggleBezier2){
+        start_time2 = glfwGetTime();
+        camera.setPos(bezier2Start);
+        lastBezierPos = bezier2Start;
+        startedCurve2 = true;
+    }
+
+
     vec2 actualPos = sceneControler.position();
     vec3 newPos = camera.getPos();
     float displacementX = newPos.x - actualPos.x;
