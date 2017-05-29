@@ -102,7 +102,11 @@ public:
     }
 
     void setFront(vec3 target){
-        this->Front = normalize(target - this->Position);
+        this->Front = normalize(target);// normalize(target - this->Position);
+    }
+
+    void move(vec3 dist_dir){
+        this->Position += dist_dir;
     }
 
     // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)

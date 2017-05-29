@@ -66,12 +66,14 @@ mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_
 mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
 //mat4 shipM, mShipMVP, mShipMV, mShipNORMALM;
 
-bool toggleBezier = false;
+bool toggleBezier = true;
 vec3 lastBezierPos;
 BezierCurve bezier({
-                       vec3(4., 2., 0.),
-                       vec3(-1.,2.f, 0.),
-                       vec3(1.,2.f, 8.)
+                       vec3(4., 5., 0.),
+                       vec3(3.,1.f, 2.),
+                       vec3(-8.,0.5f, 2.),
+                       vec3(-10.,1.f, -1.),
+                       vec3(-15.,1.f, -4.)
                    });
 
 
@@ -167,26 +169,47 @@ void Display() {
     view_matrix = camera.GetViewMatrix();
     mirrored_view_matrix = camera.GetMirroredViewMatrix(0.0f);
 
-    float dtime = 0.1;
+    /*float dtime = 0.1;
          float bezierTime = (glfwGetTime() - start_time)/DISPLACEMENT_TIME;
          if(bezierTime <= 1.f - dtime && toggleBezier){
          vec3 bezierPos = bezier.getPoint(bezierTime);
          vec3 deltaPos = bezierPos - lastBezierPos;
          lastBezierPos = bezierPos;
-         //camera.setPos(cameraPos);
-         //vec2 actualPos = sceneControler.position();
-         float displacementX = deltaPos.x;// - actualPos.x;
+
+         camera.move(deltaPos);
+
+         vec2 actualPos = sceneControler.position();
+         vec3 newPos = camera.getPos();
+         float displacementX = newPos.x - actualPos.x;
+         float displacementY = newPos.z - actualPos.y;
+         sceneControler.move({displacementX, displacementY});
+         vec2 updatedPos = sceneControler.position();
+         scene.setCenter(updatedPos/grid_size);
+         vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
+         camera.setPos(cameraPos);*/
+
+    //vec2 actualPos = sceneControler.position();
+    /*float displacementX = deltaPos.x;// - actualPos.x;
          float displacementZ = deltaPos.z;// - actualPos.y;
 
          sceneControler.move({displacementX, displacementZ});
          vec2 updatedPos = sceneControler.position();
-         scene.setCenter(updatedPos/grid_size);
          vec3 cameraPos = vec3(updatedPos.x, bezierPos.y, updatedPos.y);
          camera.setPos(cameraPos);
+         scene.setCenter(updatedPos/grid_size);
 
-         //vec3 cameraTarget = bezier.getPoint(bezierTime + dtime);
-         //camera.setFront(cameraTarget);
-    }
+         camera.setFront(deltaPos);*/
+
+    /*vec2 actualPos = sceneControler.position();
+    vec3 newPos = camera.getPos();
+    float displacementX = newPos.x - actualPos.x;
+    float displacementY = newPos.z - actualPos.y;
+    sceneControler.move({displacementX, displacementY});
+    vec2 updatedPos = sceneControler.position();
+    scene.setCenter(updatedPos/grid_size);
+    vec3 cameraPos = vec3(updatedPos.x, newPos.y, updatedPos.y);
+    camera.setPos(cameraPos);
+    }*/
 
     MV = view_matrix * quad_model_matrix;
     MVP = projection_matrix * MV;
@@ -414,7 +437,17 @@ void doMovement()
     if(keys[GLFW_KEY_L])
         camera.ProcessKeyboard(ROTATE_RIGHT, deltaTime);
 
+    float dtime = 0.1;
+    float bezierTime = (glfwGetTime() - start_time)/DISPLACEMENT_TIME;
+    if(bezierTime <= 1.f - dtime && toggleBezier){
+        vec3 bezierPos = bezier.getPoint(bezierTime);
+        vec3 deltaPos = bezierPos - lastBezierPos;
+        lastBezierPos = bezierPos;
 
+        camera.move(deltaPos);
+
+        camera.setFront(deltaPos);
+    }
     vec2 actualPos = sceneControler.position();
     vec3 newPos = camera.getPos();
     float displacementX = newPos.x - actualPos.x;
