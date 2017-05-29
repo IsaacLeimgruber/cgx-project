@@ -38,12 +38,12 @@ const float MIX_SLOPE_THRESHOLD = 0.1f;
 
 const float WATER_HEIGHT = 0.01f,
             WATER_HEIGHT_DEEP = -0.8f,
-            SAND_HEIGHT = 0.02f,
-            GRASS_HEIGHT = 0.3f,
-            ROCK_HEIGHT = 0.40f,
+            SAND_HEIGHT = 0.2f,
+            GRASS_HEIGHT = 0.4f,
+            ROCK_HEIGHT = 0.7f,
             SNOW_HEIGHT = 1.0f;
 
-const float GRASS_TRANSITION = SAND_HEIGHT + (1.0f/5.0f) * (GRASS_HEIGHT - SAND_HEIGHT);
+const float GRASS_TRANSITION = SAND_HEIGHT + (1.0f/1.5f) * (GRASS_HEIGHT - SAND_HEIGHT);
 
 const int numSamplingPositions = 9;
 uniform vec2 kernel[9] = vec2[]
@@ -105,8 +105,8 @@ void main() {
     vec3 ROCK_COLOR = 255.0 * texture(rockTex, (uv_F) * 5.0f).rgb;
     vec3 WATER_COLOR = ROCK_COLOR ;
     vec3 WATER_COLOR_DEEP = vec3(28.5f,48.0f,78.0f);
-    vec3 SAND_COLOR = 255.0 * texture(sandTex, (uv_F) * 30.0f).rgb;
-    vec3 SNOW_COLOR = 255.0 * texture(snowTex, (uv_F) * 60.0f).rgb;
+    vec3 SAND_COLOR = 255.0 * texture(sandTex, (uv_F) * 10.0f).rgb;
+    vec3 SNOW_COLOR = 255.0 * texture(snowTex, (uv_F) * 10.0f).rgb;
 
     float fadingValue = smoothstep(threshold_vpoint_World_F, max_vpoint_World_F,
                                   max(abs(vpoint_World_F.x), abs(vpoint_World_F.y))

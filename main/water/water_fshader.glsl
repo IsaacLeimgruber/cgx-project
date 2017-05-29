@@ -140,7 +140,7 @@ void main() {
 
     vec4 scumColor = texture(diffuseMap, (uv_F + vec2(0.0f, valTimeShift)) * scumScale).rgba;
     vec3 lightingResult = reflection * La;
-    vec3 lightingResultScum =  scumColor.rgb * 3.0 * La;
+    vec3 lightingResultScum =  scumColor.rgb * La;
 
     if(cosNL > 0.0){
 
