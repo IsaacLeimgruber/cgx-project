@@ -69,7 +69,7 @@ mat4 depth_projection_matrix, depth_bias_matrix, depth_view_matrix, depth_model_
 mat4 MVP, mMVP, MV, mMV, NORMALM, mNORMALM;
 //mat4 shipM, mShipMVP, mShipMV, mShipNORMALM;
 
-bool untoggleAllBezier = false;
+bool untoggleAllBezier = true;
 bool toggleBezier1 = true;
 bool toggleBezier2 = true;
 bool toggleBezier3 = true;

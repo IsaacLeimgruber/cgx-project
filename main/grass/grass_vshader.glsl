@@ -18,8 +18,8 @@ uniform sampler2D heightMap;
 uniform sampler2D grassMap;
 
 const float SAND_HEIGHT = 0.25f,
-            GRASS_HEIGHT = 0.4f,
-            ROCK_HEIGHT = 0.5f;
+GRASS_HEIGHT = 0.4f,
+ROCK_HEIGHT = 0.5f;
 const float ground_threshold = 0.6;
 
 void main() {
@@ -49,8 +49,30 @@ void main() {
     mat4 model = mat4(1.f);
     model[3][0] = bladeTranslation.x;
     model[3][2] = bladeTranslation.y;
+
+    float displacementX = 0.007* abs(sin(3. * time * bladeTranslation.x)) +
+            0.03*abs(sin(2. * time * bladeTranslation.x + 0.2)) +
+            0.04 * abs(sin(time*bladeTranslation.x / 5.f))+ 0.03;
+    float displacementY = 0.f;//0.01*sin(time * bladeTranslation.y);
+    if(gl_VertexID == 2  ||
+            gl_VertexID == 3 ||
+            gl_VertexID == 4  ||
+            gl_VertexID == 8  ||
+            gl_VertexID == 9  ||
+            gl_VertexID == 10  ||
+            gl_VertexID == 14  ||
+            gl_VertexID == 15  ||
+            gl_VertexID == 16  ){
+        model[3][0] = bladeTranslation.x + displacementX;
+        model[3][2] = bladeTranslation.y + displacementY;
+
+    }
     vec4 vertexModelPos = (model * vec4(vpoint, 1.0) + vec4(translation.x, height - 0.03, -translation.y, 0));
+
+    vertexModelPos = (model * vec4(vpoint, 1.0) + vec4(translation.x, height - 0.03, -translation.y, 0));
+
     gl_Position = VP * vertexModelPos;
+
     uv = vtexcoord;
     vpoint_World_F = translationToSceneCenter + bladeTranslation;
 
