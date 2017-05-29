@@ -50,7 +50,7 @@ int window_height_sc;
 // OpenGL window dimensions in pixels, ignored if fullscreen
 int window_width = 1600;
 int window_height = 1200;
-const bool FULLSCREEN = false;
+const bool FULLSCREEN = true;
 // native render dimensions in pixels
 int screenWidth = 1440;
 int screenHeight = 1080;
@@ -96,7 +96,7 @@ void Init() {
     //perlin.Init("perlinGrass_fshader.glsl");
     start_time = glfwGetTime();
 
-    camera   = Camera{vec3(0.0, 10, 0.0), vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
+    camera   = Camera{vec3(0.0, 3, 0.0), vec3(0.0f, 1.0f, 0.0f), grid_size * Camera::SPEED};
     light    = Light{vec3(0.0, 2.0, -4.0)};
     material = Material{};
 
