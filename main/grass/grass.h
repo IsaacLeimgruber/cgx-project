@@ -22,7 +22,7 @@ private:
     GLuint VP_id_;          // view, projection matrix ID
 
     GLuint quadVAO, quadVBO;
-    GLuint rows = 20;
+    GLuint rows = 30;
     GLuint cols = rows;
     GLuint nBush = rows * cols;
     GLuint grass_tex_location = 1;

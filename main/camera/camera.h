@@ -34,11 +34,11 @@ class Camera
 {
 public:
     // Default camera values
-    static constexpr GLfloat YAW        = -90.0f;
-    static constexpr GLfloat PITCH      = -85.0f;
+    static constexpr GLfloat YAW        =  45.0f;
+    static constexpr GLfloat PITCH      =  0.0f;
     static constexpr GLfloat SPEED      =  2.0f;
     static constexpr GLfloat SENSITIVTY =  0.05f;
-    static constexpr GLfloat FOV        =  90.0f;
+    static constexpr GLfloat FOV        =  60.0f;
     static constexpr GLfloat MAX_FOV    =  90.0f;
     static constexpr GLfloat MIN_FOV    =  1.0f;
 
@@ -57,7 +57,7 @@ public:
     GLfloat Fov;
 
     // Constructor with vectors
-    Camera(vec3 position = vec3(0.0f, 0.0f, 0.0f), vec3 up = vec3(0.0f, 1.0f, 0.0f), GLfloat speed = SPEED, GLfloat yaw = YAW, GLfloat pitch = PITCH) : Front(vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(speed), MouseSensitivity(SENSITIVTY), Fov(FOV)
+    Camera(vec3 position = vec3(0.0f, 0.0f, 0.0f), vec3 up = vec3(0.0f, 1.0f, 0.0f), GLfloat speed = SPEED, GLfloat yaw = YAW, GLfloat pitch = PITCH) : Front(vec3(-1.0f, 0.0f, 0.0f)), MovementSpeed(speed), MouseSensitivity(SENSITIVTY), Fov(FOV)
     {
         this->Position = position;
         this->WorldUp = up;

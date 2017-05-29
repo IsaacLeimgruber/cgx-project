@@ -3,7 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 struct LightProgramIds{
-    GLuint La_id, Ld_id, Ls_id, lightPos_id, lightPosCameraTranslated_id;
+    GLuint La_id, Ld_id, Ls_id, lightDir_id, lightPos_id, lightPosCameraTranslated_id;
 };
 
 class Light{
@@ -33,10 +33,6 @@ public:
 
     void setPos(glm::vec3 pos){
         this->lightPos = pos;
-    }
-
-    void setLightPosCameraTranslated(glm::vec3 pos){
-        this->lightPosCameraTranslated = pos;
     }
 
     void setAmbientIntensity(glm::vec3 c){
@@ -83,6 +79,7 @@ public:
         glUseProgram(program_id);
 
         registeredIds.lightPosCameraTranslated_id = glGetUniformLocation(program_id, "lightPos");
+        registeredIds.lightDir_id = glGetUniformLocation(program_id, "light_dir");
 
         registeredIds.La_id = glGetUniformLocation(program_id, "La");
         registeredIds.Ld_id = glGetUniformLocation(program_id, "Ld");
@@ -103,7 +100,7 @@ public:
 
     void updateProgram(GLuint programId){
         LightProgramIds pids = programToIds[programId];
-        glUniform3fv(pids.lightPosCameraTranslated_id, ONE, glm::value_ptr(lightPosCameraTranslated));
+        glUniform3fv(pids.lightDir_id, ONE, glm::value_ptr(this->lightPos));
         glUniform3fv(pids.La_id, ONE, glm::value_ptr(La));
         glUniform3fv(pids.Ld_id, ONE, glm::value_ptr(Ld));
         glUniform3fv(pids.Ls_id, ONE, glm::value_ptr(Ls));

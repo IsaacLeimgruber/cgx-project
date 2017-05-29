@@ -70,10 +70,15 @@ file(GLOB SHADERS
     water/debug/water_fshader_debug.glsl
     water/debug/water_tcshader_debug.glsl
     water/debug/water_teshader_debug.glsl
-    water/debug/water_gshader_debug.glsl
+    water/debug/water_gshader_debug.gls
+    model/yacht/yacht_vshader.glsl
+    model/yacht/yacht_fshader.glsl
+    model/yacht/yacht.3ds
+    model/yacht/yacht_tex.tga
     grass/grass_vshader.glsl
     grass/grass_fshader.glsl)
     deploy_shaders_to_build_dir(${SHADERS})
 
 add_executable(${EXERCISENAME} ${SOURCES} ${HEADERS} ${SHADERS})
-target_link_libraries(${EXERCISENAME} ${COMMON_LIBS})
+target_link_libraries(${EXERCISENAME} ${COMMON_LIBS} assimp-vc140-mt)
+

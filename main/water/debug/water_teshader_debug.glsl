@@ -21,9 +21,9 @@ out vec3 waveNormal_G;
 const float DEGTORAD = 3.14159265359f / 180.0f;
 const float rippleNormalWeight = 0.2f;
 
-float freqs[5] = float[5](15.0f, 20.0f, 23.0f, 30.0f, 40.0f);
-float amps[5] =  float[5](0.01f, 0.0055f, 0.0045f, 0.003f, 0.002f);
-float phis[5] = float[5](1.0f, 1.3f, 1.4f, 1.8f, 2.1f);
+float freqs[5] = float[5](1.0f, 3.0f, 11.0f, 21.0f, 23.0f);
+float amps[5] =  float[5](0.02f, 0.015f, 0.0085f, 0.006f, 0.004f);
+float phis[5] = float[5](0.8f, 1.0f, 1.2f, 1.4f, 2.1f);
 vec2 dirs[5] = vec2[5](vec2(0.0f,1.0f),vec2(0.5f, 1.0f),vec2(0.3f, 1.0f),vec2(0.4f, 1.0f),vec2(-0.2f, 1.0f));
 int exps[5] = int[5](1, 2, 2, 2, 3);
 float sinWave[5] = float[5](0.0f, 0.0f, 0.0f, 0.0f, 0.0f);

@@ -25,7 +25,7 @@ float GetTessLevel(in float Distance0, in float Distance1, in float height1, in 
 {
     float avgHeight = (height1 + height2) * 0.5f;
 
-    if(avgHeight < -0.05f){
+    if(avgHeight < -0.1f){
         return 1;
     }
 

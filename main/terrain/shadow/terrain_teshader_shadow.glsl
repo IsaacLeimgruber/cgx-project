@@ -8,10 +8,12 @@ uniform sampler2D heightMap;
 
 in vec3 vpoint_TE[];
 in vec2 uv_TE[];
+in vec2 vpoint_World_TE[];
 
 out vec4 vpoint_F;
 out vec2 uv_F;
 out float vheight_F;
+
 
 vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2, vec2 v3)
 {
