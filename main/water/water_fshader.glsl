@@ -37,7 +37,7 @@ const vec3 Y = vec3(0.0f, 1.0f, 0.0f);
 const float cosWaterReflectionAngleStart = 0.20f;
 const float cosWaterReflectionAngleEnd = 0.80f;
 const float waterReflectionDistanceStart = 2.0f;
-const float waterReflectionDistanceEnd = 5.0f;
+const float waterReflectionDistanceEnd = 10.0f;
 const float rippleNormalWeight = 0.15f;
 const float scumScale = 2.0f;
 

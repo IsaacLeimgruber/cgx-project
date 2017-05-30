@@ -99,6 +99,9 @@ class Grid: public GridMesh{
             currentProgramIds = (shadowPass) ? shadowProgramIds : normalProgramIds;
 
             glUseProgram(currentProgramIds.program_id);
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_CULL_FACE);
+            glDepthFunc(GL_LESS);
 
             bindHeightMapTexture();
             bindGrassMapTexture();

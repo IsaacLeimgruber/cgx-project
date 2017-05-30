@@ -21,7 +21,7 @@ out vec4 shadowCoord_F;
 
 void main()
 {
-
+    vpoint_F = position;
     vec4 vpoint_MV = MV * vec4(position, 1.0);
     vpoint_MV_F = vpoint_MV.xyz;
     normal_MV_F = normalize((NORMALM * vec4(normal, 1.0f)).xyz);

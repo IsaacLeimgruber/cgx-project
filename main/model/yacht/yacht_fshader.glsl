@@ -14,7 +14,6 @@ uniform vec3 specular_color;
 uniform vec3 light_dir;
 uniform mat4 NORMALM;
 uniform vec3 viewPos;
-uniform vec3 lightPos;
 uniform vec3 La, Ld, Ls;
 uniform float alpha;
 uniform float max_vpoint_World_F;
@@ -81,22 +80,7 @@ void main()
     // -------------SHADOW MAPS----------------------//
 
     float bias = max(0.05f * (1.0f - cosNL), 0.005f);
-    float visibility = 0;
-
-    // generate random rotation angle for each fragment
-    float angle = randomAngle(vpoint_F.xyz, 15.0f);
-    float s = sin(angle);
-    float c = cos(angle);
-    float PCFRadius = 1.0f/1000.0f;
-    for(int i=0; i < numSamplingPositions; i++)
-    {
-      // rotate offset
-      vec2 rotatedOffset = vec2(kernel[i].x * c + kernel[i].y * -s, kernel[i].x * s + kernel[i].y * c);
-      vec3 samplingPos = shadowCoord_F.xyz;
-      samplingPos += vec3(rotatedOffset * PCFRadius, -bias);
-      visibility += texture(shadowMap, samplingPos);
-    }
-    visibility /= numSamplingPositions;
+    float visibility = 1.0;
 
 
     // --------------- SHADING ----------------- //

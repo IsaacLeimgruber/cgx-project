@@ -14,10 +14,10 @@
 class LargeScene {
 
     /** the dimensions of this LargeScene's rectangular matrix in number of tiles per ROW or COLumns */
-    enum {NROW = 20, NCOL = 20};
+    enum {NROW = 19, NCOL = 19};
 
     /** the number of tile to make transparent at the edge of the large scene */
-    static constexpr int nMountainTilesInFog = 5;
+    static constexpr int nMountainTilesInFog = 4;
     static constexpr int nWaterTilesInFog = nMountainTilesInFog;
     static constexpr int fogStop = (NROW < NCOL ? NROW : NCOL) - 1;
 

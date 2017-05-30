@@ -108,14 +108,14 @@ public:
         cloudPlane.Init(0, vec2(4.0, 3.0));
         farCloudPlane.Init(0, vec2(1.0, 1.0));
         cloudPlaneModelMatrix =
-                translate(IDENTITY_MATRIX, vec3(0.0f, -10.0f, 0.0f))
+                translate(IDENTITY_MATRIX, vec3(0.0f, -4.0f, 0.0f))
                 *
                 rotate(IDENTITY_MATRIX, 0.0f, vec3(0.0f, 1.0f, 0.0f))
                 *
                 scale(IDENTITY_MATRIX, vec3(75.0f, 75.0f, 75.0f));
 
         farCloudPlaneModelMatrix =
-                translate(IDENTITY_MATRIX, vec3(0.0f, -2.0f, 0.0f))
+                translate(IDENTITY_MATRIX, vec3(0.0f, 2.0f, 0.0f))
                 *
                 rotate(IDENTITY_MATRIX, 0.2f, vec3(0.0f, 1.0f, 0.0f))
                 *
@@ -235,7 +235,7 @@ public:
 
         float time = glfwGetTime();
 
-        float theta = 0.01 * time - 0.2;
+        float theta = 0.01 * time - 0.0;
 
         vec3 sunPos = sunOrbitCenter + radius * cos(theta) * sunOrbitXAxis + radius * sin(theta) * sunOrbitYAxis;
         computeSkyColors(sunPos, viewPos);

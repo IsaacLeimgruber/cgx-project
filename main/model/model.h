@@ -74,7 +74,8 @@ public:
         glUniform2fv(translationToSceneCenter_id, 1, glm::value_ptr(translationToSceneCenter));
         glUniform1i(mirrorPass_id, mirrorPass);
 
-        light->updateProgram(this->shaderProgram);
+        if(light != nullptr)
+            light->updateProgram(this->shaderProgram);
 
         glActiveTexture(GL_TEXTURE0 + 7);
         glBindTexture(GL_TEXTURE_2D, this->shadowTexture_id);

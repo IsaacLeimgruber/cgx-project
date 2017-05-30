@@ -93,11 +93,6 @@ public:
         programToIds[program_id] = registeredIds;
     }
 
-    void updatePosUniform(GLuint programId){
-        LightProgramIds pids = programToIds[programId];
-        glUniform3fv(pids.lightPosCameraTranslated_id, ONE, glm::value_ptr(lightPosCameraTranslated));
-    }
-
     void updateProgram(GLuint programId){
         LightProgramIds pids = programToIds[programId];
         glUniform3fv(pids.lightDir_id, ONE, glm::value_ptr(this->lightPos));
