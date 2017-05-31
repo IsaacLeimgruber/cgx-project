@@ -1,4 +1,4 @@
-# Milestone 3 - 
+# Milestone 3 - Environment elements
 
 ## Contents:
 
@@ -56,7 +56,6 @@ The animation of the bushes was done in a straightforward way: we select the upp
 
 **Isaac Leimgruber**
 - 
-
 **Julien Harbulot**
 - 
 **Leandro Kieliger**
