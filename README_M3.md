@@ -13,7 +13,7 @@
 
 ## 1. Project basis: Bezier Curve
 
-A recursive implementation of the Bezier Curve following the deCasteljau algorithm. The Curve is then sampled, 
+A recursive implementation of the Bezier Curve following the deCasteljau algorithm. The Curve is sampled, 
 the distance between each sample evaluated to allocate a proportional time for each path between two successive samples to allow
 a constant speed over the curve.
 
@@ -57,9 +57,10 @@ Our scene controller always states which Tile is at the center. This way, the Ti
 
 ## Work distribution
 
-**Isaac Leimgruber**
-- 
+
 **Julien Harbulot**
-- 
+- 33% Fog, GrassFog, integrate grass in Terrain (LargeScene)
 **Leandro Kieliger**
-- 
+- 34% Sky variations, Clouds, Yacht
+**Isaac Leimgruber**
+- 32% Bezier Curve, Grass (instancing), GrassMap
