@@ -8,7 +8,8 @@
 4. Sky variations
 5. Instancing Grass
 6. Yacht 3D model
-7. Work distribution
+7. Fog
+8. Work distribution
 
 ## 1. Project basis: Bezier Curve
 
@@ -23,7 +24,6 @@ has a higher value than some threshold, then we draw mud instead of grass.
 
 ## 3. Clouds
 
-<img src="https://lkieliger.ch/docs/pictures/cgx/normalMapCompil.png">
 
 ## 4. Sky variations
 
@@ -46,10 +46,11 @@ we computed the model matrix using the translations to position the vertices. To
 no good reason for the bushes to have different sizes, we directly scaled the vertex coordinates.
 
 ### 5.3 Animating grass
-
-<img src="https://lkieliger.ch/docs/pictures/cgx/tessCompil.png">
+The animation of the bushes was done in a straightforward way: we select the upper vertices of the bushes using the vertexID and move them using a sine function.
 
 ## 6. Yacht 3D model
+
+## 7. Fog
 
 ## Work distribution
 
