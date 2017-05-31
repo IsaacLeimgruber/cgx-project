@@ -23,10 +23,11 @@ To add variations at the grass level, we used another perlin noise. If the noise
 has a higher value than some threshold, then we draw mud instead of grass. 
 
 ## 3. Clouds
+We apply a Cloud texture on the skyDome and make it move over time, this gives the impression that the clouds are moving.
 
 
 ## 4. Sky variations
-
+We colored the sky based on sun position using empirical testing.
 
 ## 5. Instancing grass
 To add realism to our terrain, we felt adding grass was a good idea. Using instancing seemed the good way.
@@ -49,8 +50,10 @@ no good reason for the bushes to have different sizes, we directly scaled the ve
 The animation of the bushes was done in a straightforward way: we select the upper vertices of the bushes using the vertexID and move them using a sine function.
 
 ## 6. Yacht 3D model
+Using the Assimp library, we imported a 3D model of a ship, computed it's lighting and shadowMap and added a small movement
 
 ## 7. Fog
+Our scene controller always states which Tile is at the center. This way, the Tiles that are the furthest from the camera have an increasing alpha coloration giving the impression that the terrain disappears in fog.
 
 ## Work distribution
 
